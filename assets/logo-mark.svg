@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Your Love Element logo mark</title>
+  <desc id="desc">A warm lemon seal with a heart-shaped seed and five element petals.</desc>
+  <defs>
+    <linearGradient id="lemon" x1="28" y1="20" x2="100" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffe58b"/>
+      <stop offset="0.55" stop-color="#f7bd47"/>
+      <stop offset="1" stop-color="#d88737"/>
+    </linearGradient>
+    <linearGradient id="heart" x1="45" y1="39" x2="83" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d95b72"/>
+      <stop offset="1" stop-color="#8f2947"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="9" stdDeviation="8" flood-color="#3a241f" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <circle cx="64" cy="64" r="52" fill="#fff7ee"/>
+  <circle cx="64" cy="64" r="49" fill="url(#lemon)" filter="url(#softShadow)"/>
+  <circle cx="64" cy="64" r="39" fill="none" stroke="#fff7ee" stroke-width="6" opacity="0.92"/>
+  <g fill="#fff7ee" opacity="0.72">
+    <path d="M64 25v24"/>
+    <path d="M64 79v24"/>
+    <path d="M25 64h24"/>
+    <path d="M79 64h24"/>
+    <path d="M36.4 36.4l17 17"/>
+    <path d="M74.6 74.6l17 17"/>
+    <path d="M91.6 36.4l-17 17"/>
+    <path d="M53.4 74.6l-17 17"/>
+  </g>
+  <g stroke="#fff7ee" stroke-linecap="round" stroke-width="3.8" opacity="0.65">
+    <path d="M64 25v21"/>
+    <path d="M64 82v21"/>
+    <path d="M25 64h21"/>
+    <path d="M82 64h21"/>
+    <path d="M38 38l15 15"/>
+    <path d="M75 75l15 15"/>
+    <path d="M90 38L75 53"/>
+    <path d="M53 75L38 90"/>
+  </g>
+  <path fill="url(#heart)" d="M64 89c-1.3-1.7-4.7-4.6-8.2-7.7C46.3 72.9 39 66.4 39 56.4c0-8 5.7-14.1 13.1-14.1 4.5 0 8.7 2.3 11.9 6.2 3.2-3.9 7.4-6.2 11.9-6.2 7.4 0 13.1 6.1 13.1 14.1 0 10-7.3 16.5-16.8 24.9-3.5 3.1-6.9 6-8.2 7.7Z"/>
+  <path fill="#fff7ee" d="M80 33c6.2 2.4 10.7 7.8 12.5 15.4-7-1.2-12.2-4.8-15.4-10.5 1.1-2 2.1-3.6 2.9-4.9Z" opacity="0.92"/>
+  <circle cx="64" cy="64" r="57" fill="none" stroke="#4f877b" stroke-width="3"/>
+</svg>

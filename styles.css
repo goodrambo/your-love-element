@@ -95,32 +95,16 @@ a {
 }
 
 .brand {
-  gap: 10px;
+  gap: 11px;
   font-weight: 800;
   letter-spacing: 0;
 }
 
 .brand-mark {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid rgba(255, 250, 245, 0.55);
-  border-radius: 50%;
-  color: #221b18;
-  background: #fff7ee;
-  font-family: "Playfair Display", Georgia, serif;
-}
-
-.brand-mark::after {
-  content: "";
-  position: absolute;
-  width: 9px;
-  height: 9px;
-  margin: 22px 0 0 22px;
-  border-radius: 50%;
-  background: var(--cinnabar);
+  display: block;
+  width: 40px;
+  height: 40px;
+  filter: drop-shadow(0 6px 14px rgba(22, 15, 14, 0.24));
 }
 
 .nav-actions {

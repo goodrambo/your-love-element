@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Your Love Element Lemon Squeezy store icon</title>
+  <desc id="desc">A square premium lemon heart seal for the Lemon Squeezy storefront.</desc>
+  <defs>
+    <linearGradient id="bg" x1="96" y1="88" x2="922" y2="934" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff8ec"/>
+      <stop offset="0.48" stop-color="#f9e4c5"/>
+      <stop offset="1" stop-color="#e4ad61"/>
+    </linearGradient>
+    <linearGradient id="fruit" x1="250" y1="184" x2="790" y2="812" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffef93"/>
+      <stop offset="0.54" stop-color="#f6bf45"/>
+      <stop offset="1" stop-color="#cf7c38"/>
+    </linearGradient>
+    <linearGradient id="love" x1="360" y1="320" x2="672" y2="724" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#dd6477"/>
+      <stop offset="1" stop-color="#7c263d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="184" fill="url(#bg)"/>
+  <circle cx="512" cy="512" r="364" fill="#fff7ee"/>
+  <circle cx="512" cy="512" r="326" fill="url(#fruit)"/>
+  <circle cx="512" cy="512" r="258" fill="none" stroke="#fff7ee" stroke-width="48" opacity="0.94"/>
+  <g stroke="#fff7ee" stroke-linecap="round" stroke-width="28" opacity="0.68">
+    <path d="M512 236v154"/>
+    <path d="M512 634v154"/>
+    <path d="M236 512h154"/>
+    <path d="M634 512h154"/>
+    <path d="M318 318l109 109"/>
+    <path d="M597 597l109 109"/>
+    <path d="M706 318 597 427"/>
+    <path d="M427 597 318 706"/>
+  </g>
+  <path fill="url(#love)" d="M512 704c-10-13-36-35-63-59-74-65-130-116-130-194 0-63 45-112 104-112 36 0 69 18 89 49 20-31 53-49 89-49 59 0 104 49 104 112 0 78-56 129-130 194-27 24-53 46-63 59Z"/>
+  <path fill="#fff8ec" d="M631 280c49 17 85 59 99 121-58-11-100-39-126-84 7-15 16-28 27-37Z" opacity="0.95"/>
+  <circle cx="512" cy="512" r="384" fill="none" stroke="#4f877b" stroke-width="24"/>
+  <circle cx="512" cy="512" r="430" fill="none" stroke="#6f263d" stroke-width="10" opacity="0.25"/>
+</svg>

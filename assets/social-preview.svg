@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Your Love Element social preview</title>
+  <desc id="desc">A social sharing card for Your Love Element with the lemon heart seal.</desc>
+  <defs>
+    <linearGradient id="cardBg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff7ee"/>
+      <stop offset="0.48" stop-color="#f9e3cd"/>
+      <stop offset="1" stop-color="#703045"/>
+    </linearGradient>
+    <linearGradient id="seal" x1="760" y1="124" x2="1078" y2="494" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffec91"/>
+      <stop offset="0.55" stop-color="#f5bb45"/>
+      <stop offset="1" stop-color="#cb7c39"/>
+    </linearGradient>
+    <linearGradient id="heart" x1="850" y1="246" x2="1014" y2="450" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#db6375"/>
+      <stop offset="1" stop-color="#7a253c"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#2e1a17" flood-opacity="0.26"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#cardBg)"/>
+  <path d="M0 540c190-56 352-39 508 16 189 66 399 63 692-60v134H0Z" fill="#4f877b" opacity="0.2"/>
+  <path d="M766 0h434v630H659c93-94 122-202 92-325-22-91-14-190 15-305Z" fill="#6f263d" opacity="0.18"/>
+  <g transform="translate(720 103)" filter="url(#shadow)">
+    <circle cx="220" cy="220" r="199" fill="#fff7ee"/>
+    <circle cx="220" cy="220" r="175" fill="url(#seal)"/>
+    <circle cx="220" cy="220" r="136" fill="none" stroke="#fff7ee" stroke-width="24" opacity="0.94"/>
+    <g stroke="#fff7ee" stroke-linecap="round" stroke-width="13" opacity="0.72">
+      <path d="M220 72v82"/>
+      <path d="M220 286v82"/>
+      <path d="M72 220h82"/>
+      <path d="M286 220h82"/>
+      <path d="m115 115 58 58"/>
+      <path d="m267 267 58 58"/>
+      <path d="m325 115-58 58"/>
+      <path d="m173 267-58 58"/>
+    </g>
+    <path fill="url(#heart)" d="M220 324c-6-8-20-20-35-33-40-36-71-63-71-106 0-35 25-61 57-61 20 0 37 10 49 27 12-17 29-27 49-27 32 0 57 26 57 61 0 43-31 70-71 106-15 13-29 25-35 33Z"/>
+    <path fill="#fff8ec" d="M283 95c28 10 47 33 55 67-31-6-55-22-69-46 4-8 9-16 14-21Z" opacity="0.95"/>
+    <circle cx="220" cy="220" r="211" fill="none" stroke="#4f877b" stroke-width="13"/>
+  </g>
+  <g transform="translate(78 84)">
+    <g transform="translate(0 2)">
+      <circle cx="30" cy="30" r="29" fill="#f4be49"/>
+      <path fill="#8e2c45" d="M30 44c-2-3-6-6-10-10-8-7-13-12-13-20 0-7 5-12 11-12 5 0 9 3 12 7 3-4 7-7 12-7 6 0 11 5 11 12 0 8-5 13-13 20-4 4-8 7-10 10Z" transform="translate(0 7)"/>
+    </g>
+    <text x="76" y="42" fill="#221b18" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="800">Your Love Element</text>
+  </g>
+  <text x="78" y="244" fill="#6f263d" font-family="Georgia, 'Times New Roman', serif" font-size="78" font-weight="700">Discover your</text>
+  <text x="78" y="326" fill="#6f263d" font-family="Georgia, 'Times New Roman', serif" font-size="78" font-weight="700">love element.</text>
+  <text x="82" y="390" fill="#5f554f" font-family="Inter, Arial, sans-serif" font-size="27" font-weight="600">A private Five Element-inspired relationship reading.</text>
+  <g transform="translate(78 454)" fill="#221b18" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="800">
+    <rect width="180" height="48" rx="24" fill="#b84d63"/>
+    <text x="28" y="31" fill="#fffaf5">Free reading</text>
+    <text x="211" y="31" fill="#4f877b">yourloveelement.com</text>
+  </g>
+</svg>
