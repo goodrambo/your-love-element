@@ -433,8 +433,8 @@ input[type="number"] {
 
 .portrait-card {
   display: grid;
-  grid-template-columns: minmax(220px, 0.82fr) 1fr;
-  gap: 24px;
+  grid-template-columns: minmax(180px, 0.55fr) minmax(0, 1fr);
+  gap: 22px;
   padding: 20px;
   box-shadow: 0 22px 60px rgba(42, 30, 24, 0.13);
 }
@@ -466,6 +466,12 @@ input[type="number"] {
 .analysis-card p {
   color: var(--muted);
   line-height: 1.65;
+}
+
+#archetypeText {
+  white-space: pre-line;
+  font-size: 0.98rem;
+  line-height: 1.68;
 }
 
 .insight-stack {
@@ -536,7 +542,7 @@ input[type="number"] {
 .preview-note {
   display: grid;
   align-content: center;
-  padding: 20px;
+  padding: 16px 18px;
   background:
     linear-gradient(135deg, rgba(216, 167, 79, 0.12), rgba(79, 135, 123, 0.08)),
     #fffaf5;
@@ -545,30 +551,32 @@ input[type="number"] {
 
 .preview-note-list {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .preview-note-list li {
-  position: relative;
-  padding-left: 18px;
+  display: grid;
+  gap: 2px;
+  min-height: 54px;
+  padding: 10px;
+  border: 1px solid rgba(34, 27, 24, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 250, 245, 0.58);
   color: var(--muted);
-  font-size: 0.94rem;
-  line-height: 1.45;
+  font-size: 0.86rem;
+  line-height: 1.25;
 }
 
-.preview-note-list li::before {
-  content: "";
-  position: absolute;
-  top: 0.62em;
-  left: 0;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--teal);
+.preview-note-list span {
+  color: var(--teal);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .unlock-box {
@@ -868,7 +876,7 @@ input[type="number"] {
   }
 
   .preview-note-list {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .deep-signal-list {
@@ -963,6 +971,10 @@ input[type="number"] {
   .unlock-box,
   .preview-note {
     padding: 16px;
+  }
+
+  .preview-note-list {
+    grid-template-columns: 1fr;
   }
 
   .legal-content {

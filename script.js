@@ -38,6 +38,33 @@ const elementCopy = {
   Water: "Intuitive depth, emotional tenderness, and a bond that begins beneath the surface.",
 };
 
+const qualityProfiles = {
+  "Emotional steadiness": {
+    title: "The Grounded Visionary",
+    partner: "calm, consistent, and quietly ambitious",
+    recognition: "They listen before impressing you, remember small details, and make your nervous system feel less noisy.",
+    pull: "Their presence feels steady before it feels dramatic, and that steadiness is part of the attraction.",
+  },
+  "Creative ambition": {
+    title: "The Magnetic Builder",
+    partner: "expressive, decisive, and self-directed",
+    recognition: "They speak with momentum, follow through quickly, and make future plans feel energizing rather than heavy.",
+    pull: "They may be building something of their own, and their focus gives the connection a sense of forward motion.",
+  },
+  "Warm intelligence": {
+    title: "The Gentle Strategist",
+    partner: "thoughtful, witty, and emotionally generous",
+    recognition: "They ask unusually precise questions, notice your emotional shifts, and make honesty feel low-pressure.",
+    pull: "The connection begins softly, then becomes difficult to ignore because the conversation keeps opening new doors.",
+  },
+  "Playful confidence": {
+    title: "The Bright Companion",
+    partner: "socially warm, expressive, and emotionally awake",
+    recognition: "They make ordinary moments feel easier, include you naturally, and show interest without making you perform for it.",
+    pull: "The bond may begin lightly, then deepen when their consistency proves their charm has real emotional weight.",
+  },
+};
+
 let currentStep = 0;
 
 function updateStep() {
@@ -57,6 +84,13 @@ function selectedValue(name) {
   return document.querySelector(`input[name="${name}"]:checked`)?.value;
 }
 
+function buildPortraitText({ status, intent, quality, setting, element, block, secure, pace }) {
+  const profile = qualityProfiles[quality] || qualityProfiles["Warm intelligence"];
+  const elementLine = elementCopy[element] || elementCopy.Earth;
+
+  return `Because you selected ${status.toLowerCase()}, your future partner portrait begins with someone ${profile.partner}. ${profile.pull} You are not simply looking for a spark; you are looking for a person whose rhythm helps you understand ${intent.toLowerCase()} without making love feel like a test.\n\nYour ${element} profile adds an important layer: ${elementLine} This suggests that the person who fits you best will not only match your chemistry, but also support the kind of emotional climate where ${secure.toLowerCase()} can become ordinary. The meeting signal points toward ${setting.toLowerCase()}, especially when the pace feels ${pace.toLowerCase()} rather than forced.\n\nThe pattern to watch is ${block.toLowerCase()}. If that old signal appears, pause before deciding whether it is intuition or protection. Your preview suggests your next meaningful connection should feel clear enough to soften your guard, but grounded enough that you do not have to chase certainty.`;
+}
+
 function revealPreview() {
   const quality = selectedValue("quality") || "Warm intelligence";
   const setting = selectedValue("setting") || "A friend's wider circle";
@@ -67,35 +101,12 @@ function revealPreview() {
   const intent = selectedValue("intent") || "Who I naturally attract";
   const pace = selectedValue("pace") || "Slow and certain";
 
-  const archetypes = {
-    "Emotional steadiness": [
-      "The Grounded Visionary",
-      `Because you selected ${status.toLowerCase()}, your strongest romantic pull is toward someone calm, consistent, and quietly ambitious. This person may not feel loud at first; they feel trustworthy before they feel thrilling.`,
-      "They listen before impressing you, remember small details, and make your nervous system feel less noisy.",
-    ],
-    "Creative ambition": [
-      "The Magnetic Builder",
-      `Your reading points toward someone expressive, decisive, and self-directed. They are likely to be building something of their own, and their focus will feel immediately different from surface-level charm.`,
-      "They speak with momentum, follow through quickly, and make future plans feel energizing rather than heavy.",
-    ],
-    "Warm intelligence": [
-      "The Gentle Strategist",
-      `You are most likely to recognize someone thoughtful, witty, and emotionally generous. The connection begins softly, then becomes difficult to ignore because the conversation keeps opening new doors.`,
-      "They ask unusually precise questions, notice your emotional shifts, and make honesty feel low-pressure.",
-    ],
-    "Playful confidence": [
-      "The Bright Companion",
-      `Your reading points toward someone socially warm, expressive, and emotionally awake. Because you selected ${status.toLowerCase()}, the connection may begin lightly, then deepen when their consistency matches their charm.`,
-      "They make ordinary moments feel easier, include you naturally, and show interest without making you perform for it.",
-    ],
-  };
-
-  const [title, text, recognition] = archetypes[quality];
-  archetypeTitle.textContent = title;
-  archetypeText.textContent = text;
+  const profile = qualityProfiles[quality] || qualityProfiles["Warm intelligence"];
+  archetypeTitle.textContent = profile.title;
+  archetypeText.textContent = buildPortraitText({ status, intent, quality, setting, element, block, secure, pace });
   elementName.textContent = `${element} profile`;
   elementSignal.textContent = elementCopy[element];
-  recognitionText.textContent = recognition;
+  recognitionText.textContent = profile.recognition;
   meetingText.textContent = `Your strongest meeting signal is ${setting.toLowerCase()}, especially when the pace feels ${pace.toLowerCase()} rather than forced.`;
   releaseText.textContent = `${block} may be the pattern to watch. Your preview suggests you should not confuse intensity with emotional alignment.`;
   adviceText.textContent = `Because you are seeking ${intent.toLowerCase()}, choose the person who makes ${secure.toLowerCase()} feel possible in ordinary life.`;
