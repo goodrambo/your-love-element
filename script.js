@@ -13,6 +13,9 @@ const recognitionText = document.querySelector("#recognitionText");
 const meetingText = document.querySelector("#meetingText");
 const releaseText = document.querySelector("#releaseText");
 const adviceText = document.querySelector("#adviceText");
+const cookieConsent = document.querySelector("#cookieConsent");
+const cookieAccept = document.querySelector("#cookieAccept");
+const cookieReject = document.querySelector("#cookieReject");
 
 const moods = [
   "Your current chapter",
@@ -95,21 +98,62 @@ function revealPreview() {
   document.querySelector("#preview").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-nextButton.addEventListener("click", () => {
-  if (currentStep < steps.length - 1) {
-    currentStep += 1;
-    updateStep();
+function initQuiz() {
+  if (!steps.length || !nextButton || !backButton) {
     return;
   }
 
-  revealPreview();
-});
+  nextButton.addEventListener("click", () => {
+    if (currentStep < steps.length - 1) {
+      currentStep += 1;
+      updateStep();
+      return;
+    }
 
-backButton.addEventListener("click", () => {
-  if (currentStep > 0) {
-    currentStep -= 1;
-    updateStep();
+    revealPreview();
+  });
+
+  backButton.addEventListener("click", () => {
+    if (currentStep > 0) {
+      currentStep -= 1;
+      updateStep();
+    }
+  });
+
+  updateStep();
+}
+
+function initCookieConsent() {
+  if (!cookieConsent || !cookieAccept || !cookieReject) {
+    return;
   }
-});
 
-updateStep();
+  const storageKey = "yle-cookie-consent";
+  const canStoreChoice = (() => {
+    try {
+      localStorage.setItem(`${storageKey}-test`, "1");
+      localStorage.removeItem(`${storageKey}-test`);
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+
+  const storedChoice = canStoreChoice ? localStorage.getItem(storageKey) : null;
+  if (!storedChoice) {
+    cookieConsent.hidden = false;
+  }
+
+  function saveChoice(choice) {
+    if (canStoreChoice) {
+      localStorage.setItem(storageKey, choice);
+    }
+    cookieConsent.hidden = true;
+  }
+
+  cookieAccept.addEventListener("click", () => saveChoice("all"));
+  cookieReject.addEventListener("click", () => saveChoice("essential"));
+}
+
+initQuiz();
+initCookieConsent();

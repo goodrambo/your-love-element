@@ -27,6 +27,7 @@ body {
   color: var(--ink);
   background: var(--shell);
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-size-adjust: 100%;
 }
 
 button,
@@ -47,7 +48,7 @@ a {
 
 .hero {
   position: relative;
-  min-height: 92vh;
+  min-height: 92svh;
   color: #fffaf5;
   isolation: isolate;
 }
@@ -113,25 +114,13 @@ a {
   color: rgba(255, 250, 245, 0.84);
 }
 
-.icon-button {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border: 1px solid rgba(255, 250, 245, 0.35);
-  border-radius: 50%;
-  color: #fffaf5;
-  background: rgba(255, 250, 245, 0.1);
-  cursor: pointer;
-}
-
 .hero-content {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(380px, 430px);
   gap: 64px;
   align-items: center;
   width: min(1180px, calc(100% - 40px));
-  min-height: calc(92vh - 82px);
+  min-height: calc(92svh - 82px);
   margin: 0 auto;
   padding: 46px 0 80px;
 }
@@ -167,7 +156,7 @@ h2 {
 h1 {
   max-width: 720px;
   margin-bottom: 22px;
-  font-size: clamp(3.1rem, 6vw, 6.7rem);
+  font-size: 5.8rem;
   line-height: 0.94;
 }
 
@@ -189,6 +178,9 @@ h1 {
 .next-button,
 .ghost-button,
 .price-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 46px;
   border: 0;
   border-radius: 999px;
@@ -419,7 +411,7 @@ input[type="number"] {
   max-width: 680px;
   margin: 0;
   color: var(--wine);
-  font-size: clamp(2.2rem, 4vw, 4.8rem);
+  font-size: 4.1rem;
   line-height: 1;
 }
 
@@ -562,6 +554,169 @@ input[type="number"] {
   box-shadow: none;
 }
 
+.site-footer {
+  border-top: 1px solid var(--line);
+  background: #fff7ee;
+}
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 24px 0;
+}
+
+.footer-brand,
+.footer-links {
+  display: flex;
+  align-items: center;
+}
+
+.footer-brand {
+  gap: 10px;
+  font-weight: 800;
+}
+
+.footer-brand .brand-mark {
+  width: 32px;
+  height: 32px;
+  filter: none;
+}
+
+.footer-links {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 16px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.cookie-consent {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  width: min(720px, calc(100% - 40px));
+  padding: 18px;
+  border: 1px solid rgba(34, 27, 24, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 250, 245, 0.97);
+  box-shadow: 0 24px 70px rgba(42, 30, 24, 0.22);
+  color: var(--ink);
+}
+
+.cookie-consent[hidden] {
+  display: none;
+}
+
+.cookie-title {
+  margin-bottom: 6px;
+  color: var(--wine);
+  font-weight: 800;
+}
+
+.cookie-copy {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.cookie-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.legal-page {
+  background: linear-gradient(180deg, #fff7ee 0%, #f7eadb 100%);
+}
+
+.legal-header {
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 247, 238, 0.92);
+}
+
+.legal-topbar,
+.legal-content {
+  width: min(920px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.legal-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 0;
+}
+
+.legal-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 16px;
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+
+.legal-content {
+  padding: 64px 0 84px;
+}
+
+.legal-kicker {
+  margin-bottom: 12px;
+  color: var(--teal);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.legal-content h1 {
+  max-width: 760px;
+  color: var(--wine);
+  font-size: 3.7rem;
+}
+
+.legal-updated {
+  margin-bottom: 36px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.legal-section {
+  padding: 28px 0;
+  border-top: 1px solid var(--line);
+}
+
+.legal-section h2 {
+  margin-bottom: 12px;
+  color: var(--wine);
+  font-size: 1.8rem;
+  line-height: 1.12;
+}
+
+.legal-section p,
+.legal-section li {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.legal-section ul {
+  margin: 0;
+  padding-left: 22px;
+}
+
 @media (max-width: 900px) {
   .hero {
     min-height: auto;
@@ -579,15 +734,21 @@ input[type="number"] {
     grid-template-columns: 1fr;
     width: min(100% - 28px, 720px);
     min-height: auto;
-    padding: 36px 0 54px;
+    padding: 18px 0 48px;
+    gap: 28px;
   }
 
   .hero-copy {
     max-width: none;
+    padding-top: 10px;
   }
 
   h1 {
-    font-size: clamp(3rem, 16vw, 5.5rem);
+    font-size: 4.1rem;
+  }
+
+  .hero-text {
+    max-width: 620px;
   }
 
   .section-heading,
@@ -620,6 +781,33 @@ input[type="number"] {
   .analysis-grid {
     grid-template-columns: 1fr;
   }
+
+  .section-heading h2 {
+    font-size: 3rem;
+  }
+
+  .footer-inner,
+  .legal-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .footer-links,
+  .legal-nav {
+    justify-content: flex-start;
+  }
+
+  .cookie-consent {
+    right: 14px;
+    bottom: 14px;
+    grid-template-columns: 1fr;
+    width: calc(100% - 28px);
+  }
+
+  .cookie-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 560px) {
@@ -628,19 +816,68 @@ input[type="number"] {
   }
 
   .hero-content {
-    padding-top: 28px;
+    padding-top: 12px;
+  }
+
+  h1 {
+    font-size: 3.2rem;
+    line-height: 0.98;
   }
 
   .hero-text {
     font-size: 1rem;
+    line-height: 1.58;
+  }
+
+  .hero-actions {
+    display: grid;
+  }
+
+  .primary-action,
+  .secondary-action,
+  .next-button,
+  .ghost-button,
+  .price-button {
+    width: 100%;
+    min-height: 48px;
   }
 
   .quiz-panel {
     padding: 16px;
   }
 
+  legend {
+    font-size: 1.34rem;
+  }
+
+  .quiz-step label {
+    min-height: 52px;
+  }
+
   .date-grid {
     grid-template-columns: 1fr;
   }
 
+  .report-band {
+    padding: 64px 14px 76px;
+  }
+
+  .section-heading h2,
+  .legal-content h1 {
+    font-size: 2.35rem;
+  }
+
+  .portrait-card,
+  .analysis-card,
+  .unlock-box {
+    padding: 16px;
+  }
+
+  .legal-content {
+    padding: 46px 0 66px;
+  }
+
+  .cookie-actions {
+    grid-template-columns: 1fr;
+  }
 }
