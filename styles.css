@@ -547,6 +547,16 @@ input[type="number"] {
   color: #fffaf5;
 }
 
+.deep-signal-list {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding-left: 20px;
+  color: rgba(255, 250, 245, 0.82);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
 .price-button {
   white-space: nowrap;
   background: var(--gold);

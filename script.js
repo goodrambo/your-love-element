@@ -19,6 +19,7 @@ const cookieReject = document.querySelector("#cookieReject");
 
 const moods = [
   "Your current chapter",
+  "Your intention",
   "Your magnetic pull",
   "Your element profile",
   "Your meeting field",
@@ -26,7 +27,6 @@ const moods = [
   "Your secure signal",
   "Your mirror",
   "Your romantic pace",
-  "Your intention",
   "Your birth signal",
 ];
 
@@ -83,6 +83,11 @@ function revealPreview() {
       `You are most likely to recognize someone thoughtful, witty, and emotionally generous. The connection begins softly, then becomes difficult to ignore because the conversation keeps opening new doors.`,
       "They ask unusually precise questions, notice your emotional shifts, and make honesty feel low-pressure.",
     ],
+    "Playful confidence": [
+      "The Bright Companion",
+      `Your reading points toward someone socially warm, expressive, and emotionally awake. Because you selected ${status.toLowerCase()}, the connection may begin lightly, then deepen when their consistency matches their charm.`,
+      "They make ordinary moments feel easier, include you naturally, and show interest without making you perform for it.",
+    ],
   };
 
   const [title, text, recognition] = archetypes[quality];
@@ -91,8 +96,8 @@ function revealPreview() {
   elementName.textContent = `${element} profile`;
   elementSignal.textContent = elementCopy[element];
   recognitionText.textContent = recognition;
-  meetingText.textContent = `Your strongest meeting signal is ${setting.toLowerCase()}, especially when the atmosphere feels ${pace.toLowerCase()} rather than performative.`;
-  releaseText.textContent = `${block} may be the pattern to watch. Your preview suggests you should not confuse activation with alignment.`;
+  meetingText.textContent = `Your strongest meeting signal is ${setting.toLowerCase()}, especially when the pace feels ${pace.toLowerCase()} rather than forced.`;
+  releaseText.textContent = `${block} may be the pattern to watch. Your preview suggests you should not confuse intensity with emotional alignment.`;
   adviceText.textContent = `Because you are seeking ${intent.toLowerCase()}, choose the person who makes ${secure.toLowerCase()} feel possible in ordinary life.`;
 
   document.querySelector("#preview").scrollIntoView({ behavior: "smooth", block: "start" });
