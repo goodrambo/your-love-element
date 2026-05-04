@@ -560,13 +560,13 @@ input[type="number"] {
 }
 
 .footer-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  width: min(1120px, calc(100% - 40px));
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  width: min(560px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 24px 0;
+  padding: 34px 0 38px;
+  text-align: center;
 }
 
 .footer-brand,
@@ -578,6 +578,7 @@ input[type="number"] {
 .footer-brand {
   gap: 10px;
   font-weight: 800;
+  color: var(--ink);
 }
 
 .footer-brand .brand-mark {
@@ -586,13 +587,39 @@ input[type="number"] {
   filter: none;
 }
 
+.footer-tagline,
+.footer-support,
+.footer-copyright {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.footer-tagline {
+  font-size: 0.95rem;
+}
+
 .footer-links {
   flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 16px;
-  color: var(--muted);
-  font-size: 0.92rem;
-  font-weight: 700;
+  justify-content: center;
+  gap: 12px 18px;
+  color: var(--teal);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.footer-support {
+  font-size: 0.95rem;
+}
+
+.footer-support a {
+  color: var(--teal);
+  font-weight: 800;
+}
+
+.footer-copyright {
+  color: rgba(111, 98, 91, 0.72);
+  font-size: 0.9rem;
 }
 
 .cookie-consent {
@@ -786,13 +813,11 @@ input[type="number"] {
     font-size: 3rem;
   }
 
-  .footer-inner,
   .legal-topbar {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .footer-links,
   .legal-nav {
     justify-content: flex-start;
   }
