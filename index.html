@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Love Element</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero" aria-labelledby="hero-title">
+        <img class="hero-image" src="assets/hero-soulmate-report.png" alt="A refined love reading report with portrait, astrology chart, and five element details" />
+        <div class="hero-scrim"></div>
+        <nav class="topbar" aria-label="Primary">
+          <a class="brand" href="#" aria-label="Your Love Element home">
+            <span class="brand-mark" aria-hidden="true">Y</span>
+            <span>Your Love Element</span>
+          </a>
+          <div class="nav-actions">
+            <a href="#reading">Reading</a>
+            <a href="#preview">Sample</a>
+            <button class="icon-button" type="button" aria-label="Open account">
+              <span aria-hidden="true">◎</span>
+            </button>
+          </div>
+        </nav>
+
+        <div class="hero-content">
+          <div class="hero-copy">
+            <p class="eyebrow">Eastern love reading</p>
+            <h1 id="hero-title">Discover your love element.</h1>
+            <p class="hero-text">
+              Answer a private reflective reading and receive a relationship profile blending romantic archetypes, birth-season signals, and Five Element-inspired insight.
+            </p>
+            <div class="hero-actions">
+              <a class="primary-action" href="#reading">Start free reading</a>
+              <a class="secondary-action" href="#preview">View sample report</a>
+            </div>
+            <div class="trust-row" aria-label="Customer trust indicators">
+              <span>Private by design</span>
+              <span>10-question reading</span>
+              <span>Personal preview</span>
+            </div>
+          </div>
+
+          <form class="quiz-panel" id="reading" aria-label="Love reading quiz">
+            <div class="quiz-topline">
+              <span>Question <strong id="stepNumber">1</strong> of <strong id="totalSteps">10</strong></span>
+              <span id="quizMood">Your current chapter</span>
+            </div>
+            <div class="progress" aria-hidden="true">
+              <span id="progressBar"></span>
+            </div>
+
+            <fieldset class="quiz-step is-active" data-step="0">
+              <legend>What best describes your love life right now?</legend>
+              <label><input type="radio" name="status" value="Open to something new" /> Open to something new</label>
+              <label><input type="radio" name="status" value="Healing from a past connection" /> Healing from a past connection</label>
+              <label><input type="radio" name="status" value="Dating, but unsure what fits" /> Dating, but unsure what fits</label>
+            </fieldset>
+
+            <fieldset class="quiz-step" data-step="1">
+              <legend>Which quality feels magnetic to you?</legend>
+              <label><input type="radio" name="quality" value="Emotional steadiness" /> Emotional steadiness</label>
+              <label><input type="radio" name="quality" value="Creative ambition" /> Creative ambition</label>
+              <label><input type="radio" name="quality" value="Warm intelligence" /> Warm intelligence</label>
+            </fieldset>
+
+            <fieldset class="quiz-step" data-step="2">
+              <legend>Which element feels closest to your relationship style?</legend>
+              <label><input type="radio" name="element" value="Wood" /> Wood: growth, patience, becoming</label>
+              <label><input type="radio" name="element" value="Fire" /> Fire: spark, courage, chemistry</label>
+              <label><input type="radio" name="element" value="Earth" /> Earth: loyalty, steadiness, care</label>
+              <label><input type="radio" name="element" value="Metal" /> Metal: clarity, standards, devotion</label>
+              <label><input type="radio" name="element" value="Water" /> Water: intuition, depth, tenderness</label>
+            </fieldset>
+
+            <fieldset class="quiz-step" data-step="3">
+              <legend>Where do you feel most likely to meet them?</legend>
+              <label><input type="radio" name="setting" value="Through work or a craft" /> Through work or a craft</label>
+              <label><input type="radio" name="setting" value="Travel or a new city" /> Travel or a new city</label>
+              <label><input type="radio" name="setting" value="A friend's wider circle" /> A friend's wider circle</label>
+            </fieldset>
+
+            <fieldset class="quiz-step" data-step="4">
+              <legend>What usually makes you pull away?</legend>
+              <label><input type="radio" name="block" value="Mixed signals" /> Mixed signals</label>
+              <label><input type="radio" name="block" value="Feeling rushed" /> Feeling rushed</label>
+              <label><input type="radio" name="block" value="Emotional distance" /> Emotional distance</label>
+            </fieldset>
+
+            <fieldset class="quiz-step" data-step="5">
+              <legend>What does a secure relationship feel like?</legend>
+              <label><input type="radio" name="secure" value="A quiet home base" /> A quiet home base</label>
+              <label><input type="radio" name="secure" value="A shared adventure" /> A shared adventure</label>
+              <label><input type="radio" name="secure" value="A clear future plan" /> A clear future plan</label>
+            </fieldset>
+
+            <fieldset class="quiz-step" data-step="6">
+              <legend>Which compliment would feel most true?</legend>
+              <label><input type="radio" name="mirror" value="You make people feel safe" /> You make people feel safe</label>
+              <label><input type="radio" name="mirror" value="You bring people alive" /> You bring people alive</label>
+              <label><input type="radio" name="mirror" value="You see what others miss" /> You see what others miss</label>
+            </fieldset>
+
+            <fieldset class="quiz-step" data-step="7">
+              <legend>Pick the pace your heart trusts most.</legend>
+              <label><input type="radio" name="pace" value="Slow and certain" /> Slow and certain</label>
+              <label><input type="radio" name="pace" value="Fast, but honest" /> Fast, but honest</label>
+              <label><input type="radio" name="pace" value="Playful first, deep later" /> Playful first, deep later</label>
+            </fieldset>
+
+            <fieldset class="quiz-step" data-step="8">
+              <legend>What are you hoping to understand?</legend>
+              <label><input type="radio" name="intent" value="Who I naturally attract" /> Who I naturally attract</label>
+              <label><input type="radio" name="intent" value="Why old patterns repeat" /> Why old patterns repeat</label>
+              <label><input type="radio" name="intent" value="When love may feel easier" /> When love may feel easier</label>
+            </fieldset>
+
+            <fieldset class="quiz-step" data-step="9">
+              <legend>When is your birthday?</legend>
+              <div class="date-grid">
+                <label>
+                  <span>Month</span>
+                  <select name="month" aria-label="Birth month">
+                    <option>January</option>
+                    <option>February</option>
+                    <option>March</option>
+                    <option>April</option>
+                    <option>May</option>
+                    <option>June</option>
+                    <option>July</option>
+                    <option>August</option>
+                    <option>September</option>
+                    <option>October</option>
+                    <option>November</option>
+                    <option>December</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Day</span>
+                  <input type="number" name="day" min="1" max="31" value="14" />
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="quiz-controls">
+              <button class="ghost-button" id="backButton" type="button" disabled>Back</button>
+              <button class="next-button" id="nextButton" type="button">Continue</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="report-band" id="preview">
+        <div class="section-heading">
+          <p class="eyebrow">Free preview report</p>
+          <h2>A personal preview first, then the complete relationship report.</h2>
+        </div>
+
+        <div class="result-layout">
+          <article class="portrait-card">
+            <div class="portrait-frame">
+              <img src="assets/hero-soulmate-report.png" alt="A sample future partner portrait" />
+            </div>
+            <div>
+              <p class="card-kicker">Future partner portrait</p>
+              <h3 id="archetypeTitle">The Grounded Visionary</h3>
+              <p id="archetypeText">
+                Your strongest romantic pull is toward someone calm, observant, and quietly ambitious. They are likely to feel familiar before they feel exciting.
+              </p>
+              <div class="element-seal">
+                <span id="elementName">Earth profile</span>
+                <small id="elementSignal">Steady love, loyal timing, practical devotion.</small>
+              </div>
+            </div>
+          </article>
+
+          <div class="insight-stack">
+            <article class="analysis-card">
+              <p class="card-kicker">Mini analysis</p>
+              <div class="analysis-grid">
+                <div>
+                  <span>Recognition sign</span>
+                  <p id="recognitionText">They listen before impressing you and make your nervous system feel less noisy.</p>
+                </div>
+                <div>
+                  <span>Meeting signal</span>
+                  <p id="meetingText">A project, dinner, or low-pressure circle where conversation gets unexpectedly specific.</p>
+                </div>
+                <div>
+                  <span>Pattern to release</span>
+                  <p id="releaseText">Do not confuse uncertainty with chemistry. Your next chapter asks for calm consistency.</p>
+                </div>
+                <div>
+                  <span>Next step</span>
+                  <p id="adviceText">Move slowly enough that your intuition can keep up with attraction.</p>
+                </div>
+              </div>
+            </article>
+
+            <article class="unlock-box">
+              <div>
+                <p class="card-kicker">Full reading</p>
+                <h3>Unlock the 18-page portrait, compatibility map, timing window, and 30-day love guide.</h3>
+              </div>
+              <button class="price-button" type="button">$9.99 unlock</button>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
