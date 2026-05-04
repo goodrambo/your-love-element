@@ -400,32 +400,50 @@ input[type="number"] {
 }
 
 .section-heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 28px;
-  margin-bottom: 34px;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  margin-bottom: 40px;
+  text-align: center;
 }
 
 .section-heading h2 {
-  max-width: 680px;
+  max-width: 760px;
   margin: 0;
   color: var(--wine);
-  font-size: 4.1rem;
+  font-size: 4.35rem;
   line-height: 1;
+}
+
+.section-heading .eyebrow {
+  margin-bottom: 0;
+}
+
+.section-intro {
+  max-width: 620px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.02rem;
+  line-height: 1.7;
 }
 
 .result-layout {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: stretch;
+  grid-template-columns: minmax(0, 0.96fr) minmax(0, 1.04fr);
+  align-items: start;
+  gap: 18px;
+}
+
+.result-column {
+  display: grid;
   gap: 18px;
 }
 
 .portrait-card,
 .analysis-card,
 .unlock-box,
-.preview-note {
+.preview-note,
+.refinement-card {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fffaf5;
@@ -433,8 +451,9 @@ input[type="number"] {
 
 .portrait-card {
   display: grid;
-  grid-template-columns: minmax(180px, 0.55fr) minmax(0, 1fr);
-  gap: 22px;
+  grid-template-columns: minmax(150px, 0.48fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 18px;
   padding: 20px;
   box-shadow: 0 22px 60px rgba(42, 30, 24, 0.13);
 }
@@ -472,11 +491,6 @@ input[type="number"] {
   white-space: pre-line;
   font-size: 0.98rem;
   line-height: 1.68;
-}
-
-.insight-stack {
-  display: grid;
-  gap: 18px;
 }
 
 .element-seal {
@@ -542,7 +556,7 @@ input[type="number"] {
 .preview-note {
   display: grid;
   align-content: center;
-  padding: 16px 18px;
+  padding: 16px;
   background:
     linear-gradient(135deg, rgba(216, 167, 79, 0.12), rgba(79, 135, 123, 0.08)),
     #fffaf5;
@@ -551,7 +565,7 @@ input[type="number"] {
 
 .preview-note-list {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin: 0;
   padding: 0;
@@ -561,7 +575,7 @@ input[type="number"] {
 .preview-note-list li {
   display: grid;
   gap: 2px;
-  min-height: 54px;
+  min-height: 48px;
   padding: 10px;
   border: 1px solid rgba(34, 27, 24, 0.1);
   border-radius: 8px;
@@ -577,6 +591,30 @@ input[type="number"] {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.refinement-card {
+  min-height: 204px;
+  padding: 22px;
+  background:
+    linear-gradient(135deg, rgba(79, 135, 123, 0.1), rgba(216, 167, 79, 0.1)),
+    #fffaf5;
+  box-shadow: 0 18px 45px rgba(42, 30, 24, 0.08);
+}
+
+.refinement-card h3 {
+  max-width: 460px;
+  margin-bottom: 10px;
+  color: var(--wine);
+  font-size: 1.35rem;
+  line-height: 1.18;
+}
+
+.refinement-card p {
+  max-width: 520px;
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.65;
 }
 
 .unlock-box {
@@ -858,7 +896,7 @@ input[type="number"] {
     margin-bottom: 18px;
   }
 
-  .insight-stack {
+  .result-column + .result-column {
     margin-top: 18px;
   }
 
