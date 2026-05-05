@@ -2,6 +2,33 @@
 
 Last updated: 2026-05-05
 
+## 2026-05-05 Automation Progress
+
+- Supabase MCP server `supabase-your-love-element` is available in Codex.
+- Confirmed target Supabase project ref: `nmwhaiimnuywnjlvobde`.
+- Applied Supabase migrations to the target project only:
+  - `create_paid_report_schema`
+  - `harden_paid_report_functions`
+  - `revoke_public_rls_auto_enable`
+- Created product tables:
+  - `readings`
+  - `webhook_events`
+  - `report_generation_jobs`
+- Created status enums:
+  - `reading_status`
+  - `report_job_status`
+- RLS is enabled on all product tables. Only `service_role` has direct table policies.
+- Supabase security advisor currently reports no lints.
+- Added Cloudflare Worker backend scaffold in `worker/`:
+  - `POST /api/readings`
+  - `POST /api/create-checkout`
+  - `POST /api/webhooks/lemon-squeezy`
+  - `POST /api/readings/:reading_id/paid-signals`
+  - `POST /api/jobs/process`
+- Added progressive frontend wiring in `script.js`.
+  - If `window.YLE_API_BASE_URL` is unset, the static site keeps working and stores answers locally as a fallback.
+  - Once the Worker is deployed, set `window.YLE_API_BASE_URL` to the Worker origin so the frontend writes to the backend.
+
 ## Current Live Site
 
 - Production domain: https://yourloveelement.com/
@@ -23,6 +50,165 @@ The core funnel:
 4. After Lemon Squeezy checkout, user returns to `/full-report/`.
 5. User completes 8 deeper relationship signals.
 6. Future implementation generates/delivers the full report.
+
+## Confirmed Paid Product Flow
+
+The recommended product flow is:
+
+1. User completes the free 10-question reading on `/`.
+2. Site reveals a free preview report and explains what the full report adds.
+3. User clicks `Unlock full report` and pays `$9.99` through Lemon Squeezy.
+4. Lemon Squeezy sends the user a confirmation email with the post-purchase link.
+5. User returns to `https://yourloveelement.com/full-report/`.
+6. User completes the 8 deeper paid signals.
+7. Site collects:
+   - Lemon Squeezy order identifier or checkout identifier
+   - purchaser email
+   - free 10-question answers, if available from browser storage
+   - paid 8-question answers
+   - submission timestamp
+8. Backend or form service verifies that the order exists and is paid.
+9. Report is generated from the combined 18 signals.
+10. User receives the full report by email.
+
+Recommended MVP delivery:
+
+- Do not show the full paid report instantly on the static `/full-report/` page.
+- After the paid 8-question form is submitted, show a confirmation state:
+  - `Your answers were received. Your full report will be delivered to your email.`
+- Deliver the first version manually or semi-manually by email within a clear window, such as `within 24 hours`.
+- Attach or link to a polished report in one of these formats:
+  - PDF attachment
+  - private hosted HTML report link
+  - email body with the full report content
+
+Recommended long-term delivery:
+
+- Replace manual generation with an automated backend flow.
+- Use Lemon Squeezy webhooks to store paid orders.
+- Use a report-generation service to create the report immediately after paid-signal submission.
+- Send the report automatically through transactional email.
+- Optionally show an on-page `Your report is ready` view after generation.
+
+Important product decision:
+
+- Email should be the primary delivery channel because it creates a durable receipt, reduces risk if the user closes the browser, and works well with Lemon Squeezy's checkout email flow.
+- The on-page confirmation should be treated as a backup/status experience, not the only place where the paid result appears.
+- The paid report should only be generated after both conditions are true:
+  - payment is verified
+  - the 8 deeper signals are submitted
+
+## Full Automation Architecture
+
+The current GitHub Pages site is static, so it cannot securely store answers, verify payments, call AI generation, or send email by itself. Full automation requires a small backend plus a database.
+
+Recommended stack:
+
+- Frontend: current GitHub Pages static site
+- Backend/API: Cloudflare Workers
+- Database: Supabase Postgres
+- Payment: Lemon Squeezy checkout + webhooks
+- Report generation: OpenAI API or another LLM API
+- Transactional email: Resend, Postmark, SendGrid, or similar
+
+Current infrastructure context:
+
+- Supabase account already exists and is used for other projects.
+- Cloudflare account already exists, but Cloudflare Workers has not been used yet.
+- Recommended next backend choice is Cloudflare Workers because the domain/DNS is already in Cloudflare and the API surface for this product can stay small.
+- A new Supabase project has been created for this product.
+- Project ref: `nmwhaiimnuywnjlvobde`
+- Codex MCP config has been added globally:
+  - name: `supabase-your-love-element`
+  - URL: `https://mcp.supabase.com/mcp?project_ref=nmwhaiimnuywnjlvobde`
+- Current session could not see the newly added MCP server without restarting/reloading Codex, so the next session should verify that the Supabase MCP tools are available before making database changes.
+- Do not use or modify other Supabase projects.
+
+Recommended automated flow:
+
+1. Free quiz is completed on `/`.
+2. Frontend sends the 10 free answers to backend:
+   - endpoint: `POST /api/readings`
+   - backend creates a `reading_id`
+   - database stores `reading_id`, free answers, and `status = previewed`
+3. User clicks `Unlock full report`.
+4. Frontend calls backend:
+   - endpoint: `POST /api/create-checkout`
+   - payload includes `reading_id`
+5. Backend creates a Lemon Squeezy checkout link with:
+   - `checkout_data.custom.reading_id`
+   - optional `checkout_data.email` if collected before checkout
+   - redirect URL: `/full-report/?reading_id=...`
+6. User completes Lemon Squeezy payment.
+7. Lemon Squeezy sends `order_created` webhook to backend.
+8. Backend verifies webhook signature, reads `meta.custom_data.reading_id`, purchaser email, order id, and payment status.
+9. Backend updates the reading:
+   - `status = paid`
+   - `order_id = ...`
+   - `customer_email = ...`
+10. User lands on `/full-report/?reading_id=...`.
+11. User completes the 8 paid signals.
+12. Frontend sends paid answers to backend:
+   - endpoint: `POST /api/readings/:reading_id/paid-signals`
+13. Backend checks that:
+   - the reading exists
+   - payment is verified
+   - paid answers are present
+14. Backend generates the report from the combined 18 answers.
+15. Backend saves generated report content and `status = report_generated`.
+16. Backend sends the report to the purchaser email through transactional email.
+17. Backend updates `status = delivered` and stores the email provider message id.
+
+Recommended state machine:
+
+- `previewed` - free answers saved
+- `checkout_created` - Lemon Squeezy checkout link created
+- `paid` - Lemon Squeezy webhook confirms payment
+- `paid_answers_submitted` - 8 deeper signals submitted
+- `generating` - report generation is running
+- `report_generated` - report saved
+- `delivered` - email sent
+- `failed` - generation or delivery failed and needs retry
+
+Important implementation detail:
+
+- The backend should trigger report generation whenever both required inputs are available:
+  - verified payment
+  - submitted paid answers
+- This makes the flow resilient if the webhook arrives before the user submits paid answers, or if the user submits paid answers before the webhook is processed.
+
+Recommended database tables:
+
+- `readings`
+  - `id`
+  - `free_answers_json`
+  - `paid_answers_json`
+  - `customer_email`
+  - `lemon_squeezy_order_id`
+  - `status`
+  - `report_html`
+  - `report_text`
+  - `email_message_id`
+  - `created_at`
+  - `updated_at`
+- `webhook_events`
+  - `id`
+  - `provider`
+  - `event_name`
+  - `external_event_id`
+  - `payload_json`
+  - `processed_at`
+
+Answer collection decision:
+
+- Do not rely only on browser localStorage for paid product delivery.
+- Browser storage is useful as a fallback for preserving answers during the same session, but the authoritative copy must live in the backend database.
+- The `reading_id` is the bridge between:
+  - free quiz answers
+  - Lemon Squeezy payment
+  - paid 8-question answers
+  - generated report
+  - email delivery
 
 ## Pages and Assets
 

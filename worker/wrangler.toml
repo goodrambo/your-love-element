@@ -1,0 +1,9 @@
+name = "your-love-element-api"
+main = "src/index.js"
+compatibility_date = "2026-05-05"
+
+[vars]
+SITE_URL = "https://yourloveelement.com"
+SUPPORT_EMAIL = "support@yourloveelement.com"
+FROM_EMAIL = "Your Love Element <support@yourloveelement.com>"
+OPENAI_MODEL = "gpt-4.1-mini"

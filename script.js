@@ -24,6 +24,13 @@ const paidTotalSteps = document.querySelector("#paidTotalSteps");
 const paidProgressBar = document.querySelector("#paidProgressBar");
 const paidQuizMood = document.querySelector("#paidQuizMood");
 const paidComplete = document.querySelector("#paidComplete");
+const unlockReportButton = document.querySelector("#unlockReportButton");
+const readingSaveStatus = document.querySelector("#readingSaveStatus");
+const paidSaveStatus = document.querySelector("#paidSaveStatus");
+
+const apiBaseUrl = window.YLE_API_BASE_URL || "";
+const readingStorageKey = "yle-reading-id";
+const freeAnswersStorageKey = "yle-free-answers";
 
 const moods = [
   "Your current chapter",
@@ -76,6 +83,145 @@ const qualityProfiles = {
 let currentStep = 0;
 let paidCurrentStep = 0;
 
+function getStorageItem(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function setStorageItem(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Browser storage is a convenience only; the backend remains authoritative.
+  }
+}
+
+function setStatus(element, message, tone = "neutral") {
+  if (!element) {
+    return;
+  }
+
+  element.textContent = message;
+  element.dataset.tone = tone;
+  element.hidden = false;
+}
+
+function collectAnswers(form, names) {
+  return names.reduce((answers, name) => {
+    const field = form?.elements?.[name];
+
+    if (!field) {
+      return answers;
+    }
+
+    if (field instanceof RadioNodeList) {
+      answers[name] = field.value;
+      return answers;
+    }
+
+    answers[name] = field.value;
+    return answers;
+  }, {});
+}
+
+function getFreeAnswers() {
+  const form = document.querySelector("#reading");
+  const answers = collectAnswers(form, ["status", "intent", "quality", "element", "setting", "block", "secure", "mirror", "pace"]);
+  return {
+    status: answers.status || "Open to something new",
+    intent: answers.intent || "Who I naturally attract",
+    quality: answers.quality || "Warm intelligence",
+    element: answers.element || "Earth",
+    setting: answers.setting || "A friend's wider circle",
+    block: answers.block || "Mixed signals",
+    secure: answers.secure || "A quiet home base",
+    mirror: answers.mirror || "You make people feel safe",
+    pace: answers.pace || "Slow and certain",
+    birthdate: {
+      month: form?.elements?.month?.value || "January",
+      day: form?.elements?.day?.value || "14",
+    },
+  };
+}
+
+function getPaidAnswers() {
+  return collectAnswers(document.querySelector("#paidSignals"), [
+    "activation",
+    "pastPattern",
+    "reassurance",
+    "conflict",
+    "partnerEnergy",
+    "boundary",
+    "trustSignal",
+    "guidance",
+  ]);
+}
+
+function getReadingIdFromUrl() {
+  return new URLSearchParams(window.location.search).get("reading_id");
+}
+
+async function apiPost(path, payload) {
+  if (!apiBaseUrl) {
+    throw new Error("API is not configured yet");
+  }
+
+  const response = await fetch(`${apiBaseUrl}${path}`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || "Request failed");
+  }
+  return data;
+}
+
+async function saveFreeAnswers() {
+  const answers = getFreeAnswers();
+  setStorageItem(freeAnswersStorageKey, JSON.stringify(answers));
+
+  if (!apiBaseUrl) {
+    setStatus(readingSaveStatus, "Preview saved in this browser. Checkout automation will activate after payment setup.", "neutral");
+    return null;
+  }
+
+  setStatus(readingSaveStatus, "Saving your preview...", "neutral");
+  const result = await apiPost("/api/readings", { free_answers: answers });
+  setStorageItem(readingStorageKey, result.reading_id);
+  setStatus(readingSaveStatus, "Preview saved. Your full report can now connect to this reading.", "success");
+  return result.reading_id;
+}
+
+async function startCheckout(event) {
+  if (!apiBaseUrl) {
+    return;
+  }
+
+  event.preventDefault();
+  const existingReadingId = getStorageItem(readingStorageKey);
+  const readingId = existingReadingId || (await saveFreeAnswers());
+  if (!readingId) {
+    setStatus(readingSaveStatus, "Please reveal your preview before checkout.", "error");
+    return;
+  }
+
+  setStatus(readingSaveStatus, "Creating secure checkout...", "neutral");
+  try {
+    const result = await apiPost("/api/create-checkout", { reading_id: readingId });
+    window.location.href = result.checkout_url;
+  } catch (error) {
+    setStatus(readingSaveStatus, "Checkout is not available yet. Please contact support.", "error");
+  }
+}
+
 function updateStep() {
   steps.forEach((step, index) => {
     step.classList.toggle("is-active", index === currentStep);
@@ -100,7 +246,7 @@ function buildPortraitText({ status, intent, quality, setting, element, block, s
   return `Because you selected ${status.toLowerCase()}, your future partner portrait begins with someone ${profile.partner}. ${profile.pull} You are not simply looking for a spark; you are looking for a person whose rhythm helps you understand ${intent.toLowerCase()} without making love feel like a test.\n\nYour ${element} profile adds an important layer: ${elementLine} This suggests that the person who fits you best will not only match your chemistry, but also support the kind of emotional climate where ${secure.toLowerCase()} can become ordinary. The meeting signal points toward ${setting.toLowerCase()}, especially when the pace feels ${pace.toLowerCase()} rather than forced.\n\nThe pattern to watch is ${block.toLowerCase()}. If that old signal appears, pause before deciding whether it is intuition or protection. Your preview suggests your next meaningful connection should feel clear enough to soften your guard, but grounded enough that you do not have to chase certainty.`;
 }
 
-function revealPreview() {
+async function revealPreview() {
   const quality = selectedValue("quality") || "Warm intelligence";
   const setting = selectedValue("setting") || "A friend's wider circle";
   const status = selectedValue("status") || "Open to something new";
@@ -121,6 +267,12 @@ function revealPreview() {
   adviceText.textContent = `Because you are seeking ${intent.toLowerCase()}, choose the person who makes ${secure.toLowerCase()} feel possible in ordinary life.`;
 
   document.querySelector("#preview").scrollIntoView({ behavior: "smooth", block: "start" });
+
+  try {
+    await saveFreeAnswers();
+  } catch {
+    setStatus(readingSaveStatus, "Your preview is visible, but online saving is temporarily unavailable.", "error");
+  }
 }
 
 function initQuiz() {
@@ -172,10 +324,26 @@ function updatePaidStep() {
   paidNextButton.textContent = paidCurrentStep === paidSteps.length - 1 ? "Finish signals" : "Continue";
 }
 
-function completePaidSignals() {
+async function completePaidSignals() {
   paidSteps.forEach((step) => {
     step.classList.remove("is-active");
   });
+  paidNextButton.disabled = true;
+  setStatus(paidSaveStatus, "Saving your deeper signals...", "neutral");
+
+  const readingId = getReadingIdFromUrl() || getStorageItem(readingStorageKey);
+  if (apiBaseUrl && readingId) {
+    try {
+      await apiPost(`/api/readings/${readingId}/paid-signals`, { paid_answers: getPaidAnswers() });
+      setStatus(paidSaveStatus, "Your deeper signals were saved.", "success");
+    } catch {
+      setStatus(paidSaveStatus, "Your answers are saved in this browser, but online delivery needs support.", "error");
+    }
+  } else {
+    setStorageItem("yle-paid-answers", JSON.stringify(getPaidAnswers()));
+    setStatus(paidSaveStatus, "Your answers are saved in this browser. Contact support if you already purchased.", "neutral");
+  }
+
   paidNextButton.hidden = true;
   paidBackButton.hidden = true;
   paidComplete.hidden = false;
@@ -243,3 +411,7 @@ function initCookieConsent() {
 initQuiz();
 initPaidQuiz();
 initCookieConsent();
+
+if (unlockReportButton) {
+  unlockReportButton.addEventListener("click", startCheckout);
+}
