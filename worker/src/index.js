@@ -63,6 +63,10 @@ export default {
         return json({ ok: true });
       }
 
+      if (request.method === "GET" && url.pathname === "/api/health/supabase") {
+        return json(await checkSupabaseHealth(env));
+      }
+
       return json({ error: "Not found" }, 404);
     } catch (error) {
       console.error(error);
@@ -90,6 +94,38 @@ async function createReading(request, env) {
     reading_id: rows[0].id,
     status: rows[0].status,
   };
+}
+
+async function checkSupabaseHealth(env) {
+  const configured = {
+    supabase_url: Boolean(env.SUPABASE_URL),
+    supabase_service_role_key: Boolean(env.SUPABASE_SERVICE_ROLE_KEY),
+  };
+
+  if (!configured.supabase_url || !configured.supabase_service_role_key) {
+    return {
+      ok: false,
+      configured,
+      error: "Supabase environment variables are missing",
+    };
+  }
+
+  try {
+    const rows = await supabase(env, "/rest/v1/readings?select=id&limit=1");
+    return {
+      ok: true,
+      configured,
+      reachable: true,
+      sample_count: Array.isArray(rows) ? rows.length : 0,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      configured,
+      reachable: false,
+      error: error.message,
+    };
+  }
 }
 
 async function createCheckout(request, env) {
