@@ -16,6 +16,14 @@ const adviceText = document.querySelector("#adviceText");
 const cookieConsent = document.querySelector("#cookieConsent");
 const cookieAccept = document.querySelector("#cookieAccept");
 const cookieReject = document.querySelector("#cookieReject");
+const paidSteps = Array.from(document.querySelectorAll(".paid-step"));
+const paidNextButton = document.querySelector("#paidNextButton");
+const paidBackButton = document.querySelector("#paidBackButton");
+const paidStepNumber = document.querySelector("#paidStepNumber");
+const paidTotalSteps = document.querySelector("#paidTotalSteps");
+const paidProgressBar = document.querySelector("#paidProgressBar");
+const paidQuizMood = document.querySelector("#paidQuizMood");
+const paidComplete = document.querySelector("#paidComplete");
 
 const moods = [
   "Your current chapter",
@@ -66,6 +74,7 @@ const qualityProfiles = {
 };
 
 let currentStep = 0;
+let paidCurrentStep = 0;
 
 function updateStep() {
   steps.forEach((step, index) => {
@@ -139,6 +148,66 @@ function initQuiz() {
   updateStep();
 }
 
+const paidMoods = [
+  "Attachment pattern",
+  "Past pattern",
+  "Reassurance need",
+  "Conflict style",
+  "Partner energy",
+  "Boundaries",
+  "Trust signal",
+  "30-day guidance",
+];
+
+function updatePaidStep() {
+  paidSteps.forEach((step, index) => {
+    step.classList.toggle("is-active", index === paidCurrentStep);
+  });
+
+  paidStepNumber.textContent = String(paidCurrentStep + 1);
+  paidTotalSteps.textContent = String(paidSteps.length);
+  paidProgressBar.style.width = `${((paidCurrentStep + 1) / paidSteps.length) * 100}%`;
+  paidQuizMood.textContent = paidMoods[paidCurrentStep];
+  paidBackButton.disabled = paidCurrentStep === 0;
+  paidNextButton.textContent = paidCurrentStep === paidSteps.length - 1 ? "Finish signals" : "Continue";
+}
+
+function completePaidSignals() {
+  paidSteps.forEach((step) => {
+    step.classList.remove("is-active");
+  });
+  paidNextButton.hidden = true;
+  paidBackButton.hidden = true;
+  paidComplete.hidden = false;
+  paidProgressBar.style.width = "100%";
+  paidQuizMood.textContent = "Ready for report";
+}
+
+function initPaidQuiz() {
+  if (!paidSteps.length || !paidNextButton || !paidBackButton) {
+    return;
+  }
+
+  paidNextButton.addEventListener("click", () => {
+    if (paidCurrentStep < paidSteps.length - 1) {
+      paidCurrentStep += 1;
+      updatePaidStep();
+      return;
+    }
+
+    completePaidSignals();
+  });
+
+  paidBackButton.addEventListener("click", () => {
+    if (paidCurrentStep > 0) {
+      paidCurrentStep -= 1;
+      updatePaidStep();
+    }
+  });
+
+  updatePaidStep();
+}
+
 function initCookieConsent() {
   if (!cookieConsent || !cookieAccept || !cookieReject) {
     return;
@@ -172,4 +241,5 @@ function initCookieConsent() {
 }
 
 initQuiz();
+initPaidQuiz();
 initCookieConsent();

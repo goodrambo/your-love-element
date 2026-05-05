@@ -848,6 +848,92 @@ input[type="number"] {
   padding-left: 22px;
 }
 
+.full-report-page {
+  width: min(920px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 64px 0 92px;
+}
+
+.full-report-intro {
+  max-width: 760px;
+  margin: 0 auto 28px;
+  text-align: center;
+}
+
+.full-report-intro h1 {
+  color: var(--wine);
+  font-size: 3.7rem;
+}
+
+.full-report-intro p {
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.paid-quiz-panel {
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffaf5;
+  box-shadow: 0 24px 70px rgba(42, 30, 24, 0.14);
+}
+
+.paid-step {
+  display: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.paid-step.is-active {
+  display: block;
+}
+
+.paid-step label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 50px;
+  margin: 10px 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffdf8;
+  cursor: pointer;
+  transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.paid-step label:hover {
+  border-color: rgba(79, 135, 123, 0.45);
+  box-shadow: 0 10px 24px rgba(34, 27, 24, 0.08);
+  transform: translateY(-1px);
+}
+
+.paid-step label:has(input:checked) {
+  border-color: rgba(184, 77, 99, 0.5);
+  background: linear-gradient(135deg, rgba(184, 77, 99, 0.1), rgba(79, 135, 123, 0.08)), #fffaf5;
+}
+
+.paid-complete {
+  padding: 24px;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(79, 135, 123, 0.12), rgba(216, 167, 79, 0.12)),
+    #fffaf5;
+  text-align: center;
+}
+
+.paid-complete h2 {
+  color: var(--wine);
+  font-size: 2.2rem;
+}
+
+.paid-complete p {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
 @media (max-width: 900px) {
   .hero {
     min-height: auto;
@@ -1017,6 +1103,19 @@ input[type="number"] {
 
   .legal-content {
     padding: 46px 0 66px;
+  }
+
+  .full-report-page {
+    width: min(100% - 28px, 720px);
+    padding: 46px 0 70px;
+  }
+
+  .full-report-intro h1 {
+    font-size: 2.45rem;
+  }
+
+  .paid-quiz-panel {
+    padding: 16px;
   }
 
   .cookie-actions {
