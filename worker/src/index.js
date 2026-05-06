@@ -487,7 +487,8 @@ async function generateReport(env, reading) {
     "Do not make medical, legal, or deterministic claims.",
     "Return JSON with keys: title, emotional_summary, sections, text.",
     "emotional_summary should be a warm 2-3 sentence note that makes the reader feel seen and reassured.",
-    "sections should include partner_portrait, element_profile, compatibility_map, pattern_to_release, timing_window, thirty_day_guidance.",
+    "sections must be an object with exactly these keys: partner_portrait, element_profile, compatibility_map, pattern_to_release, timing_window, thirty_day_guidance.",
+    "Each sections value must be a plain string, not an object or array.",
     "Each section should feel specific to the answers, not generic. Use elegant, emotionally generous prose.",
     "",
     `Free answers: ${JSON.stringify(reading.free_answers_json)}`,
@@ -845,7 +846,7 @@ function normalizeReportSections(sections = {}, fallbackText = "") {
 
       return {
         title,
-        body: String(value),
+        body: reportValueToText(value),
       };
     })
     .filter(Boolean);
@@ -861,6 +862,46 @@ function normalizeReportSections(sections = {}, fallbackText = "") {
       body: paragraph.trim(),
     }))
     .filter((section) => section.body);
+}
+
+function reportValueToText(value) {
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(reportValueToText).filter(Boolean).join("\n\n");
+  }
+
+  if (typeof value === "object") {
+    const preferred = value.body || value.content || value.text || value.summary || value.description;
+    if (preferred) {
+      return reportValueToText(preferred);
+    }
+
+    return Object.entries(value)
+      .map(([key, nestedValue]) => {
+        const text = reportValueToText(nestedValue);
+        if (!text) {
+          return "";
+        }
+        return `${titleCase(key)}: ${text}`;
+      })
+      .filter(Boolean)
+      .join("\n\n");
+  }
+
+  return String(value);
+}
+
+function titleCase(value) {
+  return String(value)
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function renderEmailSection(section) {
