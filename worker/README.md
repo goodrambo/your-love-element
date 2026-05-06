@@ -34,6 +34,23 @@ Plaintext runtime variables are managed in `wrangler.toml` so GitHub deployments
 
 The GitHub Pages frontend should set `window.YLE_API_BASE_URL` to the deployed Worker origin once the Worker route is live.
 
+## Confirmed Deployment Flow
+
+The confirmed deployment path for this repo is commit and push to `main`. Cloudflare is connected to GitHub and deploys the Worker from `worker/wrangler.toml`.
+
+Use this flow after changing `worker/src/index.js` or `worker/wrangler.toml`:
+
+1. Run `node --check worker/src/index.js`.
+2. Commit the Worker changes.
+3. Push to `origin main`.
+4. Wait for the Cloudflare/GitHub deploy integration to publish the Worker.
+5. Verify `https://your-love-element-api.goodrambo2013.workers.dev/api/health`.
+6. For email template or prompt changes, run a fresh report E2E because old delivered emails cannot prove the new Worker code is live.
+
+Do not rely on local `wrangler deploy` from Codex unless `wrangler`/`npx` is actually available and authenticated. In this workspace, local `npx wrangler deploy` was not available; the working path was commit + push.
+
+GitHub Pages deploys the static site and assets. Worker code changes are validated through the Worker URL, not by the Pages build alone.
+
 ## Health Checks
 
 - `GET /api/health` checks that the Worker is deployed.

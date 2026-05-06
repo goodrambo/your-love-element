@@ -4,7 +4,7 @@ Last updated: 2026-05-06
 
 ## 2026-05-06 Production E2E Check
 
-- Confirmed GitHub `main` is at latest commit `a603badc28d10a381ccfd96b4d744ce4d0a3d783`.
+- Confirmed GitHub `main` is now at latest commit `1cd9e26a6bddc0bcbeed99faffd20aaf9cbf0015`.
 - Confirmed GitHub Pages is built from `main` root and the latest Pages deployment succeeded on 2026-05-06 13:05 UTC.
 - Confirmed production site and element banner assets are live:
   - `https://yourloveelement.com/`
@@ -29,6 +29,28 @@ Last updated: 2026-05-06
 - Local Worker email revision after reviewing the delivered email:
   - Banner image now renders at its natural 16:9 ratio instead of using `object-fit: cover`, so the top image should no longer be cropped.
   - `30-Day Guidance` prompt now asks each checkpoint for a specific goal, concrete practice, and observable progress signal, with 35-60 words per node.
+- The email revision was committed and pushed:
+  - commit: `1cd9e26 Improve report email banner and guidance`
+  - GitHub Pages build for `1cd9e26` completed successfully on 2026-05-06 14:41 UTC.
+
+## Confirmed Deployment Workflow
+
+- This project has an existing Cloudflare/GitHub deploy integration for the Worker.
+- For changes under `worker/src/index.js` or `worker/wrangler.toml`, the confirmed workflow is:
+  1. Run `node --check worker/src/index.js`.
+  2. Commit the relevant files.
+  3. Push to `origin main`.
+  4. Let the existing Cloudflare GitHub deploy run the Worker deploy, equivalent to `npx wrangler deploy --config worker/wrangler.toml` on Cloudflare's side.
+  5. Verify `https://your-love-element-api.goodrambo2013.workers.dev/api/health`.
+- Do not assume local `wrangler` or `npx` is available in Codex. In this workspace it was not available.
+- Do not treat GitHub Pages deployment alone as proof that Worker code changed. GitHub Pages confirms static site/assets only; Worker behavior should be verified through Worker endpoints or a fresh E2E test.
+- Plaintext Worker vars belong in `worker/wrangler.toml`; otherwise Cloudflare/GitHub deploy may overwrite Dashboard-only plaintext edits.
+- Worker secrets remain only in Cloudflare Dashboard/runtime secrets and should not be committed:
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `RESEND_API_KEY`
+  - `OPENAI_API_KEY`
+  - `JOB_RUNNER_SECRET`
+  - future Lemon Squeezy secrets
 
 ## 2026-05-05 Automation Progress
 
