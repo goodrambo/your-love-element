@@ -67,6 +67,10 @@ export default {
         return json(await checkSupabaseHealth(env));
       }
 
+      if (request.method === "GET" && url.pathname === "/api/health/email") {
+        return json(await checkEmailHealth(env));
+      }
+
       return json({ error: "Not found" }, 404);
     } catch (error) {
       console.error(error);
@@ -117,6 +121,44 @@ async function checkSupabaseHealth(env) {
       configured,
       reachable: true,
       sample_count: Array.isArray(rows) ? rows.length : 0,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      configured,
+      reachable: false,
+      error: error.message,
+    };
+  }
+}
+
+async function checkEmailHealth(env) {
+  const configured = {
+    resend_api_key: Boolean(env.RESEND_API_KEY),
+    from_email: Boolean(env.FROM_EMAIL),
+    support_email: Boolean(env.SUPPORT_EMAIL),
+  };
+
+  if (!configured.resend_api_key) {
+    return {
+      ok: false,
+      configured,
+      error: "Resend API key is missing",
+    };
+  }
+
+  try {
+    const response = await fetch("https://api.resend.com/domains", {
+      headers: {
+        authorization: `Bearer ${env.RESEND_API_KEY}`,
+      },
+    });
+
+    return {
+      ok: response.ok,
+      configured,
+      reachable: response.ok,
+      resend_status: response.status,
     };
   } catch (error) {
     return {

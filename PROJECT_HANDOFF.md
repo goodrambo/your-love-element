@@ -29,6 +29,29 @@ Last updated: 2026-05-05
   - If `window.YLE_API_BASE_URL` is unset, the static site keeps working and stores answers locally as a fallback.
   - Once the Worker is deployed, set `window.YLE_API_BASE_URL` to the Worker origin so the frontend writes to the backend.
 
+## 2026-05-06 Email And Delivery Setup
+
+- Cloudflare Email Routing is enabled for `yourloveelement.com`.
+- Active inbound forwarding addresses:
+  - `support@yourloveelement.com`
+  - `reports@yourloveelement.com`
+- Catch-all routing is disabled.
+- DNS currently includes Cloudflare Email Routing MX records:
+  - `route1.mx.cloudflare.net`
+  - `route2.mx.cloudflare.net`
+  - `route3.mx.cloudflare.net`
+- Cloudflare Email Routing TXT records are present for SPF and DKIM.
+- Recommended transactional email identity:
+  - From: `Your Love Element <reports@yourloveelement.com>`
+  - Reply-To / support: `support@yourloveelement.com`
+- Resend should be configured in the existing Resend account, not a separate account.
+- Use a dedicated Resend API key for this product and store it only in Cloudflare Worker runtime secrets as `RESEND_API_KEY`.
+- Cloudflare Worker runtime variables/secrets should include:
+  - `RESEND_API_KEY` as a secret
+  - `FROM_EMAIL=Your Love Element <reports@yourloveelement.com>`
+  - `SUPPORT_EMAIL=support@yourloveelement.com`
+- Do not store Resend or Supabase secrets in Cloudflare build-process variables unless a build step explicitly needs them.
+
 ## Current Live Site
 
 - Production domain: https://yourloveelement.com/

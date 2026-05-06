@@ -26,7 +26,13 @@ Cloudflare Worker backend for the paid report automation flow.
 
 - `SITE_URL` defaults to `https://yourloveelement.com`
 - `SUPPORT_EMAIL` defaults to `support@yourloveelement.com`
-- `FROM_EMAIL` defaults to `Your Love Element <support@yourloveelement.com>`
+- `FROM_EMAIL` should be `Your Love Element <reports@yourloveelement.com>` once Resend is verified
 - `OPENAI_MODEL` defaults to `gpt-4.1-mini`
 
 The GitHub Pages frontend should set `window.YLE_API_BASE_URL` to the deployed Worker origin once the Worker route is live.
+
+## Health Checks
+
+- `GET /api/health` checks that the Worker is deployed.
+- `GET /api/health/supabase` checks runtime Supabase configuration and REST access.
+- `GET /api/health/email` checks runtime Resend configuration and API reachability without exposing secrets.
