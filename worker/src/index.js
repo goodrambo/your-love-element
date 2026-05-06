@@ -137,41 +137,39 @@ async function checkSupabaseHealth(env) {
 }
 
 async function checkEmailHealth(env) {
+  const fromEmail = env.FROM_EMAIL || "";
+  const supportEmail = env.SUPPORT_EMAIL || "";
   const configured = {
     resend_api_key: Boolean(env.RESEND_API_KEY),
-    from_email: Boolean(env.FROM_EMAIL),
-    support_email: Boolean(env.SUPPORT_EMAIL),
+    from_email: Boolean(fromEmail),
+    support_email: Boolean(supportEmail),
+    from_email_domain: emailDomain(fromEmail),
+    support_email_domain: emailDomain(supportEmail),
   };
 
-  if (!configured.resend_api_key) {
+  const missing = Object.entries({
+    RESEND_API_KEY: configured.resend_api_key,
+    FROM_EMAIL: configured.from_email,
+    SUPPORT_EMAIL: configured.support_email,
+  })
+    .filter(([, present]) => !present)
+    .map(([name]) => name);
+
+  if (missing.length) {
     return {
       ok: false,
       configured,
-      error: "Resend API key is missing",
+      delivery_check: "not_attempted",
+      error: `Missing email configuration: ${missing.join(", ")}`,
     };
   }
 
-  try {
-    const response = await fetch("https://api.resend.com/domains", {
-      headers: {
-        authorization: `Bearer ${env.RESEND_API_KEY}`,
-      },
-    });
-
-    return {
-      ok: response.ok,
-      configured,
-      reachable: response.ok,
-      resend_status: response.status,
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      configured,
-      reachable: false,
-      error: error.message,
-    };
-  }
+  return {
+    ok: true,
+    configured,
+    delivery_check: "configuration_only",
+    note: "Resend Sending access keys may not have permission to read domains. Use POST /api/test-email or a report E2E to verify actual delivery.",
+  };
 }
 
 async function createCheckout(request, env) {
@@ -772,6 +770,11 @@ function optionalEmail(value) {
     throw httpError(400, "Invalid email");
   }
   return email;
+}
+
+function emailDomain(value) {
+  const match = String(value || "").match(/[A-Z0-9._%+-]+@([A-Z0-9.-]+\.[A-Z]{2,})/i);
+  return match ? match[1].toLowerCase() : null;
 }
 
 function requireEnv(env, keys) {

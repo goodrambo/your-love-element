@@ -55,8 +55,10 @@ GitHub Pages deploys the static site and assets. Worker code changes are validat
 
 - `GET /api/health` checks that the Worker is deployed.
 - `GET /api/health/supabase` checks runtime Supabase configuration and REST access.
-- `GET /api/health/email` checks runtime Resend configuration and API reachability without exposing secrets.
+- `GET /api/health/email` checks runtime email configuration without exposing secrets. It is configuration-only because Resend Sending access keys can send email but may not have permission to read account domains.
 - `POST /api/test-email` requires `Authorization: Bearer <JOB_RUNNER_SECRET>`.
+
+Use `POST /api/test-email` or a full report E2E to verify actual Resend delivery.
 
 ## Report Delivery
 

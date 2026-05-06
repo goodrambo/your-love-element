@@ -42,6 +42,10 @@ Last updated: 2026-05-06
   - `thirty_day_guidance` now uses the new practical format: `Goal`, `Practice`, and `Notice` in each Day checkpoint.
   - `report_html` and `report_text` still do not contain `[object Object]`.
   - Because the new 30-Day prompt format appeared in production output, the updated Worker code path is confirmed live.
+- Local Worker update prepared after the latest email E2E:
+  - `/api/health/email` should be configuration-only, not a Resend `/domains` API check.
+  - Reason: current Resend key is a Sending access key. It can send email successfully, but may return 401 for account/domain reads.
+  - Actual delivery should be verified with protected `POST /api/test-email` or a full report E2E.
 
 ## Confirmed Deployment Workflow
 
