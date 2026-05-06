@@ -1,6 +1,34 @@
 # Your Love Element Project Handoff
 
-Last updated: 2026-05-05
+Last updated: 2026-05-06
+
+## 2026-05-06 Production E2E Check
+
+- Confirmed GitHub `main` is at latest commit `a603badc28d10a381ccfd96b4d744ce4d0a3d783`.
+- Confirmed GitHub Pages is built from `main` root and the latest Pages deployment succeeded on 2026-05-06 13:05 UTC.
+- Confirmed production site and element banner assets are live:
+  - `https://yourloveelement.com/`
+  - `https://yourloveelement.com/assets/elements/fire-banner.jpg`
+  - `https://yourloveelement.com/assets/elements/water-banner.jpg`
+- Ran a new production E2E report test using `fire` as the free-answer element:
+  - reading id: `78e460b1-12b5-4e86-9dc5-d7450d078b78`
+  - queued job id: `04e9f641-9fe8-4293-803e-06db1cd748b9`
+  - final reading status: `delivered`
+  - final job status: `succeeded`
+  - email message id: `2b91dffe-b507-4946-b993-240281e2dc6e`
+- Verified generated production report data:
+  - `emotional_summary` is present.
+  - `thirty_day_guidance` is a string with Day 1, Day 3, Day 7, Day 14, Day 21, and Day 30 checkpoints.
+  - `report_html` does not contain `[object Object]`.
+  - `report_text` does not contain `[object Object]`.
+- Important note: `report_html` stored in Supabase is the standalone report HTML and does not include the email banner. The banner is applied only in the delivery email template through `elementBannerUrl(siteUrl, element)`. For the tested reading, the production input element was `fire`, so the email template path resolves to `https://yourloveelement.com/assets/elements/fire-banner.jpg`.
+- Started Lemon Squeezy checkout testing:
+  - `POST /api/create-checkout` currently returns a generic `Internal server error`.
+  - Because production Worker catches 500s generically, the external response does not reveal whether the blocker is missing Lemon Worker secrets or a Lemon Squeezy API/config error.
+  - Next step is to verify/set `LEMON_SQUEEZY_API_KEY`, `LEMON_SQUEEZY_STORE_ID`, `LEMON_SQUEEZY_VARIANT_ID`, and `LEMON_SQUEEZY_WEBHOOK_SECRET`, then retest `/api/create-checkout`.
+- Local Worker email revision after reviewing the delivered email:
+  - Banner image now renders at its natural 16:9 ratio instead of using `object-fit: cover`, so the top image should no longer be cropped.
+  - `30-Day Guidance` prompt now asks each checkpoint for a specific goal, concrete practice, and observable progress signal, with 35-60 words per node.
 
 ## 2026-05-05 Automation Progress
 

@@ -489,8 +489,9 @@ async function generateReport(env, reading) {
     "emotional_summary should be a warm 2-3 sentence note that makes the reader feel seen and reassured.",
     "sections must be an object with exactly these keys: partner_portrait, element_profile, compatibility_map, pattern_to_release, timing_window, thirty_day_guidance.",
     "Each sections value must be a plain string, not an object or array.",
-    "The thirty_day_guidance section must be a 30-day timeline with exactly these nodes: Day 1, Day 3, Day 7, Day 14, Day 21, Day 30.",
-    "Write each timeline node on its own line in this format: Day N — short emotionally supportive action step.",
+    "The thirty_day_guidance section must be a practical 30-day timeline with exactly these nodes: Day 1, Day 3, Day 7, Day 14, Day 21, Day 30.",
+    "Write each timeline node on its own line in this format: Day N — Goal: specific emotional or relational outcome. Practice: concrete action, reflection prompt, or conversation script. Notice: one observable signal the reader can use to track progress.",
+    "Each thirty_day_guidance node should be 35-60 words, specific to the user's answers, and useful enough that a paying reader feels they received a clear exercise rather than a vague affirmation.",
     "Each section should feel specific to the answers, not generic. Use elegant, emotionally generous prose.",
     "",
     `Free answers: ${JSON.stringify(reading.free_answers_json)}`,
@@ -584,7 +585,7 @@ function buildReportEmail(env, reading, report) {
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;max-width:720px;background:#fffaf5;border:1px solid #eaded2;border-radius:18px;overflow:hidden;">
             <tr>
               <td style="padding:0;">
-                <img src="${bannerUrl}" alt="${escapeHtml(element)} element relationship report banner" width="720" style="display:block;width:100%;max-height:260px;object-fit:cover;border:0;">
+                <img src="${bannerUrl}" alt="${escapeHtml(element)} element relationship report banner" width="720" height="405" style="display:block;width:100%;height:auto;border:0;line-height:100%;">
               </td>
             </tr>
             <tr>
@@ -939,7 +940,7 @@ function renderTimelineSection(section) {
     <tr>
       <td style="padding:24px 0;">
         <h2 style="margin:0 0 10px;color:#4b1f2f;font-family:Georgia,'Times New Roman',serif;font-size:24px;line-height:1.2;">${escapeHtml(section.title)}</h2>
-        <p style="margin:0 0 16px;color:#6f625b;font-size:15px;line-height:1.7;">A softer month works better when it has rhythm. Use these checkpoints as small invitations, not pressure.</p>
+        <p style="margin:0 0 16px;color:#6f625b;font-size:15px;line-height:1.7;">Use these checkpoints as a 30-day practice plan: each one gives you a goal, a small action, and a signal to watch so the reading turns into something you can actually use.</p>
         ${timeline.map(renderTimelineNode).join("")}
       </td>
     </tr>
