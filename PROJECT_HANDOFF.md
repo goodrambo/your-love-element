@@ -51,6 +51,12 @@ Last updated: 2026-05-05
   - `FROM_EMAIL=Your Love Element <reports@yourloveelement.com>`
   - `SUPPORT_EMAIL=support@yourloveelement.com`
 - Do not store Resend or Supabase secrets in Cloudflare build-process variables unless a build step explicitly needs them.
+- Report delivery email has been upgraded from raw report HTML to a branded transactional email:
+  - opening reassurance and personalization
+  - report banner image from `/assets/hero-soulmate-report.png`
+  - styled report sections
+  - clear support/reply path
+- PDF attachment is not implemented yet. Resend supports attachments and inline images, but reliable PDF generation needs a dedicated renderer or service before enabling it in production.
 
 ## Current Live Site
 

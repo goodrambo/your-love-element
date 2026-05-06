@@ -38,3 +38,14 @@ The GitHub Pages frontend should set `window.YLE_API_BASE_URL` to the deployed W
 - `GET /api/health/supabase` checks runtime Supabase configuration and REST access.
 - `GET /api/health/email` checks runtime Resend configuration and API reachability without exposing secrets.
 - `POST /api/test-email` requires `Authorization: Bearer <JOB_RUNNER_SECRET>`.
+
+## Report Delivery
+
+Report emails are sent as branded HTML transactional emails with:
+
+- a hero image from `SITE_URL/assets/hero-soulmate-report.png`
+- a personalized emotional summary
+- styled report sections
+- reply-to support routing
+
+PDF attachments are intentionally deferred until a reliable PDF rendering path is chosen.

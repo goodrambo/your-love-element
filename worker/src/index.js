@@ -485,8 +485,10 @@ async function generateReport(env, reading) {
     "Use the user's free 10 answers and paid 8 signals.",
     "Tone: intimate, grounded, emotionally intelligent, practical.",
     "Do not make medical, legal, or deterministic claims.",
-    "Return JSON with keys: title, sections, text, html.",
+    "Return JSON with keys: title, emotional_summary, sections, text.",
+    "emotional_summary should be a warm 2-3 sentence note that makes the reader feel seen and reassured.",
     "sections should include partner_portrait, element_profile, compatibility_map, pattern_to_release, timing_window, thirty_day_guidance.",
+    "Each section should feel specific to the answers, not generic. Use elegant, emotionally generous prose.",
     "",
     `Free answers: ${JSON.stringify(reading.free_answers_json)}`,
     `Paid answers: ${JSON.stringify(reading.paid_answers_json)}`,
@@ -518,7 +520,7 @@ async function generateReport(env, reading) {
   const data = await response.json();
   const report = JSON.parse(data.choices?.[0]?.message?.content || "{}");
   const text = report.text || stringifySections(report.sections);
-  const html = report.html || textToHtml(text);
+  const html = buildStandaloneReportHtml(env, reading, report, text);
 
   return {
     json: report,
@@ -528,6 +530,7 @@ async function generateReport(env, reading) {
 }
 
 async function sendReportEmail(env, reading, report) {
+  const email = buildReportEmail(env, reading, report);
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -535,11 +538,11 @@ async function sendReportEmail(env, reading, report) {
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      from: env.FROM_EMAIL || "Your Love Element <support@yourloveelement.com>",
+      from: env.FROM_EMAIL || "Your Love Element <reports@yourloveelement.com>",
       to: [reading.customer_email],
-      subject: "Your Love Element full report is ready",
-      html: report.html,
-      text: report.text,
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
       reply_to: env.SUPPORT_EMAIL || "support@yourloveelement.com",
     }),
   });
@@ -549,6 +552,117 @@ async function sendReportEmail(env, reading, report) {
   }
 
   return response.json();
+}
+
+function buildReportEmail(env, reading, report) {
+  const siteUrl = env.SITE_URL || "https://yourloveelement.com";
+  const answers = reading.free_answers_json || {};
+  const element = answers.element || "love";
+  const quality = answers.quality || "emotional clarity";
+  const pace = answers.pace || "a pace your heart can trust";
+  const title = report.json?.title || `Your Love Element Report: ${element}`;
+  const summary = report.json?.emotional_summary || `Your report is ready. It was shaped from your free reading and deeper signals, with special attention to ${quality.toLowerCase()}, ${element} energy, and ${pace.toLowerCase()}.`;
+  const sections = normalizeReportSections(report.json?.sections, report.text);
+  const supportEmail = env.SUPPORT_EMAIL || "support@yourloveelement.com";
+
+  const html = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${escapeHtml(title)}</title>
+  </head>
+  <body style="margin:0;background:#fff7ee;color:#2a1e18;font-family:Inter,Arial,sans-serif;">
+    <div style="display:none;max-height:0;overflow:hidden;">Your full relationship report is ready, with a personalized reading of your element, patterns, timing, and next steps.</div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fff7ee;">
+      <tr>
+        <td align="center" style="padding:28px 14px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;max-width:720px;background:#fffaf5;border:1px solid #eaded2;border-radius:18px;overflow:hidden;">
+            <tr>
+              <td style="padding:0;">
+                <img src="${siteUrl}/assets/hero-soulmate-report.png" alt="Your Love Element report preview" width="720" style="display:block;width:100%;max-height:260px;object-fit:cover;border:0;">
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:30px 28px 18px;">
+                <p style="margin:0 0 10px;color:#4f877b;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;">Your full report is ready</p>
+                <h1 style="margin:0;color:#4b1f2f;font-family:Georgia,'Times New Roman',serif;font-size:32px;line-height:1.12;">${escapeHtml(title)}</h1>
+                <p style="margin:18px 0 0;color:#5f514b;font-size:17px;line-height:1.7;">${escapeHtml(summary)}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 28px 22px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4ebe2;border-radius:14px;">
+                  <tr>
+                    <td style="padding:18px;">
+                      <p style="margin:0;color:#4b1f2f;font-size:15px;line-height:1.7;"><strong>A note before you read:</strong> this report is not here to rush your heart. It is here to give language to what you already sense, soften the old pattern, and help you recognize love that feels steady enough to trust.</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 28px 8px;">
+                ${sections.map(renderEmailSection).join("")}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:8px 28px 30px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#4b1f2f;border-radius:14px;">
+                  <tr>
+                    <td style="padding:22px;">
+                      <h2 style="margin:0 0 10px;color:#fffaf5;font-family:Georgia,'Times New Roman',serif;font-size:22px;">How to use this reading</h2>
+                      <p style="margin:0;color:#f5dfcb;font-size:15px;line-height:1.7;">Read it once for recognition, then save it and return to the 30-day guidance when your nervous system is quieter. The most useful part may not be the line that feels exciting. It may be the line that helps you stop negotiating with uncertainty.</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 28px 30px;">
+                <p style="margin:0;color:#6f625b;font-size:14px;line-height:1.7;">If anything in your report feels especially true, confusing, or tender, you can reply directly to this email. Replies go to <a href="mailto:${escapeHtml(supportEmail)}" style="color:#4f877b;font-weight:700;">${escapeHtml(supportEmail)}</a>.</p>
+                <p style="margin:18px 0 0;color:#9a8b83;font-size:12px;line-height:1.6;">Your Love Element is a reflective relationship reading for personal insight. It is not medical, legal, financial, or mental health advice.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  const text = [
+    title,
+    "",
+    summary,
+    "",
+    "A note before you read: this report is not here to rush your heart. It is here to give language to what you already sense, soften the old pattern, and help you recognize love that feels steady enough to trust.",
+    "",
+    ...sections.flatMap((section) => [section.title, section.body, ""]),
+    "How to use this reading",
+    "Read it once for recognition, then save it and return to the 30-day guidance when your nervous system is quieter.",
+    "",
+    `Questions? Reply to this email or contact ${supportEmail}.`,
+  ].join("\n");
+
+  return {
+    subject: `Your full report is ready: ${element} love, ${pace.toLowerCase()}`,
+    html,
+    text,
+  };
+}
+
+function buildStandaloneReportHtml(env, reading, report, fallbackText) {
+  const sections = normalizeReportSections(report.sections, fallbackText);
+  const title = report.title || `Your Love Element Report: ${reading.free_answers_json?.element || "Love"}`;
+  const summary = report.emotional_summary || "";
+
+  return [
+    `<article class="yle-report">`,
+    `<header><p>Your Love Element</p><h1>${escapeHtml(title)}</h1>${summary ? `<p>${escapeHtml(summary)}</p>` : ""}</header>`,
+    ...sections.map((section) => `<section><h2>${escapeHtml(section.title)}</h2><p>${escapeHtml(section.body).replace(/\n/g, "<br>")}</p></section>`),
+    `</article>`,
+  ].join("");
 }
 
 async function getReading(env, readingId) {
@@ -710,6 +824,54 @@ function timingSafeEqual(a, b) {
     diff |= left[index] ^ right[index];
   }
   return diff === 0;
+}
+
+const REPORT_SECTION_LABELS = {
+  partner_portrait: "The Partner Who Fits You Best",
+  element_profile: "Your Love Element",
+  compatibility_map: "Your Compatibility Map",
+  pattern_to_release: "The Pattern To Release",
+  timing_window: "Your Timing Window",
+  thirty_day_guidance: "30-Day Guidance",
+};
+
+function normalizeReportSections(sections = {}, fallbackText = "") {
+  const normalized = Object.entries(REPORT_SECTION_LABELS)
+    .map(([key, title]) => {
+      const value = sections?.[key];
+      if (!value) {
+        return null;
+      }
+
+      return {
+        title,
+        body: String(value),
+      };
+    })
+    .filter(Boolean);
+
+  if (normalized.length) {
+    return normalized;
+  }
+
+  return String(fallbackText || "")
+    .split(/\n{2,}/)
+    .map((paragraph, index) => ({
+      title: index === 0 ? "Your Full Report" : `Part ${index + 1}`,
+      body: paragraph.trim(),
+    }))
+    .filter((section) => section.body);
+}
+
+function renderEmailSection(section) {
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-top:1px solid #eaded2;">
+    <tr>
+      <td style="padding:22px 0;">
+        <h2 style="margin:0 0 10px;color:#4b1f2f;font-family:Georgia,'Times New Roman',serif;font-size:24px;line-height:1.2;">${escapeHtml(section.title)}</h2>
+        <p style="margin:0;color:#2a1e18;font-size:16px;line-height:1.75;">${escapeHtml(section.body).replace(/\n/g, "<br>")}</p>
+      </td>
+    </tr>
+  </table>`;
 }
 
 function stringifySections(sections = {}) {
