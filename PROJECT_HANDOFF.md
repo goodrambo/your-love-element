@@ -60,10 +60,16 @@ Last updated: 2026-05-05
   - `OPENAI_MODEL=gpt-5.5`
 - Report delivery email has been upgraded from raw report HTML to a branded transactional email:
   - opening reassurance and personalization
-  - report banner image from `/assets/hero-soulmate-report.png`
+  - element-specific report banner image from `/assets/elements/{element}-banner.jpg`
   - styled report sections
   - `30-Day Guidance` rendered as timed checkpoints: Day 1, Day 3, Day 7, Day 14, Day 21, Day 30
   - clear support/reply path
+- Element banner assets:
+  - `assets/elements/wood-banner.jpg`
+  - `assets/elements/fire-banner.jpg`
+  - `assets/elements/earth-banner.jpg`
+  - `assets/elements/metal-banner.jpg`
+  - `assets/elements/water-banner.jpg`
 - PDF attachment is not implemented yet. Resend supports attachments and inline images, but reliable PDF generation needs a dedicated renderer or service before enabling it in production.
 
 ## Current Live Site

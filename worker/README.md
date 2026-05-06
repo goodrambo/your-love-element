@@ -45,7 +45,7 @@ The GitHub Pages frontend should set `window.YLE_API_BASE_URL` to the deployed W
 
 Report emails are sent as branded HTML transactional emails with:
 
-- a hero image from `SITE_URL/assets/hero-soulmate-report.png`
+- element-specific hero banners from `SITE_URL/assets/elements/{element}-banner.jpg`
 - a personalized emotional summary
 - styled report sections
 - `30-Day Guidance` as timed checkpoint cards

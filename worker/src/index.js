@@ -563,6 +563,7 @@ function buildReportEmail(env, reading, report) {
   const element = answers.element || "love";
   const quality = answers.quality || "emotional clarity";
   const pace = answers.pace || "a pace your heart can trust";
+  const bannerUrl = elementBannerUrl(siteUrl, element);
   const title = report.json?.title || `Your Love Element Report: ${element}`;
   const summary = report.json?.emotional_summary || `Your report is ready. It was shaped from your free reading and deeper signals, with special attention to ${quality.toLowerCase()}, ${element} energy, and ${pace.toLowerCase()}.`;
   const sections = normalizeReportSections(report.json?.sections, report.text);
@@ -583,7 +584,7 @@ function buildReportEmail(env, reading, report) {
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;max-width:720px;background:#fffaf5;border:1px solid #eaded2;border-radius:18px;overflow:hidden;">
             <tr>
               <td style="padding:0;">
-                <img src="${siteUrl}/assets/hero-soulmate-report.png" alt="Your Love Element report preview" width="720" style="display:block;width:100%;max-height:260px;object-fit:cover;border:0;">
+                <img src="${bannerUrl}" alt="${escapeHtml(element)} element relationship report banner" width="720" style="display:block;width:100%;max-height:260px;object-fit:cover;border:0;">
               </td>
             </tr>
             <tr>
@@ -837,6 +838,15 @@ const REPORT_SECTION_LABELS = {
   timing_window: "Your Timing Window",
   thirty_day_guidance: "30-Day Guidance",
 };
+
+function elementBannerUrl(siteUrl, element) {
+  const slug = String(element || "")
+    .trim()
+    .toLowerCase();
+  const known = new Set(["wood", "fire", "earth", "metal", "water"]);
+  const file = known.has(slug) ? `${slug}-banner.jpg` : "earth-banner.jpg";
+  return `${siteUrl}/assets/elements/${file}`;
+}
 
 function normalizeReportSections(sections = {}, fallbackText = "") {
   const normalized = Object.entries(REPORT_SECTION_LABELS)
