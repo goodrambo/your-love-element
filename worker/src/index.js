@@ -59,6 +59,10 @@ export default {
         return json(await processNextReportJob(request, env));
       }
 
+      if (request.method === "POST" && url.pathname === "/api/test-email") {
+        return json(await sendTestEmail(request, env));
+      }
+
       if (request.method === "GET" && url.pathname === "/api/health") {
         return json({ ok: true });
       }
@@ -341,6 +345,40 @@ async function submitPaidSignals(readingId, request, env) {
     reading_id: readingId,
     status: nextStatus,
     queued: Boolean(reading.lemon_squeezy_order_id),
+  };
+}
+
+async function sendTestEmail(request, env) {
+  requireBearerSecret(request, env.JOB_RUNNER_SECRET);
+  requireEnv(env, ["RESEND_API_KEY"]);
+
+  const body = await readJson(request).catch(() => ({}));
+  const to = optionalEmail(body.to) || env.SUPPORT_EMAIL || "support@yourloveelement.com";
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${env.RESEND_API_KEY}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      from: env.FROM_EMAIL || "Your Love Element <reports@yourloveelement.com>",
+      to: [to],
+      subject: "Your Love Element test email",
+      html: "<p>This is a test email from the Your Love Element Worker.</p>",
+      text: "This is a test email from the Your Love Element Worker.",
+      reply_to: env.SUPPORT_EMAIL || "support@yourloveelement.com",
+    }),
+  });
+
+  const result = await response.json().catch(async () => ({ error: await response.text() }));
+  if (!response.ok) {
+    throw httpError(502, `Resend failed: ${JSON.stringify(result)}`);
+  }
+
+  return {
+    ok: true,
+    id: result.id,
+    to,
   };
 }
 
