@@ -51,6 +51,13 @@ Last updated: 2026-05-05
   - `FROM_EMAIL=Your Love Element <reports@yourloveelement.com>`
   - `SUPPORT_EMAIL=support@yourloveelement.com`
 - Do not store Resend or Supabase secrets in Cloudflare build-process variables unless a build step explicitly needs them.
+- Plaintext Worker variables are managed in `worker/wrangler.toml`. Editing plaintext runtime variables only in the Cloudflare Dashboard may be overwritten by the next GitHub deployment.
+- Current `worker/wrangler.toml` plaintext variables should include:
+  - `SITE_URL=https://yourloveelement.com`
+  - `SUPABASE_URL=https://nmwhaiimnuywnjlvobde.supabase.co`
+  - `SUPPORT_EMAIL=support@yourloveelement.com`
+  - `FROM_EMAIL=Your Love Element <reports@yourloveelement.com>`
+  - `OPENAI_MODEL=gpt-5.5`
 - Report delivery email has been upgraded from raw report HTML to a branded transactional email:
   - opening reassurance and personalization
   - report banner image from `/assets/hero-soulmate-report.png`

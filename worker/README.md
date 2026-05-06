@@ -28,7 +28,9 @@ Cloudflare Worker backend for the paid report automation flow.
 - `SITE_URL` defaults to `https://yourloveelement.com`
 - `SUPPORT_EMAIL` defaults to `support@yourloveelement.com`
 - `FROM_EMAIL` should be `Your Love Element <reports@yourloveelement.com>` once Resend is verified
-- `OPENAI_MODEL` defaults to `gpt-4.1-mini`
+- `OPENAI_MODEL` is currently configured as `gpt-5.5`
+
+Plaintext runtime variables are managed in `wrangler.toml` so GitHub deployments do not overwrite Dashboard edits with stale values. Secrets still live only in Cloudflare Worker runtime secrets.
 
 The GitHub Pages frontend should set `window.YLE_API_BASE_URL` to the deployed Worker origin once the Worker route is live.
 

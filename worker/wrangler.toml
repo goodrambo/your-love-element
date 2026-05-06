@@ -4,6 +4,7 @@ compatibility_date = "2026-05-05"
 
 [vars]
 SITE_URL = "https://yourloveelement.com"
+SUPABASE_URL = "https://nmwhaiimnuywnjlvobde.supabase.co"
 SUPPORT_EMAIL = "support@yourloveelement.com"
-FROM_EMAIL = "Your Love Element <support@yourloveelement.com>"
-OPENAI_MODEL = "gpt-4.1-mini"
+FROM_EMAIL = "Your Love Element <reports@yourloveelement.com>"
+OPENAI_MODEL = "gpt-5.5"
