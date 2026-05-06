@@ -489,6 +489,8 @@ async function generateReport(env, reading) {
     "emotional_summary should be a warm 2-3 sentence note that makes the reader feel seen and reassured.",
     "sections must be an object with exactly these keys: partner_portrait, element_profile, compatibility_map, pattern_to_release, timing_window, thirty_day_guidance.",
     "Each sections value must be a plain string, not an object or array.",
+    "The thirty_day_guidance section must be a 30-day timeline with exactly these nodes: Day 1, Day 3, Day 7, Day 14, Day 21, Day 30.",
+    "Write each timeline node on its own line in this format: Day N — short emotionally supportive action step.",
     "Each section should feel specific to the answers, not generic. Use elegant, emotionally generous prose.",
     "",
     `Free answers: ${JSON.stringify(reading.free_answers_json)}`,
@@ -905,11 +907,61 @@ function titleCase(value) {
 }
 
 function renderEmailSection(section) {
+  if (section.title === REPORT_SECTION_LABELS.thirty_day_guidance) {
+    return renderTimelineSection(section);
+  }
+
   return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-top:1px solid #eaded2;">
     <tr>
       <td style="padding:22px 0;">
         <h2 style="margin:0 0 10px;color:#4b1f2f;font-family:Georgia,'Times New Roman',serif;font-size:24px;line-height:1.2;">${escapeHtml(section.title)}</h2>
         <p style="margin:0;color:#2a1e18;font-size:16px;line-height:1.75;">${escapeHtml(section.body).replace(/\n/g, "<br>")}</p>
+      </td>
+    </tr>
+  </table>`;
+}
+
+function renderTimelineSection(section) {
+  const nodes = parseTimelineNodes(section.body);
+  const timeline = nodes.length ? nodes : [{ day: "30 days", text: section.body }];
+
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-top:1px solid #eaded2;">
+    <tr>
+      <td style="padding:24px 0;">
+        <h2 style="margin:0 0 10px;color:#4b1f2f;font-family:Georgia,'Times New Roman',serif;font-size:24px;line-height:1.2;">${escapeHtml(section.title)}</h2>
+        <p style="margin:0 0 16px;color:#6f625b;font-size:15px;line-height:1.7;">A softer month works better when it has rhythm. Use these checkpoints as small invitations, not pressure.</p>
+        ${timeline.map(renderTimelineNode).join("")}
+      </td>
+    </tr>
+  </table>`;
+}
+
+function parseTimelineNodes(body) {
+  return String(body || "")
+    .split(/\n+/)
+    .map((line) => line.trim().replace(/^[-*]\s*/, ""))
+    .map((line) => {
+      const match = line.match(/^(Day\s*\d+)\s*(?:[-–—:])\s*(.+)$/i);
+      if (!match) {
+        return null;
+      }
+
+      return {
+        day: match[1].replace(/\s+/, " "),
+        text: match[2],
+      };
+    })
+    .filter(Boolean);
+}
+
+function renderTimelineNode(node) {
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 10px;background:#f4ebe2;border-radius:12px;">
+    <tr>
+      <td width="86" valign="top" style="padding:14px 0 14px 16px;">
+        <p style="margin:0;color:#4f877b;font-size:13px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;">${escapeHtml(node.day)}</p>
+      </td>
+      <td valign="top" style="padding:14px 16px 14px 8px;">
+        <p style="margin:0;color:#2a1e18;font-size:15px;line-height:1.65;">${escapeHtml(node.text)}</p>
       </td>
     </tr>
   </table>`;

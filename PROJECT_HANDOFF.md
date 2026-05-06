@@ -62,6 +62,7 @@ Last updated: 2026-05-05
   - opening reassurance and personalization
   - report banner image from `/assets/hero-soulmate-report.png`
   - styled report sections
+  - `30-Day Guidance` rendered as timed checkpoints: Day 1, Day 3, Day 7, Day 14, Day 21, Day 30
   - clear support/reply path
 - PDF attachment is not implemented yet. Resend supports attachments and inline images, but reliable PDF generation needs a dedicated renderer or service before enabling it in production.
 

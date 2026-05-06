@@ -48,6 +48,7 @@ Report emails are sent as branded HTML transactional emails with:
 - a hero image from `SITE_URL/assets/hero-soulmate-report.png`
 - a personalized emotional summary
 - styled report sections
+- `30-Day Guidance` as timed checkpoint cards
 - reply-to support routing
 
 PDF attachments are intentionally deferred until a reliable PDF rendering path is chosen.
