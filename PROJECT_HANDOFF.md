@@ -32,6 +32,16 @@ Last updated: 2026-05-06
 - The email revision was committed and pushed:
   - commit: `1cd9e26 Improve report email banner and guidance`
   - GitHub Pages build for `1cd9e26` completed successfully on 2026-05-06 14:41 UTC.
+- Ran a fresh production E2E after `1cd9e26`:
+  - reading id: `b43373f3-9576-4a3a-bf33-ea3d27821c45`
+  - queued job id: `b486b97a-b967-4e70-ac8a-2f9d52d87ef4`
+  - final reading status: `delivered`
+  - final job status: `succeeded`
+  - email message id: `a8f553f2-280e-4032-95cb-517797b035fc`
+  - tested element: `water`
+  - `thirty_day_guidance` now uses the new practical format: `Goal`, `Practice`, and `Notice` in each Day checkpoint.
+  - `report_html` and `report_text` still do not contain `[object Object]`.
+  - Because the new 30-Day prompt format appeared in production output, the updated Worker code path is confirmed live.
 
 ## Confirmed Deployment Workflow
 
