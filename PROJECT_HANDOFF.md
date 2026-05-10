@@ -2,6 +2,79 @@
 
 Last updated: 2026-05-10
 
+## 2026-05-10 UX, Checkout Trust, and SEO/GEO Updates
+
+Two post-launch polish commits were completed and pushed to `origin/main`:
+
+- `4a5acd2 Improve checkout trust flow`
+- `561dc32 Add SEO trust content`
+
+Important state after these commits:
+
+- The free 10-question reading now requires an answer on each radio step.
+- The birthday step no longer defaults to `January 14`; month/day must be provided.
+- The paid `/full-report/` 8-question flow now requires an answer on each paid signal step.
+- The initial homepage preview is explicitly a sample/placeholder state, not a personalized default result.
+- After the free reading is completed, the preview section switches to `Your free preview report` and uses only the user's real answers.
+- The paid CTA now shows `$9.99`, delivery expectations, entertainment/non-professional-advice language, and duplicate-charge/failed-delivery support language before checkout.
+- Static pages now cache-bust CSS/JS with `?v=20260510-content`.
+- Worker checkout creation now sends `checkout_options.locale = "en"` so Lemon Squeezy checkout stays in English instead of following browser locale.
+- `/full-report/` now has `<meta name="robots" content="noindex,follow" />` because it is a post-checkout form, not a public SEO landing page.
+- Homepage SEO metadata was expanded for the actual search intent:
+  - title: `Five Element Love Reading & Relationship Report | Your Love Element`
+  - description mentions the 10-question private reading, free preview, and optional `$9.99` full report by email.
+- Homepage JSON-LD now includes `Organization`, `WebSite`, `Product/Offer`, and `FAQPage`.
+- Homepage now has a visible FAQ section before the footer covering:
+  - whether the free preview is personalized
+  - what the full report includes
+  - `$9.99` price
+  - email delivery after payment and deeper answers
+  - non-professional-advice disclaimer
+  - failed delivery / duplicate charge support
+- Added:
+  - `robots.txt`
+  - `sitemap.xml`
+- Contact, Privacy, Terms, and Refund pages were updated to remove stale "early access", "payment approval", and "paid products become available" language. They now reflect that paid reports are active and delivered by email.
+- Privacy/Terms/Refund updated date: `May 10, 2026`.
+
+Verification already run after `4a5acd2`:
+
+- GitHub Pages build completed successfully.
+- Live homepage blocked advancing the free quiz with no answer and showed `Choose one answer to continue.`
+- Live `/full-report/` blocked advancing the paid quiz with no answer and showed `Choose one answer to continue.`
+- Production Worker health returned `{"ok":true}`.
+- A production test checkout was created with reading id `10867666-6dd5-4178-87ea-1aef87836a08`.
+- Lemon Squeezy checkout opened in English and displayed `$9.99`.
+- No payment was submitted.
+
+Verification already run after `561dc32`:
+
+- GitHub Pages build completed successfully.
+- Live homepage showed the new SEO title, expanded metadata, JSON-LD, and visible FAQ content.
+- `https://yourloveelement.com/robots.txt` is live.
+- `https://yourloveelement.com/sitemap.xml` is live.
+- Live contact page shows the new `Report delivery` section and no longer uses early-access/payment-approval language.
+
+Current git/workspace note:
+
+- `main` is in sync with `origin/main` after `561dc32`.
+- `demo/` remains untracked and pre-existing. It was not changed or staged in these updates.
+
+Recommended next-session priorities:
+
+1. Run a real low-value production purchase or Lemon Squeezy test purchase, if available, to verify the full paid loop:
+   - checkout payment
+   - `order_created` webhook
+   - return to `/full-report/?reading_id=...`
+   - paid 8-signal submission
+   - report generation job
+   - email delivery
+2. Review the actual delivered paid report from the post-payment path, not only Worker test jobs.
+3. Consider collecting purchaser email before checkout only if needed for recovery UX. Current flow relies on Lemon Squeezy customer email plus `reading_id`.
+4. Consider adding a small "report delivery timing" sentence to the paid-complete state if support requests show users expect instant delivery.
+5. Consider image performance optimization later. `assets/hero-soulmate-report.png` is about 2.2 MB and appears above the fold.
+6. Do not add more languages yet unless traffic/source data supports it. Short-term language strategy is English site + English Lemon checkout.
+
 ## 2026-05-10 Confirmed Lemon Squeezy Launch Setup
 
 Lemon Squeezy approval has passed and the production checkout flow is now active.
