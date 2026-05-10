@@ -13,6 +13,11 @@ const recognitionText = document.querySelector("#recognitionText");
 const meetingText = document.querySelector("#meetingText");
 const releaseText = document.querySelector("#releaseText");
 const adviceText = document.querySelector("#adviceText");
+const previewEyebrow = document.querySelector("#previewEyebrow");
+const previewTitle = document.querySelector("#previewTitle");
+const previewIntro = document.querySelector("#previewIntro");
+const portraitKicker = document.querySelector("#portraitKicker");
+const quizValidation = document.querySelector("#quizValidation");
 const cookieConsent = document.querySelector("#cookieConsent");
 const cookieAccept = document.querySelector("#cookieAccept");
 const cookieReject = document.querySelector("#cookieReject");
@@ -27,10 +32,23 @@ const paidComplete = document.querySelector("#paidComplete");
 const unlockReportButton = document.querySelector("#unlockReportButton");
 const readingSaveStatus = document.querySelector("#readingSaveStatus");
 const paidSaveStatus = document.querySelector("#paidSaveStatus");
+const paidValidation = document.querySelector("#paidValidation");
 
 const apiBaseUrl = window.YLE_API_BASE_URL || "";
 const readingStorageKey = "yle-reading-id";
 const freeAnswersStorageKey = "yle-free-answers";
+
+const freeAnswerNames = ["status", "intent", "quality", "element", "setting", "block", "secure", "mirror", "pace"];
+const paidAnswerNames = [
+  "activation",
+  "pastPattern",
+  "reassurance",
+  "conflict",
+  "partnerEnergy",
+  "boundary",
+  "trustSignal",
+  "guidance",
+];
 
 const moods = [
   "Your current chapter",
@@ -109,6 +127,16 @@ function setStatus(element, message, tone = "neutral") {
   element.hidden = false;
 }
 
+function clearStatus(element) {
+  if (!element) {
+    return;
+  }
+
+  element.textContent = "";
+  element.hidden = true;
+  delete element.dataset.tone;
+}
+
 function collectAnswers(form, names) {
   return names.reduce((answers, name) => {
     const field = form?.elements?.[name];
@@ -118,46 +146,95 @@ function collectAnswers(form, names) {
     }
 
     if (field instanceof RadioNodeList) {
-      answers[name] = field.value;
+      answers[name] = field.value.trim();
       return answers;
     }
 
-    answers[name] = field.value;
+    answers[name] = String(field.value || "").trim();
     return answers;
   }, {});
 }
 
+function activeRadioValue(step) {
+  return step?.querySelector('input[type="radio"]:checked')?.value || "";
+}
+
+function lowerInitial(value) {
+  if (!value) {
+    return "";
+  }
+
+  return `${value.charAt(0).toLowerCase()}${value.slice(1)}`;
+}
+
+function validateBirthdate(form) {
+  const month = form?.elements?.month?.value || "";
+  const day = Number(form?.elements?.day?.value);
+  return Boolean(month && Number.isInteger(day) && day >= 1 && day <= 31);
+}
+
+function showValidation(target, step, message) {
+  setStatus(target, message, "error");
+  step?.setAttribute("data-invalid", "true");
+}
+
+function clearStepValidation(target, step) {
+  clearStatus(target);
+  step?.removeAttribute("data-invalid");
+}
+
+function validateStep(step, target, form) {
+  if (!step) {
+    return true;
+  }
+
+  if (step.querySelector(".date-grid")) {
+    const isValid = validateBirthdate(form);
+    if (!isValid) {
+      showValidation(target, step, "Choose your birth month and enter a day between 1 and 31.");
+      return false;
+    }
+    clearStepValidation(target, step);
+    return true;
+  }
+
+  if (!activeRadioValue(step)) {
+    showValidation(target, step, "Choose one answer to continue.");
+    return false;
+  }
+
+  clearStepValidation(target, step);
+  return true;
+}
+
+function hasAllAnswers(answers, names) {
+  return names.every((name) => Boolean(answers[name]));
+}
+
 function getFreeAnswers() {
   const form = document.querySelector("#reading");
-  const answers = collectAnswers(form, ["status", "intent", "quality", "element", "setting", "block", "secure", "mirror", "pace"]);
+  const answers = collectAnswers(form, freeAnswerNames);
+  const birthdate = {
+    month: String(form?.elements?.month?.value || "").trim(),
+    day: String(form?.elements?.day?.value || "").trim(),
+  };
+
+  if (!hasAllAnswers(answers, freeAnswerNames) || !validateBirthdate(form)) {
+    throw new Error("Free reading is incomplete");
+  }
+
   return {
-    status: answers.status || "Open to something new",
-    intent: answers.intent || "Who I naturally attract",
-    quality: answers.quality || "Warm intelligence",
-    element: answers.element || "Earth",
-    setting: answers.setting || "A friend's wider circle",
-    block: answers.block || "Mixed signals",
-    secure: answers.secure || "A quiet home base",
-    mirror: answers.mirror || "You make people feel safe",
-    pace: answers.pace || "Slow and certain",
-    birthdate: {
-      month: form?.elements?.month?.value || "January",
-      day: form?.elements?.day?.value || "14",
-    },
+    ...answers,
+    birthdate,
   };
 }
 
 function getPaidAnswers() {
-  return collectAnswers(document.querySelector("#paidSignals"), [
-    "activation",
-    "pastPattern",
-    "reassurance",
-    "conflict",
-    "partnerEnergy",
-    "boundary",
-    "trustSignal",
-    "guidance",
-  ]);
+  const answers = collectAnswers(document.querySelector("#paidSignals"), paidAnswerNames);
+  if (!hasAllAnswers(answers, paidAnswerNames)) {
+    throw new Error("Paid signals are incomplete");
+  }
+  return answers;
 }
 
 function getReadingIdFromUrl() {
@@ -185,7 +262,14 @@ async function apiPost(path, payload) {
 }
 
 async function saveFreeAnswers() {
-  const answers = getFreeAnswers();
+  let answers;
+  try {
+    answers = getFreeAnswers();
+  } catch {
+    setStatus(readingSaveStatus, "Complete the 10-question free reading before checkout.", "error");
+    return null;
+  }
+
   setStorageItem(freeAnswersStorageKey, JSON.stringify(answers));
 
   if (!apiBaseUrl) {
@@ -236,35 +320,48 @@ function updateStep() {
 }
 
 function selectedValue(name) {
-  return document.querySelector(`input[name="${name}"]:checked`)?.value;
+  return document.querySelector(`#reading input[name="${name}"]:checked`)?.value || "";
 }
 
 function buildPortraitText({ status, intent, quality, setting, element, block, secure, pace }) {
-  const profile = qualityProfiles[quality] || qualityProfiles["Warm intelligence"];
-  const elementLine = elementCopy[element] || elementCopy.Earth;
+  const profile = qualityProfiles[quality];
+  const elementLine = elementCopy[element];
 
-  return `Because you selected ${status.toLowerCase()}, your future partner portrait begins with someone ${profile.partner}. ${profile.pull} You are not simply looking for a spark; you are looking for a person whose rhythm helps you understand ${intent.toLowerCase()} without making love feel like a test.\n\nYour ${element} profile adds an important layer: ${elementLine} This suggests that the person who fits you best will not only match your chemistry, but also support the kind of emotional climate where ${secure.toLowerCase()} can become ordinary. The meeting signal points toward ${setting.toLowerCase()}, especially when the pace feels ${pace.toLowerCase()} rather than forced.\n\nThe pattern to watch is ${block.toLowerCase()}. If that old signal appears, pause before deciding whether it is intuition or protection. Your preview suggests your next meaningful connection should feel clear enough to soften your guard, but grounded enough that you do not have to chase certainty.`;
+  return `Because you selected "${status}", your future partner portrait begins with someone ${profile.partner}. ${profile.pull} You are not simply looking for a spark; you are looking for a person whose rhythm helps you explore "${intent}" without making love feel like a test.\n\nYour ${element} profile adds an important layer: ${elementLine} This suggests that the person who fits you best will not only match your chemistry, but also support the kind of emotional climate where ${lowerInitial(secure)} can become ordinary. The meeting signal points toward ${lowerInitial(setting)}, especially when the pace feels ${lowerInitial(pace)} rather than forced.\n\nThe pattern to watch is ${lowerInitial(block)}. If that old signal appears, pause before deciding whether it is intuition or protection. Your preview suggests your next meaningful connection should feel clear enough to soften your guard, but grounded enough that you do not have to chase certainty.`;
 }
 
 async function revealPreview() {
-  const quality = selectedValue("quality") || "Warm intelligence";
-  const setting = selectedValue("setting") || "A friend's wider circle";
-  const status = selectedValue("status") || "Open to something new";
-  const element = selectedValue("element") || "Earth";
-  const block = selectedValue("block") || "Mixed signals";
-  const secure = selectedValue("secure") || "A quiet home base";
-  const intent = selectedValue("intent") || "Who I naturally attract";
-  const pace = selectedValue("pace") || "Slow and certain";
+  let answers;
+  try {
+    answers = getFreeAnswers();
+  } catch {
+    setStatus(quizValidation, "Complete every question before revealing your preview.", "error");
+    return;
+  }
 
-  const profile = qualityProfiles[quality] || qualityProfiles["Warm intelligence"];
+  const { quality, setting, status, element, block, secure, intent, pace } = answers;
+  const profile = qualityProfiles[quality];
+
+  if (previewEyebrow) {
+    previewEyebrow.textContent = "Your free preview report";
+  }
+  if (previewTitle) {
+    previewTitle.textContent = "Your first love signal, before the full map.";
+  }
+  if (previewIntro) {
+    previewIntro.textContent = "Your preview is based on the 10 answers you just gave. The full report adds eight deeper signals when you are ready for more precision.";
+  }
+  if (portraitKicker) {
+    portraitKicker.textContent = "Future partner portrait";
+  }
   archetypeTitle.textContent = profile.title;
   archetypeText.textContent = buildPortraitText({ status, intent, quality, setting, element, block, secure, pace });
   elementName.textContent = `${element} profile`;
   elementSignal.textContent = elementCopy[element];
   recognitionText.textContent = profile.recognition;
-  meetingText.textContent = `Your strongest meeting signal is ${setting.toLowerCase()}, especially when the pace feels ${pace.toLowerCase()} rather than forced.`;
+  meetingText.textContent = `Your strongest meeting signal is ${lowerInitial(setting)}, especially when the pace feels ${lowerInitial(pace)} rather than forced.`;
   releaseText.textContent = `${block} may be the pattern to watch. Your preview suggests you should not confuse intensity with emotional alignment.`;
-  adviceText.textContent = `Because you are seeking ${intent.toLowerCase()}, choose the person who makes ${secure.toLowerCase()} feel possible in ordinary life.`;
+  adviceText.textContent = `Because you are seeking "${intent}", choose the person who makes ${lowerInitial(secure)} feel possible in ordinary life.`;
 
   document.querySelector("#preview").scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -281,6 +378,11 @@ function initQuiz() {
   }
 
   nextButton.addEventListener("click", () => {
+    const current = steps[currentStep];
+    if (!validateStep(current, quizValidation, document.querySelector("#reading"))) {
+      return;
+    }
+
     if (currentStep < steps.length - 1) {
       currentStep += 1;
       updateStep();
@@ -292,9 +394,14 @@ function initQuiz() {
 
   backButton.addEventListener("click", () => {
     if (currentStep > 0) {
+      clearStepValidation(quizValidation, steps[currentStep]);
       currentStep -= 1;
       updateStep();
     }
+  });
+
+  document.querySelector("#reading")?.addEventListener("change", () => {
+    validateStep(steps[currentStep], quizValidation, document.querySelector("#reading"));
   });
 
   updateStep();
@@ -325,6 +432,14 @@ function updatePaidStep() {
 }
 
 async function completePaidSignals() {
+  let paidAnswers;
+  try {
+    paidAnswers = getPaidAnswers();
+  } catch {
+    setStatus(paidValidation, "Complete every deeper signal before finishing.", "error");
+    return;
+  }
+
   paidSteps.forEach((step) => {
     step.classList.remove("is-active");
   });
@@ -334,13 +449,13 @@ async function completePaidSignals() {
   const readingId = getReadingIdFromUrl() || getStorageItem(readingStorageKey);
   if (apiBaseUrl && readingId) {
     try {
-      await apiPost(`/api/readings/${readingId}/paid-signals`, { paid_answers: getPaidAnswers() });
+      await apiPost(`/api/readings/${readingId}/paid-signals`, { paid_answers: paidAnswers });
       setStatus(paidSaveStatus, "Your deeper signals were saved.", "success");
     } catch {
       setStatus(paidSaveStatus, "Your answers are saved in this browser, but online delivery needs support.", "error");
     }
   } else {
-    setStorageItem("yle-paid-answers", JSON.stringify(getPaidAnswers()));
+    setStorageItem("yle-paid-answers", JSON.stringify(paidAnswers));
     setStatus(paidSaveStatus, "Your answers are saved in this browser. Contact support if you already purchased.", "neutral");
   }
 
@@ -357,6 +472,11 @@ function initPaidQuiz() {
   }
 
   paidNextButton.addEventListener("click", () => {
+    const current = paidSteps[paidCurrentStep];
+    if (!validateStep(current, paidValidation, document.querySelector("#paidSignals"))) {
+      return;
+    }
+
     if (paidCurrentStep < paidSteps.length - 1) {
       paidCurrentStep += 1;
       updatePaidStep();
@@ -368,9 +488,14 @@ function initPaidQuiz() {
 
   paidBackButton.addEventListener("click", () => {
     if (paidCurrentStep > 0) {
+      clearStepValidation(paidValidation, paidSteps[paidCurrentStep]);
       paidCurrentStep -= 1;
       updatePaidStep();
     }
+  });
+
+  document.querySelector("#paidSignals")?.addEventListener("change", () => {
+    validateStep(paidSteps[paidCurrentStep], paidValidation, document.querySelector("#paidSignals"));
   });
 
   updatePaidStep();

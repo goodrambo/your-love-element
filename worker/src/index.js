@@ -201,6 +201,9 @@ async function createCheckout(request, env) {
               reading_id: readingId,
             },
           },
+          checkout_options: {
+            locale: "en",
+          },
           product_options: {
             redirect_url: `${siteUrl}/full-report/?reading_id=${encodeURIComponent(readingId)}`,
             receipt_button_text: "Complete your full report",
