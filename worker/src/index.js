@@ -448,6 +448,19 @@ async function processNextQueuedReportJob(env) {
       throw new Error("Reading is missing customer email");
     }
 
+    if (reading.status === "delivered" && reading.email_message_id) {
+      await supabase(env, `/rest/v1/report_generation_jobs?id=eq.${job.id}`, {
+        method: "PATCH",
+        body: {
+          status: "succeeded",
+          completed_at: new Date().toISOString(),
+          last_error: null,
+        },
+      });
+
+      return { ok: true, processed: true, reading_id: reading.id, skipped: "already_delivered" };
+    }
+
     await supabase(env, `/rest/v1/readings?id=eq.${reading.id}`, {
       method: "PATCH",
       body: {
@@ -457,17 +470,26 @@ async function processNextQueuedReportJob(env) {
       },
     });
 
-    const report = await generateReport(env, reading);
-    await supabase(env, `/rest/v1/readings?id=eq.${reading.id}`, {
-      method: "PATCH",
-      body: {
-        status: "report_generated",
-        report_html: report.html,
-        report_text: report.text,
-        report_json: report.json,
-        generated_at: new Date().toISOString(),
-      },
-    });
+    const report = reading.report_json && reading.report_text && reading.report_html
+      ? {
+          json: reading.report_json,
+          text: reading.report_text,
+          html: reading.report_html,
+        }
+      : await generateReport(env, reading);
+
+    if (!reading.report_json || !reading.report_text || !reading.report_html) {
+      await supabase(env, `/rest/v1/readings?id=eq.${reading.id}`, {
+        method: "PATCH",
+        body: {
+          status: "report_generated",
+          report_html: report.html,
+          report_text: report.text,
+          report_json: report.json,
+          generated_at: new Date().toISOString(),
+        },
+      });
+    }
 
     const email = await sendReportEmail(env, reading, report);
     await supabase(env, `/rest/v1/readings?id=eq.${reading.id}`, {
@@ -484,6 +506,7 @@ async function processNextQueuedReportJob(env) {
       body: {
         status: "succeeded",
         completed_at: new Date().toISOString(),
+        last_error: null,
       },
     });
 
@@ -574,6 +597,7 @@ async function sendReportEmail(env, reading, report) {
     headers: {
       authorization: `Bearer ${env.RESEND_API_KEY}`,
       "content-type": "application/json",
+      "idempotency-key": `full-report/${reading.id}`,
     },
     body: JSON.stringify({
       from: env.FROM_EMAIL || "Your Love Element <reports@yourloveelement.com>",

@@ -10,6 +10,17 @@ Latest commits pushed to `origin/main`:
 - `ee3f4d2 Add delivery email before checkout`
 - `be95063 Adjust mobile preview intro spacing`
 - `7435dc1 Adjust paid signal saved spacing`
+- `Make report email delivery idempotent` (current session closeout commit)
+
+Duplicate report email investigation:
+
+- User observed `admin@kaonow.com` received two full report emails, about 15 minutes apart.
+- Most likely cause: the cron/job flow retried after the email send side effect had already happened but before `readings`/`report_generation_jobs` were reliably marked delivered/succeeded.
+- Worker was updated to make report email delivery idempotent:
+  - if a reading is already `delivered` with `email_message_id`, any leftover queued/running job is marked `succeeded` without sending again
+  - if a report was already generated, retries reuse the stored `report_json`, `report_text`, and `report_html`
+  - Resend report email requests now send `Idempotency-Key: full-report/{reading.id}` so Resend suppresses duplicate sends for the same reading during retry windows
+- Resend idempotency keys are supported for `POST /emails` and prevent duplicate sends for the same idempotency key within their retention window.
 
 Production checks completed after these commits:
 
