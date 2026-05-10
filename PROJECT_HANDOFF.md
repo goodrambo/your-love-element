@@ -2,6 +2,64 @@
 
 Last updated: 2026-05-10
 
+## 2026-05-10 Session Closeout: Paid Loop, Email, And Spacing
+
+Latest commits pushed to `origin/main`:
+
+- `4ec48ba Add scheduled report job processing`
+- `ee3f4d2 Add delivery email before checkout`
+- `be95063 Adjust mobile preview intro spacing`
+- `7435dc1 Adjust paid signal saved spacing`
+
+Production checks completed after these commits:
+
+- GitHub Pages build completed successfully for `7435dc1`.
+- Live homepage now loads `styles.css?v=20260510-spacing`.
+- Live `/full-report/` now loads `../styles.css?v=20260510-paid-spacing`.
+- Production Worker health checks after the cron fix returned:
+  - `/api/health`: `{"ok":true}`
+  - `/api/health/supabase`: `ok: true`
+  - `/api/health/email`: `ok: true`, configuration-only delivery check
+- User confirmed a real purchase using `admin@kaonow.com` received the generated full report successfully.
+
+Important live behavior now:
+
+- Homepage preview intro spacing is adjusted on mobile via `#preview .section-intro`.
+- `/full-report/` paid saved status now has breathing room via `.paid-quiz-panel .api-status { margin: 18px 0; }`.
+- The homepage full-report CTA asks for `Delivery email` before checkout and sends it to `POST /api/create-checkout`.
+- Worker passes that email to Lemon Squeezy as `checkout_data.email` and stores it as `readings.customer_email`.
+- Report delivery uses `readings.customer_email`, with Lemon Squeezy webhook still able to update it from checkout data.
+- Cloudflare Worker cron runs every 5 minutes and processes up to 3 queued report jobs.
+
+Lemon Squeezy email clarification:
+
+- Customer receipt email and merchant sale notification are separate Lemon Squeezy email flows.
+- `Your Love Element (via Lemon Squeezy)` receipt is the customer receipt.
+- `Lemon Squeezy - You made a sale!` is the merchant sale notification.
+- If `goodrambo2013@gmail.com` receives `You made a sale!`, that is expected if the Lemon Squeezy account/store notification email is still the personal Gmail.
+- If the merchant notification should not go to personal Gmail, update Lemon Squeezy store/account notification settings or disable sale notifications there.
+- This repo controls Worker checkout creation and Resend full-report delivery, not Lemon Squeezy's merchant notification recipient.
+
+Current git/workspace note:
+
+- Local `main` is pushed to `origin/main` at `7435dc1`.
+- `demo/` remains untracked and pre-existing. It was not changed or staged.
+
+Recommended next-session priorities:
+
+1. Verify Lemon Squeezy account/store notification settings:
+   - customer receipt reply/contact should point to `support@yourloveelement.com`
+   - merchant sale notifications should go to the desired admin mailbox, not a personal Gmail if that is undesirable
+2. Run one more clean live paid-loop test after the cron fix and delivery email field:
+   - complete free preview
+   - enter delivery email
+   - pay through Lemon checkout
+   - submit 8 deeper signals
+   - confirm full report delivery to the entered email
+   - confirm merchant notification routing is acceptable
+3. If delivery still feels delayed, consider adding a clearer paid-complete sentence such as "Reports usually arrive within a few minutes."
+4. Consider adding a support/retry admin tool only if more real purchases expose stuck jobs.
+
 ## 2026-05-10 Delivery Email Capture And Lemon Receipt Note
 
 Email delivery clarification after the first real purchase:
