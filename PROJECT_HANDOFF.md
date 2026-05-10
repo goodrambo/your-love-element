@@ -21,6 +21,7 @@ Duplicate report email investigation:
   - if a report was already generated, retries reuse the stored `report_json`, `report_text`, and `report_html`
   - Resend report email requests now send `Idempotency-Key: full-report/{reading.id}` so Resend suppresses duplicate sends for the same reading during retry windows
 - Resend idempotency keys are supported for `POST /emails` and prevent duplicate sends for the same idempotency key within their retention window.
+- `worker/README.md` now has a dedicated `Duplicate Email Prevention` section. Preserve those guardrails whenever editing report queue or email delivery code.
 
 Production checks completed after these commits:
 

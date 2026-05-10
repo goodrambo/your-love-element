@@ -90,4 +90,22 @@ Report emails are sent as branded HTML transactional emails with:
 - `30-Day Guidance` as timed checkpoint cards
 - reply-to support routing
 
+## Duplicate Email Prevention
+
+Full report delivery must remain idempotent. A real purchase showed that cron retries can send duplicate emails if the Resend side effect succeeds but the later database updates do not complete cleanly.
+
+Current guardrails:
+
+- `sendReportEmail` sends `Idempotency-Key: full-report/{reading.id}` to Resend.
+- If a queued job loads a reading already marked `delivered` with `email_message_id`, the Worker marks the job `succeeded` and does not send again.
+- If a report was already generated, retries reuse stored `report_json`, `report_text`, and `report_html` instead of generating a new report.
+- Do not remove these checks when changing `processNextQueuedReportJob`, cron behavior, or the Resend payload.
+
+If duplicate full report emails reappear, inspect:
+
+- duplicate `report_generation_jobs` rows for the same `reading_id`
+- jobs that retried after Resend succeeded but before `email_message_id` was written
+- Resend responses/errors around the duplicate timestamps
+- whether the idempotency key was changed or omitted
+
 PDF attachments are intentionally deferred until a reliable PDF rendering path is chosen.
