@@ -32,7 +32,21 @@ Cloudflare Worker backend for the paid report automation flow.
 
 Plaintext runtime variables are managed in `wrangler.toml` so GitHub deployments do not overwrite Dashboard edits with stale values. Secrets still live only in Cloudflare Worker runtime secrets.
 
-The GitHub Pages frontend should set `window.YLE_API_BASE_URL` to the deployed Worker origin once the Worker route is live.
+The GitHub Pages frontend sets `window.YLE_API_BASE_URL` to `https://your-love-element-api.goodrambo2013.workers.dev` before loading `script.js` on both `/` and `/full-report/`.
+
+## Confirmed Lemon Squeezy Flow
+
+The production checkout is intentionally created by the Worker, not by a static Lemon Squeezy product link. Keep this shape unless the payment architecture is changed deliberately:
+
+1. `POST /api/readings` stores the free answers and returns a `reading_id`.
+2. `POST /api/create-checkout` receives that `reading_id`.
+3. The Worker creates a Lemon Squeezy checkout with `checkout_data.custom.reading_id`.
+4. The Worker sets redirect and receipt links to `/full-report/?reading_id=...`.
+5. Lemon Squeezy sends `order_created` and `order_refunded` events to `/api/webhooks/lemon-squeezy`.
+6. The webhook verifies the `X-Signature` with `LEMON_SQUEEZY_WEBHOOK_SECRET`.
+7. Payment and paid answers are joined by `reading_id`; report generation should only happen once both are present.
+
+Production Lemon Squeezy store id is `365266`. Store id, variant id, API key, and webhook secret are Cloudflare Worker Secrets.
 
 ## Confirmed Deployment Flow
 

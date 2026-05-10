@@ -1,6 +1,92 @@
 # Your Love Element Project Handoff
 
-Last updated: 2026-05-06
+Last updated: 2026-05-10
+
+## 2026-05-10 Confirmed Lemon Squeezy Launch Setup
+
+Lemon Squeezy approval has passed and the production checkout flow is now active.
+
+Confirmed production setup:
+
+- Lemon Squeezy store: `Your Love Element`
+- Lemon Squeezy Store ID: `365266`
+- Product: `Your Love Element: Full Relationship Report`
+- Price: `$9.99`
+- Product type: digital product / personalized report
+- Tax category: Digital Goods or Services
+- Homepage CTA: `Unlock full report`
+- Production Worker origin: `https://your-love-element-api.goodrambo2013.workers.dev`
+- Production site origin: `https://yourloveelement.com`
+- Production frontend commit that enabled checkout: `6ad9464 Enable Lemon Squeezy checkout frontend`
+
+Cloudflare Worker runtime variables/secrets now include:
+
+- `LEMON_SQUEEZY_API_KEY` as Secret
+- `LEMON_SQUEEZY_STORE_ID` as Secret, value `365266`
+- `LEMON_SQUEEZY_VARIANT_ID` as Secret
+- `LEMON_SQUEEZY_WEBHOOK_SECRET` as Secret
+
+Lemon Squeezy webhook setup:
+
+- Callback URL: `https://your-love-element-api.goodrambo2013.workers.dev/api/webhooks/lemon-squeezy`
+- Signing secret: same value as Cloudflare Worker secret `LEMON_SQUEEZY_WEBHOOK_SECRET`
+- Enabled events:
+  - `order_created`
+  - `order_refunded`
+- Do not enable subscription or license-key events for the current product. The current product is a one-time digital report purchase, not a subscription or license product.
+
+Lemon Squeezy product configuration notes:
+
+- `Media`: use `assets/hero-soulmate-report.png` or another polished product image.
+- `Files`: leave empty. This product is a personalized generated report, not a fixed download file.
+- `Links`: leave empty unless intentionally adding a fallback. The production checkout link is created dynamically by the Worker.
+- `Variants`: keep the single `$9.99` variant unless intentionally launching a new price/package.
+- `Confirmation modal` should send customers back to finish the deeper report signals:
+  - Title: `Your full report is ready to refine`
+  - Message: `Thank you for your order. To complete your personalized relationship report, please answer the 8 deeper signals on the next page. Your full report will be delivered by email after your answers are received.`
+  - Button text: `Complete your report`
+  - Button link: `https://yourloveelement.com/full-report/`
+- `Email receipt` should also point customers back to the deeper signals:
+  - Thank you note: `Thank you for ordering your full relationship report. To complete your personalized report, please answer the 8 deeper relationship signals using the button below. After your answers are received, your full report will be generated and delivered to your email.`
+  - Button text: `Complete your report`
+  - Button link: `https://yourloveelement.com/full-report/`
+
+Confirmed technical flow:
+
+1. User completes the free 10-question reading on `/`.
+2. `script.js` calls `POST /api/readings` and stores the returned `reading_id` in browser storage.
+3. User clicks `Unlock full report`.
+4. Frontend calls `POST /api/create-checkout` with the `reading_id`.
+5. Worker creates a Lemon Squeezy checkout using `LEMON_SQUEEZY_STORE_ID` and `LEMON_SQUEEZY_VARIANT_ID`.
+6. Worker attaches `checkout_data.custom.reading_id`.
+7. Worker sets the checkout redirect and receipt links to `https://yourloveelement.com/full-report/?reading_id=...`.
+8. Lemon Squeezy checkout opens.
+9. After payment, Lemon Squeezy sends `order_created` to `/api/webhooks/lemon-squeezy`.
+10. Worker verifies the `X-Signature` with `LEMON_SQUEEZY_WEBHOOK_SECRET`.
+11. Worker reads `meta.custom_data.reading_id`, customer email, order id, product id, variant id, and payment status.
+12. Worker updates the Supabase `readings` row to `paid`.
+13. Customer returns to `/full-report/?reading_id=...`.
+14. Customer submits the 8 deeper paid signals.
+15. Worker stores paid answers and the database trigger queues report generation once both payment and paid answers are present.
+
+Confirmed production checks run on 2026-05-10:
+
+- `GET /api/health` returned `{"ok":true}`.
+- `GET /api/health/supabase` returned `ok: true`.
+- `GET /api/health/email` returned `ok: true`.
+- `POST /api/readings` successfully created test reading `2d89c736-8b4d-4811-bb03-ab3715095bf5`.
+- `POST /api/create-checkout` successfully returned a Lemon Squeezy checkout URL for that reading.
+- Live `https://yourloveelement.com/` contains `Unlock full report` and `window.YLE_API_BASE_URL`.
+- Live `https://yourloveelement.com/full-report/` contains `window.YLE_API_BASE_URL`.
+
+Do-not-change guardrails:
+
+- Do not replace the homepage CTA with a static Lemon Squeezy checkout link. The Worker-created checkout is required because it attaches `reading_id` to `checkout_data.custom`.
+- Do not remove `window.YLE_API_BASE_URL` from `index.html` or `full-report/index.html`; without it the static site falls back to local-only storage and checkout automation stops.
+- Do not rename `reading_id` in Lemon Squeezy custom data unless `worker/src/index.js`, webhook handling, and frontend redirect handling are updated together.
+- Do not upload a fixed product file in Lemon Squeezy unless the business model changes. The current delivery model is personalized generation after payment plus deeper answers.
+- Do not change webhook events away from `order_created` and `order_refunded` without updating `handleLemonSqueezyWebhook`.
+- Do not move the paid 8-question form before checkout. The confirmed product flow is free preview first, payment second, deeper signals third, email delivery last.
 
 ## 2026-05-06 Production E2E Check
 
@@ -22,10 +108,7 @@ Last updated: 2026-05-06
   - `report_html` does not contain `[object Object]`.
   - `report_text` does not contain `[object Object]`.
 - Important note: `report_html` stored in Supabase is the standalone report HTML and does not include the email banner. The banner is applied only in the delivery email template through `elementBannerUrl(siteUrl, element)`. For the tested reading, the production input element was `fire`, so the email template path resolves to `https://yourloveelement.com/assets/elements/fire-banner.jpg`.
-- Started Lemon Squeezy checkout testing:
-  - `POST /api/create-checkout` currently returns a generic `Internal server error`.
-  - Because production Worker catches 500s generically, the external response does not reveal whether the blocker is missing Lemon Worker secrets or a Lemon Squeezy API/config error.
-  - Next step is to verify/set `LEMON_SQUEEZY_API_KEY`, `LEMON_SQUEEZY_STORE_ID`, `LEMON_SQUEEZY_VARIANT_ID`, and `LEMON_SQUEEZY_WEBHOOK_SECRET`, then retest `/api/create-checkout`.
+- Historical note: Lemon Squeezy checkout initially returned a generic `Internal server error` before the production Lemon Worker secrets were configured. This was resolved on 2026-05-10; `/api/create-checkout` now returns a Lemon Squeezy checkout URL in production.
 - Local Worker email revision after reviewing the delivered email:
   - Banner image now renders at its natural 16:9 ratio instead of using `object-fit: cover`, so the top image should no longer be cropped.
   - `30-Day Guidance` prompt now asks each checkpoint for a specific goal, concrete practice, and observable progress signal, with 35-60 words per node.
@@ -66,7 +149,10 @@ Last updated: 2026-05-06
   - `RESEND_API_KEY`
   - `OPENAI_API_KEY`
   - `JOB_RUNNER_SECRET`
-  - future Lemon Squeezy secrets
+  - `LEMON_SQUEEZY_API_KEY`
+  - `LEMON_SQUEEZY_STORE_ID`
+  - `LEMON_SQUEEZY_VARIANT_ID`
+  - `LEMON_SQUEEZY_WEBHOOK_SECRET`
 
 ## 2026-05-05 Automation Progress
 
@@ -156,7 +242,7 @@ The core funnel:
 1. User completes a free 10-question reading.
 2. Site shows a free preview report.
 3. Paid full report is positioned at `$9.99`.
-4. After Lemon Squeezy checkout, user returns to `/full-report/`.
+4. After Lemon Squeezy checkout, user returns to `/full-report/?reading_id=...`.
 5. User completes 8 deeper relationship signals.
 6. Future implementation generates/delivers the full report.
 
@@ -168,7 +254,7 @@ The recommended product flow is:
 2. Site reveals a free preview report and explains what the full report adds.
 3. User clicks `Unlock full report` and pays `$9.99` through Lemon Squeezy.
 4. Lemon Squeezy sends the user a confirmation email with the post-purchase link.
-5. User returns to `https://yourloveelement.com/full-report/`.
+5. User returns to `https://yourloveelement.com/full-report/?reading_id=...`.
 6. User completes the 8 deeper paid signals.
 7. Site collects:
    - Lemon Squeezy order identifier or checkout identifier
@@ -347,8 +433,8 @@ Important files:
 - Free reading stays at 10 questions.
 - Paid full report adds 8 extra questions.
 - Paid 8 questions happen after checkout, not before checkout.
-- Price is currently planned as `$9.99`.
-- CTA stays as `Join early access` until Lemon Squeezy payment approval is complete.
+- Price is `$9.99`.
+- CTA is live as `Unlock full report` and should continue to use the Worker-created checkout flow.
 - `/full-report/` is intentionally not in the main nav yet.
 - Clean URLs are preferred:
   - `/privacy/`, not `/privacy.html`
@@ -435,7 +521,7 @@ Known limitation:
 
 ## Lemon Squeezy Setup
 
-Payment approval is still under review.
+Payment approval has passed and production checkout is active.
 
 Prepared product:
 
@@ -444,16 +530,21 @@ Prepared product:
 - Product type: digital product / personalized report
 - Store icon: `assets/lemon-squeezy-store-icon.png`
 - Product copy: `lemon-squeezy-product-copy.md`
-- Planned post-purchase redirect: `https://yourloveelement.com/full-report/`
+- Fallback post-purchase redirect: `https://yourloveelement.com/full-report/`
+- Runtime post-purchase redirect created by Worker: `https://yourloveelement.com/full-report/?reading_id=...`
 
-When Lemon Squeezy approval passes:
+Completed production setup:
 
-1. Create product in Lemon Squeezy.
-2. Paste copy from `lemon-squeezy-product-copy.md`.
-3. Upload `assets/lemon-squeezy-store-icon.png`.
-4. Set checkout button text: `Unlock full report`.
-5. Set post-purchase redirect to `/full-report/`.
-6. Replace homepage `Join early access` CTA with Lemon Squeezy checkout link.
+1. Product created in Lemon Squeezy.
+2. Copy from `lemon-squeezy-product-copy.md` used for the product.
+3. Product media configured.
+4. Confirmation modal points to `/full-report/` as fallback.
+5. Email receipt points to `/full-report/` as fallback.
+6. Worker secrets configured in Cloudflare.
+7. Lemon webhook configured for `order_created` and `order_refunded`.
+8. Homepage CTA changed from `Join early access` to `Unlock full report`.
+9. Frontend pages set `window.YLE_API_BASE_URL` before loading `script.js`.
+10. Production `/api/create-checkout` verified to return a Lemon Squeezy checkout URL.
 
 ## Design/Layout Decisions
 
@@ -543,12 +634,11 @@ Recommended next session order:
    - PDF
    - email delivery
    - hybrid
-3. Connect Lemon Squeezy checkout after approval.
-4. Add order verification before allowing `/full-report/` to submit/generate.
-5. Add report generation/delivery.
-6. Replace `Join early access` CTA with real checkout link.
-7. Update Terms/Refund/Privacy based on actual delivery and payment behavior.
-8. Test social previews with live URL after major copy/image changes.
+3. Run a real low-value production purchase or Lemon Squeezy test purchase, if available, to verify `order_created` webhook end to end.
+4. Confirm the paid report email is delivered after both payment and 8 deeper signals are present.
+5. Add stricter order verification before allowing `/full-report/` to submit/generate if needed.
+6. Update Terms/Refund/Privacy based on actual delivery timing and refund behavior.
+7. Test social previews with live URL after major copy/image changes.
 
 ## Useful Commands
 
