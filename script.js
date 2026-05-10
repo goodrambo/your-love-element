@@ -37,6 +37,20 @@ const paidValidation = document.querySelector("#paidValidation");
 const apiBaseUrl = window.YLE_API_BASE_URL || "";
 const readingStorageKey = "yle-reading-id";
 const freeAnswersStorageKey = "yle-free-answers";
+const monthDayLimits = {
+  January: 31,
+  February: 29,
+  March: 31,
+  April: 30,
+  May: 31,
+  June: 30,
+  July: 31,
+  August: 31,
+  September: 30,
+  October: 31,
+  November: 30,
+  December: 31,
+};
 
 const freeAnswerNames = ["status", "intent", "quality", "element", "setting", "block", "secure", "mirror", "pace"];
 const paidAnswerNames = [
@@ -100,6 +114,8 @@ const qualityProfiles = {
 
 let currentStep = 0;
 let paidCurrentStep = 0;
+let previewReadyForCheckout = false;
+let currentReadingId = null;
 
 function getStorageItem(key) {
   try {
@@ -170,7 +186,24 @@ function lowerInitial(value) {
 function validateBirthdate(form) {
   const month = form?.elements?.month?.value || "";
   const day = Number(form?.elements?.day?.value);
-  return Boolean(month && Number.isInteger(day) && day >= 1 && day <= 31);
+  const maxDay = monthDayLimits[month] || 31;
+  return Boolean(month && Number.isInteger(day) && day >= 1 && day <= maxDay);
+}
+
+function syncBirthDayLimit(form) {
+  const month = form?.elements?.month?.value || "";
+  const dayField = form?.elements?.day;
+  if (!dayField) {
+    return;
+  }
+
+  const maxDay = monthDayLimits[month] || 31;
+  dayField.max = String(maxDay);
+  dayField.setAttribute("aria-label", month ? `Birth day, 1 to ${maxDay}` : "Birth day");
+
+  if (Number(dayField.value) > maxDay) {
+    dayField.value = "";
+  }
 }
 
 function showValidation(target, step, message) {
@@ -191,7 +224,7 @@ function validateStep(step, target, form) {
   if (step.querySelector(".date-grid")) {
     const isValid = validateBirthdate(form);
     if (!isValid) {
-      showValidation(target, step, "Choose your birth month and enter a day between 1 and 31.");
+      showValidation(target, step, "Choose a valid day for the selected birth month.");
       return false;
     }
     clearStepValidation(target, step);
@@ -290,8 +323,13 @@ async function startCheckout(event) {
   }
 
   event.preventDefault();
-  const existingReadingId = getStorageItem(readingStorageKey);
-  const readingId = existingReadingId || (await saveFreeAnswers());
+  if (!previewReadyForCheckout) {
+    setStatus(readingSaveStatus, "Complete the 10-question free reading and reveal your preview before checkout.", "error");
+    document.querySelector("#reading")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  const readingId = currentReadingId || (await saveFreeAnswers());
   if (!readingId) {
     setStatus(readingSaveStatus, "Please reveal your preview before checkout.", "error");
     return;
@@ -366,8 +404,14 @@ async function revealPreview() {
   document.querySelector("#preview").scrollIntoView({ behavior: "smooth", block: "start" });
 
   try {
-    await saveFreeAnswers();
+    currentReadingId = await saveFreeAnswers();
+    previewReadyForCheckout = Boolean(currentReadingId);
+    if (unlockReportButton) {
+      unlockReportButton.removeAttribute("aria-disabled");
+      unlockReportButton.textContent = "Unlock full report - $9.99";
+    }
   } catch {
+    previewReadyForCheckout = false;
     setStatus(readingSaveStatus, "Your preview is visible, but online saving is temporarily unavailable.", "error");
   }
 }
@@ -400,10 +444,19 @@ function initQuiz() {
     }
   });
 
-  document.querySelector("#reading")?.addEventListener("change", () => {
-    validateStep(steps[currentStep], quizValidation, document.querySelector("#reading"));
+  const form = document.querySelector("#reading");
+  form?.addEventListener("change", () => {
+    syncBirthDayLimit(form);
+    previewReadyForCheckout = false;
+    currentReadingId = null;
+    if (unlockReportButton) {
+      unlockReportButton.setAttribute("aria-disabled", "true");
+      unlockReportButton.textContent = "Reveal free preview first";
+    }
+    validateStep(steps[currentStep], quizValidation, form);
   });
 
+  syncBirthDayLimit(form);
   updateStep();
 }
 

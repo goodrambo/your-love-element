@@ -2,6 +2,23 @@
 
 Last updated: 2026-05-10
 
+## 2026-05-10 Preview QA Fixes
+
+Small post-launch UX fixes were prepared after mobile/desktop review:
+
+- Increased spacing between the sample preview heading and intro copy on mobile.
+- Birth day validation now respects the selected month:
+  - February allows up to 29.
+  - April, June, September, and November allow up to 30.
+  - 31-day months still allow up to 31.
+- The full-report checkout CTA no longer trusts a stale browser-stored `yle-reading-id` after refresh. The current page session must complete and reveal the free preview before checkout can begin.
+- The initial paid CTA is visually gated as `Reveal free preview first` and switches to `Unlock full report - $9.99` only after the preview is saved.
+- The desktop preview area was simplified from uneven stacked cards into:
+  - partner portrait card
+  - mini analysis card
+  - a single full-width paid report CTA
+- Static pages now cache-bust CSS/JS with `?v=20260510-fixes`.
+
 ## 2026-05-10 UX, Checkout Trust, and SEO/GEO Updates
 
 Two post-launch polish commits were completed and pushed to `origin/main`:

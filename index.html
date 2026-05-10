@@ -25,7 +25,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=20260510-content" />
+    <link rel="stylesheet" href="styles.css?v=20260510-fixes" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -275,87 +275,60 @@
         </div>
 
         <div class="result-layout">
-          <div class="result-column result-column-primary">
-            <article class="portrait-card">
-              <div class="portrait-frame">
-                <img src="assets/hero-soulmate-report.png" alt="A sample future partner portrait" />
+          <article class="portrait-card">
+            <div class="portrait-frame">
+              <img src="assets/hero-soulmate-report.png" alt="A sample future partner portrait" />
+            </div>
+            <div>
+              <p class="card-kicker" id="portraitKicker">Sample partner portrait</p>
+              <h3 id="archetypeTitle">Your archetype will appear here</h3>
+              <p id="archetypeText">
+                Answer the 10 questions to reveal a preview built from your actual choices. Your sample space will become a focused portrait of the qualities you notice, the pace your heart trusts, and the kind of relationship climate that feels most supportive.
+
+                Until then, this area is only a preview of the report format. No hidden default answers are being used for your reading.
+              </p>
+              <div class="element-seal">
+                <span id="elementName">Element profile pending</span>
+                <small id="elementSignal">Your selected element signal will appear after the free reading.</small>
+              </div>
+            </div>
+          </article>
+
+          <article class="analysis-card">
+            <p class="card-kicker">Mini analysis</p>
+            <div class="analysis-grid">
+              <div>
+                <span>Recognition sign</span>
+                <p id="recognitionText">Complete the quiz to reveal the first signal your future partner profile may carry.</p>
               </div>
               <div>
-                <p class="card-kicker" id="portraitKicker">Sample partner portrait</p>
-                <h3 id="archetypeTitle">Your archetype will appear here</h3>
-                <p id="archetypeText">
-                  Answer the 10 questions to reveal a preview built from your actual choices. Your sample space will become a focused portrait of the qualities you notice, the pace your heart trusts, and the kind of relationship climate that feels most supportive.
-
-                  Until then, this area is only a preview of the report format. No hidden default answers are being used for your reading.
-                </p>
-                <div class="element-seal">
-                  <span id="elementName">Element profile pending</span>
-                  <small id="elementSignal">Your selected element signal will appear after the free reading.</small>
-                </div>
+                <span>Meeting signal</span>
+                <p id="meetingText">Your likely meeting field will be shaped by the setting and pace you choose.</p>
               </div>
-            </article>
+              <div>
+                <span>Pattern to release</span>
+                <p id="releaseText">Your preview will name the old pattern your next chapter may ask you to release.</p>
+              </div>
+              <div>
+                <span>Next step</span>
+                <p id="adviceText">After the 10 questions, this becomes a practical next step for your current love chapter.</p>
+              </div>
+            </div>
+          </article>
 
-            <article class="preview-note">
-              <p class="card-kicker">Your free preview includes</p>
-              <ul class="preview-note-list">
-                <li><span>Element</span> profile</li>
-                <li><span>Partner</span> archetype</li>
-                <li><span>Meeting</span> signals</li>
-                <li><span>Next</span> step</li>
+          <article class="unlock-box">
+            <div>
+              <p class="card-kicker">Full report - $9.99</p>
+              <h3>Go deeper only after the free preview feels useful.</h3>
+              <ul class="offer-list" aria-label="Full report purchase details">
+                <li>Includes 8 follow-up signals for attachment, conflict, reassurance, boundaries, trust, and 30-day guidance.</li>
+                <li>Delivered by email after payment and your deeper answers are received.</li>
+                <li>Reflective personal insight and entertainment, with support for delivery or charge issues.</li>
               </ul>
-            </article>
-          </div>
-
-          <div class="result-column">
-            <article class="analysis-card">
-              <p class="card-kicker">Mini analysis</p>
-              <div class="analysis-grid">
-                <div>
-                  <span>Recognition sign</span>
-                  <p id="recognitionText">Complete the quiz to reveal the first signal your future partner profile may carry.</p>
-                </div>
-                <div>
-                  <span>Meeting signal</span>
-                  <p id="meetingText">Your likely meeting field will be shaped by the setting and pace you choose.</p>
-                </div>
-                <div>
-                  <span>Pattern to release</span>
-                  <p id="releaseText">Your preview will name the old pattern your next chapter may ask you to release.</p>
-                </div>
-                <div>
-                  <span>Next step</span>
-                  <p id="adviceText">After the 10 questions, this becomes a practical next step for your current love chapter.</p>
-                </div>
-              </div>
-            </article>
-
-            <article class="refinement-card">
-              <p class="card-kicker">Why the full report goes deeper</p>
-              <h3>Eight follow-up questions separate chemistry from compatibility.</h3>
-              <p>The paid report uses your deeper answers to refine attachment pattern, conflict style, reassurance needs, boundaries, and the kind of partner energy that feels genuinely safe.</p>
-            </article>
-
-            <article class="unlock-box">
-              <div>
-                <p class="card-kicker">Full report - $9.99</p>
-                <h3>Unlock your full relationship report after your free preview feels useful.</h3>
-                <ul class="offer-list" aria-label="Full report purchase details">
-                  <li>Includes 8 deeper signals for attachment, conflict, reassurance, boundaries, trust, and 30-day guidance.</li>
-                  <li>Delivered by email after payment and your deeper answers are received.</li>
-                  <li>Reflective personal insight and entertainment, not professional advice.</li>
-                  <li>Support is available for duplicate charges, failed delivery, or technical issues.</li>
-                </ul>
-                <ul class="deep-signal-list" aria-label="Full report deepening questions">
-                  <li>What happens inside when you start liking someone?</li>
-                  <li>Which past relationship pattern keeps repeating?</li>
-                  <li>What reassurance helps your heart trust faster?</li>
-                  <li>How do you handle conflict and closeness?</li>
-                </ul>
-              </div>
-              <a class="price-button" id="unlockReportButton" href="/full-report/">Unlock full report - $9.99</a>
-              <p class="api-status" id="readingSaveStatus" hidden></p>
-            </article>
-          </div>
+            </div>
+            <a class="price-button" id="unlockReportButton" href="/full-report/" aria-disabled="true">Reveal free preview first</a>
+            <p class="api-status" id="readingSaveStatus" hidden></p>
+          </article>
         </div>
       </section>
 
@@ -427,6 +400,6 @@
     <script>
       window.YLE_API_BASE_URL = "https://your-love-element-api.goodrambo2013.workers.dev";
     </script>
-    <script src="script.js?v=20260510-content"></script>
+    <script src="script.js?v=20260510-fixes"></script>
   </body>
 </html>
