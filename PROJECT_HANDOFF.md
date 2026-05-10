@@ -2,6 +2,23 @@
 
 Last updated: 2026-05-10
 
+## 2026-05-10 Delivery Email Capture And Lemon Receipt Note
+
+Email delivery clarification after the first real purchase:
+
+- The production site now asks for `Delivery email` in the homepage full-report CTA before sending the customer to Lemon Squeezy.
+- Frontend sends that email to `POST /api/create-checkout`.
+- Worker already supports `checkout_data.email`; the field now pre-fills the Lemon checkout and stores `customer_email` on the matching `readings` row.
+- Lemon Squeezy `order_created` webhook can still overwrite/update `customer_email` with the email actually used at checkout.
+- Report delivery continues to use `readings.customer_email`.
+
+Important Lemon Squeezy admin note:
+
+- The receipt email shown as `Your Love Element (via Lemon Squeezy)` is sent by Lemon Squeezy, not by the Worker/Resend report email flow.
+- If Apple Mail/Gmail shows replies going to `goodrambo2013@gmail.com`, the Lemon Squeezy store/account receipt reply/contact email is still using the personal Gmail.
+- Update Lemon Squeezy store/account/customer support or receipt email settings so merchant replies go to `support@yourloveelement.com`.
+- This repo controls the dynamic checkout URL, receipt button URL/text, and full report delivery email, but not Lemon Squeezy's merchant receipt sender identity shown by the mail client.
+
 ## 2026-05-10 Paid Report Delivery Cron Fix
 
 Issue observed after the first real production purchase: payment could complete, but the full report might not arrive because queued `report_generation_jobs` were not automatically processed.

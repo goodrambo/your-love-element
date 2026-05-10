@@ -30,6 +30,7 @@ const paidProgressBar = document.querySelector("#paidProgressBar");
 const paidQuizMood = document.querySelector("#paidQuizMood");
 const paidComplete = document.querySelector("#paidComplete");
 const unlockReportButton = document.querySelector("#unlockReportButton");
+const checkoutEmailInput = document.querySelector("#checkoutEmail");
 const readingSaveStatus = document.querySelector("#readingSaveStatus");
 const paidSaveStatus = document.querySelector("#paidSaveStatus");
 const paidValidation = document.querySelector("#paidValidation");
@@ -329,6 +330,13 @@ async function startCheckout(event) {
     return;
   }
 
+  const checkoutEmail = String(checkoutEmailInput?.value || "").trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(checkoutEmail)) {
+    setStatus(readingSaveStatus, "Enter the email address where your full report should be delivered.", "error");
+    checkoutEmailInput?.focus();
+    return;
+  }
+
   const readingId = currentReadingId || (await saveFreeAnswers());
   if (!readingId) {
     setStatus(readingSaveStatus, "Please reveal your preview before checkout.", "error");
@@ -337,7 +345,10 @@ async function startCheckout(event) {
 
   setStatus(readingSaveStatus, "Creating secure checkout...", "neutral");
   try {
-    const result = await apiPost("/api/create-checkout", { reading_id: readingId });
+    const result = await apiPost("/api/create-checkout", {
+      reading_id: readingId,
+      email: checkoutEmail,
+    });
     window.location.href = result.checkout_url;
   } catch (error) {
     setStatus(readingSaveStatus, "Checkout is not available yet. Please contact support.", "error");

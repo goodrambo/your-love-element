@@ -345,7 +345,8 @@ input[type="radio"] {
 }
 
 select,
-input[type="number"] {
+input[type="number"],
+input[type="email"] {
   width: 100%;
   min-height: 46px;
   border: 1px solid var(--line);
@@ -688,6 +689,33 @@ input[type="number"] {
 
 .offer-list li {
   max-width: 330px;
+}
+
+.checkout-email {
+  display: grid;
+  gap: 6px;
+  min-width: 280px;
+  max-width: 360px;
+  color: rgba(255, 250, 245, 0.9);
+}
+
+.checkout-email span {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.checkout-email input {
+  border-color: rgba(255, 250, 245, 0.32);
+  background: rgba(255, 250, 245, 0.95);
+  color: var(--ink);
+}
+
+.checkout-email small {
+  color: rgba(255, 250, 245, 0.74);
+  font-size: 0.82rem;
+  line-height: 1.4;
 }
 
 .price-button {
@@ -1097,6 +1125,10 @@ input[type="number"] {
   .unlock-box {
     align-items: stretch;
     grid-template-columns: 1fr;
+  }
+
+  .checkout-email {
+    max-width: none;
   }
 
   .price-button {

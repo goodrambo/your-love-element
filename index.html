@@ -25,7 +25,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=20260510-fixes" />
+    <link rel="stylesheet" href="styles.css?v=20260510-email" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -326,6 +326,11 @@
                 <li>Reflective personal insight and entertainment, with support for delivery or charge issues.</li>
               </ul>
             </div>
+            <label class="checkout-email">
+              <span>Delivery email</span>
+              <input id="checkoutEmail" type="email" autocomplete="email" placeholder="you@example.com" />
+              <small>Your Lemon checkout and full report delivery will use this email.</small>
+            </label>
             <a class="price-button" id="unlockReportButton" href="/full-report/" aria-disabled="true">Reveal free preview first</a>
             <p class="api-status" id="readingSaveStatus" hidden></p>
           </article>
@@ -400,6 +405,6 @@
     <script>
       window.YLE_API_BASE_URL = "https://your-love-element-api.goodrambo2013.workers.dev";
     </script>
-    <script src="script.js?v=20260510-fixes"></script>
+    <script src="script.js?v=20260510-email"></script>
   </body>
 </html>
