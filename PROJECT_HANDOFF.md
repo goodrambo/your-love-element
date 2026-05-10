@@ -2,6 +2,29 @@
 
 Last updated: 2026-05-10
 
+## 2026-05-10 Paid Report Delivery Cron Fix
+
+Issue observed after the first real production purchase: payment could complete, but the full report might not arrive because queued `report_generation_jobs` were not automatically processed.
+
+Fix prepared:
+
+- Added a Cloudflare Worker `scheduled` handler that calls the report queue processor.
+- Added `[triggers] crons = ["*/5 * * * *"]` to `worker/wrangler.toml`.
+- Each cron run processes up to 3 queued report generation jobs.
+- The protected `POST /api/jobs/process` endpoint remains available for manual recovery/debugging and now uses the same queue processor.
+
+Operational notes:
+
+- A full report is only generated after both conditions are true:
+  - Lemon Squeezy `order_created` webhook has marked the reading as paid.
+  - The customer has submitted the 8 deeper signals on `/full-report/?reading_id=...`.
+- After this Worker deploy is live, already queued jobs should be picked up by the next cron run.
+- If a paid customer still does not receive email after the cron fix, inspect the matching `readings` and `report_generation_jobs` rows for:
+  - missing `customer_email`
+  - missing `paid_answers_json`
+  - failed job `last_error`
+  - Resend delivery error
+
 ## 2026-05-10 Preview QA Fixes
 
 Small post-launch UX fixes were prepared after mobile/desktop review:

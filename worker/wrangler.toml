@@ -2,6 +2,9 @@ name = "your-love-element-api"
 main = "src/index.js"
 compatibility_date = "2026-05-05"
 
+[triggers]
+crons = ["*/5 * * * *"]
+
 [vars]
 SITE_URL = "https://yourloveelement.com"
 SUPABASE_URL = "https://nmwhaiimnuywnjlvobde.supabase.co"

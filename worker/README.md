@@ -8,7 +8,7 @@ Cloudflare Worker backend for the paid report automation flow.
 - `POST /api/create-checkout` creates a Lemon Squeezy checkout for an existing reading.
 - `POST /api/webhooks/lemon-squeezy` records and verifies Lemon Squeezy order webhooks.
 - `POST /api/readings/:reading_id/paid-signals` stores the 8 paid answers.
-- `POST /api/jobs/process` processes one queued report generation job.
+- `POST /api/jobs/process` manually processes one queued report generation job.
 - `POST /api/test-email` sends one protected Resend test email.
 
 ## Required Worker Secrets
@@ -33,6 +33,12 @@ Cloudflare Worker backend for the paid report automation flow.
 Plaintext runtime variables are managed in `wrangler.toml` so GitHub deployments do not overwrite Dashboard edits with stale values. Secrets still live only in Cloudflare Worker runtime secrets.
 
 The GitHub Pages frontend sets `window.YLE_API_BASE_URL` to `https://your-love-element-api.goodrambo2013.workers.dev` before loading `script.js` on both `/` and `/full-report/`.
+
+## Scheduled Report Delivery
+
+`worker/wrangler.toml` configures a Cloudflare Cron trigger to run every 5 minutes. The Worker `scheduled` handler processes up to 3 queued report generation jobs per run.
+
+Keep the protected `POST /api/jobs/process` endpoint for manual recovery and debugging. Normal production delivery should not rely on a human or external script calling it.
 
 ## Confirmed Lemon Squeezy Flow
 

@@ -82,6 +82,10 @@ export default {
       return json({ error: status === 500 ? "Internal server error" : error.message }, status);
     }
   },
+
+  scheduled(event, env, ctx) {
+    ctx.waitUntil(processReportQueue(env, 3));
+  },
 };
 
 async function createReading(request, env) {
@@ -387,6 +391,35 @@ async function processNextReportJob(request, env) {
   requireBearerSecret(request, env.JOB_RUNNER_SECRET);
   requireEnv(env, ["OPENAI_API_KEY", "RESEND_API_KEY"]);
 
+  return processReportQueue(env, 1);
+}
+
+async function processReportQueue(env, limit = 1) {
+  requireEnv(env, ["OPENAI_API_KEY", "RESEND_API_KEY"]);
+
+  const results = [];
+  for (let count = 0; count < limit; count += 1) {
+    const result = await processNextQueuedReportJob(env);
+    if (!result.processed) {
+      return {
+        ok: true,
+        processed: results.length > 0,
+        count: results.length,
+        results,
+      };
+    }
+    results.push(result);
+  }
+
+  return {
+    ok: true,
+    processed: results.length > 0,
+    count: results.length,
+    results,
+  };
+}
+
+async function processNextQueuedReportJob(env) {
   const workerId = crypto.randomUUID();
   const jobs = await supabase(
     env,
