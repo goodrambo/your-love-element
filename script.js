@@ -97,19 +97,19 @@ const elementCopy = {
 };
 
 const elementShareCopy = {
-  Wood: "You move toward love through growth, patience, and becoming.",
-  Fire: "You move toward love through aliveness, courage, and honest spark.",
-  Earth: "You move toward love through steadiness, loyalty, and grounded care.",
-  Metal: "You move toward love through clarity, devotion, and self-respect.",
-  Water: "You move toward love through emotional depth, quiet trust, and tenderness.",
+  Wood: "Drawn to growth, patient timing, and becoming together.",
+  Fire: "Drawn to aliveness, brave expression, and honest spark.",
+  Earth: "Drawn to steady devotion, grounded care, and loyalty.",
+  Metal: "Drawn to clear standards, refined devotion, and self-respect.",
+  Water: "Drawn to emotional depth, quiet trust, and tenderness.",
 };
 
 const elementSharePalettes = {
-  Wood: { accent: "#4f877b", deep: "#244e43", soft: "#dce9dc", warm: "#d8a74f" },
-  Fire: { accent: "#b84d63", deep: "#6f263d", soft: "#f5d9d5", warm: "#d8a74f" },
-  Earth: { accent: "#9b7650", deep: "#5a3d2e", soft: "#eadfca", warm: "#d8a74f" },
-  Metal: { accent: "#64727a", deep: "#323f45", soft: "#e3e7e6", warm: "#d8a74f" },
-  Water: { accent: "#1f706a", deep: "#173f4a", soft: "#d9ece9", warm: "#d8a74f" },
+  Wood: { accent: "#4f877b", deep: "#183f38", wash: "#9bbca4", pale: "#e4efe2", warm: "#c49a45" },
+  Fire: { accent: "#b84d63", deep: "#6f263d", wash: "#d9988d", pale: "#f5ded9", warm: "#c49a45" },
+  Earth: { accent: "#9b7650", deep: "#5a3d2e", wash: "#c5ad7d", pale: "#eee4ce", warm: "#c49a45" },
+  Metal: { accent: "#64727a", deep: "#243640", wash: "#b8c1bf", pale: "#e7e9e5", warm: "#c49a45" },
+  Water: { accent: "#0f6578", deep: "#102842", wash: "#79aebe", pale: "#e1eff0", warm: "#c49a45" },
 };
 
 const qualityProfiles = {
@@ -341,6 +341,253 @@ function drawCenteredWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines
   return y + lines.length * lineHeight;
 }
 
+function drawPaperTexture(ctx) {
+  ctx.fillStyle = "#fbf6ed";
+  ctx.fillRect(0, 0, shareCardWidth, shareCardHeight);
+
+  const warmWash = ctx.createLinearGradient(0, 0, shareCardWidth, shareCardHeight);
+  warmWash.addColorStop(0, "rgba(255, 252, 245, 0.92)");
+  warmWash.addColorStop(0.48, "rgba(250, 241, 226, 0.72)");
+  warmWash.addColorStop(1, "rgba(255, 247, 235, 0.9)");
+  ctx.fillStyle = warmWash;
+  ctx.fillRect(0, 0, shareCardWidth, shareCardHeight);
+
+  for (let i = 0; i < 720; i += 1) {
+    const x = (i * 97) % shareCardWidth;
+    const y = (i * 193) % shareCardHeight;
+    const alpha = 0.018 + ((i % 7) * 0.004);
+    ctx.fillStyle = `rgba(65, 50, 36, ${alpha})`;
+    ctx.fillRect(x, y, 1 + (i % 3), 1);
+  }
+}
+
+function drawOrnateBorder(ctx) {
+  ctx.save();
+  ctx.strokeStyle = "rgba(94, 75, 49, 0.18)";
+  ctx.lineWidth = 4;
+  drawRoundedRect(ctx, 58, 56, 964, 1238, 36);
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.78)";
+  ctx.lineWidth = 3;
+  drawRoundedRect(ctx, 72, 70, 936, 1210, 28);
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(94, 75, 49, 0.14)";
+  ctx.lineWidth = 2;
+  [
+    [58, 136, 140, 56],
+    [940, 56, 1022, 136],
+    [58, 1214, 140, 1294],
+    [940, 1294, 1022, 1214],
+  ].forEach(([x1, y1, x2, y2]) => {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.quadraticCurveTo((x1 + x2) / 2, (y1 + y2) / 2, x2, y2);
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function drawHeartLogo(ctx, palette, x, y) {
+  ctx.save();
+  ctx.strokeStyle = palette.warm;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(x, y, 43, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x, y + 24);
+  ctx.bezierCurveTo(x - 48, y - 4, x - 22, y - 34, x, y - 12);
+  ctx.bezierCurveTo(x + 22, y - 34, x + 48, y - 4, x, y + 24);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - 28, y + 18);
+  ctx.lineTo(x - 42, y + 34);
+  ctx.moveTo(x + 28, y + 18);
+  ctx.lineTo(x + 42, y + 34);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawLeafSprig(ctx, palette) {
+  ctx.save();
+  ctx.translate(888, 42);
+  ctx.rotate(-0.28);
+  ctx.strokeStyle = palette.accent;
+  ctx.lineWidth = 5;
+  ctx.globalAlpha = 0.44;
+  ctx.beginPath();
+  ctx.moveTo(86, -26);
+  ctx.bezierCurveTo(40, 90, 92, 210, -6, 338);
+  ctx.stroke();
+
+  for (let i = 0; i < 6; i += 1) {
+    const y = 30 + i * 52;
+    const side = i % 2 === 0 ? -1 : 1;
+    ctx.save();
+    ctx.translate(side * 24, y);
+    ctx.rotate(side * -0.72);
+    ctx.fillStyle = palette.wash;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 28 + i * 2, 74 - i * 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = palette.deep;
+    ctx.globalAlpha = 0.22;
+    ctx.beginPath();
+    ctx.moveTo(0, -54);
+    ctx.lineTo(0, 54);
+    ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawWatercolorMarks(ctx, palette) {
+  ctx.save();
+  ctx.globalAlpha = 0.46;
+  const waveGradient = ctx.createLinearGradient(0, 1040, 760, 1330);
+  waveGradient.addColorStop(0, palette.accent);
+  waveGradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+  ctx.fillStyle = waveGradient;
+  ctx.beginPath();
+  ctx.moveTo(-40, 1168);
+  ctx.bezierCurveTo(96, 1078, 184, 1124, 292, 1064);
+  ctx.bezierCurveTo(398, 1006, 468, 1076, 584, 1038);
+  ctx.bezierCurveTo(428, 1196, 232, 1308, -42, 1332);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.globalAlpha = 0.62;
+  ctx.strokeStyle = palette.accent;
+  ctx.lineWidth = 6;
+  for (let i = 0; i < 5; i += 1) {
+    ctx.beginPath();
+    ctx.moveTo(32 + i * 18, 1124 + i * 22);
+    ctx.bezierCurveTo(168, 1056 + i * 10, 260, 1164 + i * 4, 394, 1096 + i * 18);
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = 0.28;
+  for (let i = 0; i < 28; i += 1) {
+    const x = (i * 47) % 350;
+    const y = 882 + ((i * 71) % 260);
+    ctx.fillStyle = i % 4 === 0 ? palette.warm : palette.accent;
+    ctx.beginPath();
+    ctx.arc(x, y, 3 + (i % 6), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawTinyDivider(ctx, palette, y, icon = "heart") {
+  ctx.save();
+  ctx.strokeStyle = palette.warm;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(398, y);
+  ctx.lineTo(494, y);
+  ctx.moveTo(586, y);
+  ctx.lineTo(682, y);
+  ctx.stroke();
+
+  ctx.fillStyle = palette.warm;
+  ctx.font = '700 26px Inter, system-ui, sans-serif';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(icon === "drop" ? "◇" : "♥", 540, y + 1);
+  ctx.restore();
+}
+
+function drawElementLines(ctx, palette) {
+  ctx.save();
+  ctx.strokeStyle = palette.accent;
+  ctx.lineWidth = 4;
+  ctx.globalAlpha = 0.85;
+  for (let i = 0; i < 3; i += 1) {
+    const y = 680 + i * 18;
+    ctx.beginPath();
+    ctx.moveTo(450, y);
+    ctx.bezierCurveTo(495, y - 24, 530, y + 22, 574, y);
+    ctx.bezierCurveTo(608, y - 16, 648, y + 10, 680, y - 6);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawFiveElementSeal(ctx, palette, x, y) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = "rgba(196, 154, 69, 0.72)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(0, 0, 76, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, 0, 55, 0, Math.PI * 2);
+  ctx.stroke();
+
+  const points = [
+    [0, -42, "#d8a74f", "◎"],
+    [42, -4, "#0f6578", "≈"],
+    [25, 42, "#64727a", "△"],
+    [-25, 42, "#b84d63", "♢"],
+    [-42, -4, "#4f877b", "◌"],
+  ];
+
+  ctx.font = '700 30px Inter, system-ui, sans-serif';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  points.forEach(([px, py, color, mark]) => {
+    ctx.fillStyle = "#fbf6ed";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(px, py, 20, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.fillText(mark, px, py + 1);
+  });
+
+  ctx.strokeStyle = "rgba(196, 154, 69, 0.56)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  points.forEach(([px, py], index) => {
+    if (index === 0) {
+      ctx.moveTo(px, py);
+    } else {
+      ctx.lineTo(px, py);
+    }
+  });
+  ctx.closePath();
+  ctx.stroke();
+
+  ctx.fillStyle = palette.warm;
+  ctx.font = '800 30px Inter, system-ui, sans-serif';
+  ctx.fillText("♥", 0, 8);
+  ctx.restore();
+}
+
+function drawBrushUrl(ctx, palette) {
+  ctx.save();
+  ctx.fillStyle = palette.deep;
+  ctx.beginPath();
+  ctx.moveTo(238, 1206);
+  ctx.bezierCurveTo(388, 1180, 618, 1184, 846, 1198);
+  ctx.bezierCurveTo(826, 1240, 446, 1244, 242, 1238);
+  ctx.bezierCurveTo(220, 1228, 214, 1214, 238, 1206);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#fffaf5";
+  ctx.font = '700 38px Inter, system-ui, sans-serif';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("yourloveelement.com", 540, 1219);
+  ctx.restore();
+}
+
 function shareCardFileName() {
   const element = String(currentShareCardData?.element || "love-element").toLowerCase();
   return `your-love-element-${element}.png`;
@@ -372,97 +619,48 @@ async function createShareCardBlob(data) {
   const title = data.title || "Your Love Element";
   const description = data.description || elementCopy[data.element] || "A private love signal from Your Love Element.";
 
-  ctx.fillStyle = "#fff7ee";
-  ctx.fillRect(0, 0, shareCardWidth, shareCardHeight);
+  drawPaperTexture(ctx);
+  drawOrnateBorder(ctx);
+  drawLeafSprig(ctx, palette);
+  drawWatercolorMarks(ctx, palette);
 
-  const gradient = ctx.createLinearGradient(0, 0, shareCardWidth, shareCardHeight);
-  gradient.addColorStop(0, "#fffaf5");
-  gradient.addColorStop(0.56, palette.soft);
-  gradient.addColorStop(1, "#fff1e0");
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, shareCardWidth, shareCardHeight);
-
-  ctx.globalAlpha = 0.18;
-  ctx.fillStyle = palette.accent;
-  ctx.beginPath();
-  ctx.ellipse(880, 136, 260, 170, -0.28, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = palette.warm;
-  ctx.beginPath();
-  ctx.ellipse(172, 1120, 230, 150, 0.35, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-
-  ctx.strokeStyle = "rgba(34, 27, 24, 0.12)";
-  ctx.lineWidth = 3;
-  drawRoundedRect(ctx, 64, 64, 952, 1222, 46);
-  ctx.stroke();
-
-  ctx.strokeStyle = "rgba(31, 112, 106, 0.22)";
-  ctx.lineWidth = 5;
-  for (let i = 0; i < 4; i += 1) {
-    const y = 268 + i * 34;
-    ctx.beginPath();
-    ctx.moveTo(188, y);
-    ctx.bezierCurveTo(318, y - 42, 388, y + 42, 518, y);
-    ctx.bezierCurveTo(648, y - 42, 718, y + 42, 848, y);
-    ctx.stroke();
-  }
-
-  ctx.fillStyle = "#fffaf5";
-  drawRoundedRect(ctx, 128, 170, 824, 1010, 34);
-  ctx.fill();
-  ctx.strokeStyle = "rgba(34, 27, 24, 0.1)";
-  ctx.stroke();
-
-  ctx.fillStyle = palette.accent;
-  ctx.beginPath();
-  ctx.arc(540, 246, 50, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#fffaf5";
-  ctx.font = '700 38px Inter, system-ui, sans-serif';
   ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("YLE", 540, 247);
-
   ctx.textBaseline = "alphabetic";
-  ctx.font = '800 28px Inter, system-ui, sans-serif';
+  drawHeartLogo(ctx, palette, 540, 114);
+
+  ctx.font = '800 32px Inter, system-ui, sans-serif';
   ctx.fillStyle = palette.deep;
-  drawTrackedText(ctx, "YOUR LOVE ELEMENT", 540, 354, 4);
+  drawTrackedText(ctx, "YOUR LOVE ELEMENT", 540, 198, 6);
+  drawTinyDivider(ctx, palette, 236, "heart");
 
-  ctx.font = '600 38px Inter, system-ui, sans-serif';
-  ctx.fillStyle = "#6f625b";
-  ctx.fillText("My Love Element is", 540, 468);
-
-  ctx.font = '700 148px "Playfair Display", Georgia, serif';
+  ctx.font = '700 76px "Playfair Display", Georgia, serif';
   ctx.fillStyle = palette.deep;
-  ctx.fillText(data.element, 540, 612);
+  ctx.fillText("My Love Element is", 540, 356);
 
-  ctx.fillStyle = palette.warm;
-  drawRoundedRect(ctx, 330, 656, 420, 12, 999);
-  ctx.fill();
-
-  ctx.font = '800 24px Inter, system-ui, sans-serif';
+  ctx.save();
+  ctx.globalAlpha = 0.08;
   ctx.fillStyle = palette.accent;
-  drawTrackedText(ctx, "FUTURE PARTNER SIGNAL", 540, 760, 3);
+  ctx.font = '700 190px "Playfair Display", Georgia, serif';
+  ctx.fillText(data.element, 540, 592);
+  ctx.restore();
+
+  ctx.font = '700 212px "Playfair Display", Georgia, serif';
+  ctx.fillStyle = palette.accent;
+  ctx.fillText(data.element, 540, 588);
+  drawTinyDivider(ctx, palette, 642, "drop");
+  drawElementLines(ctx, palette);
 
   ctx.font = '700 64px "Playfair Display", Georgia, serif';
-  ctx.fillStyle = "#221b18";
-  drawCenteredWrappedText(ctx, title, 540, 842, 700, 78, 2);
-
-  ctx.font = '500 36px Inter, system-ui, sans-serif';
-  ctx.fillStyle = "#5d524c";
-  drawCenteredWrappedText(ctx, description, 540, 996, 690, 52, 3);
-
-  ctx.strokeStyle = "rgba(34, 27, 24, 0.12)";
-  ctx.beginPath();
-  ctx.moveTo(226, 1160);
-  ctx.lineTo(854, 1160);
-  ctx.stroke();
-
-  ctx.font = '800 30px Inter, system-ui, sans-serif';
   ctx.fillStyle = palette.deep;
-  ctx.fillText("yourloveelement.com", 540, 1232);
+  drawCenteredWrappedText(ctx, title, 540, 804, 850, 74, 2);
+  drawTinyDivider(ctx, palette, 856, "heart");
+
+  ctx.font = '500 42px Inter, system-ui, sans-serif';
+  ctx.fillStyle = palette.deep;
+  drawCenteredWrappedText(ctx, description, 540, 916, 680, 56, 3);
+
+  drawFiveElementSeal(ctx, palette, 540, 1076);
+  drawBrushUrl(ctx, palette);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
@@ -546,8 +744,9 @@ async function shareCardImage() {
     const blob = await ensureShareCardBlob();
     const file = new File([blob], shareCardFileName(), { type: "image/png" });
     const sharePayload = {
-      title: "My Love Element",
-      text: "I found my love element on Your Love Element.",
+      title: `My Love Element is ${currentShareCardData?.element || "ready"}`,
+      text: `My Love Element is ${currentShareCardData?.element || "ready"}. Take the free reading and discover yours:`,
+      url: "https://yourloveelement.com/",
       files: [file],
     };
 
