@@ -1,6 +1,160 @@
 # Your Love Element Project Handoff
 
-Last updated: 2026-05-10
+Last updated: 2026-05-12
+
+## 2026-05-12 Meta Tracking And Purchase CAPI Confirmed
+
+Meta tracking is now live and verified for both browser events and server-side purchase events.
+
+Meta dataset / Pixel:
+
+- Dataset name: `Your Love Element`
+- Pixel/Dataset ID: `4282306195342317`
+- Static config file: `assets/tracking-config.js`
+- Base Pixel loader: `assets/meta-pixel-base.js`
+- Main funnel events: `script.js`
+- Worker CAPI purchase sender: `worker/src/index.js`
+
+Important frontend tracking decisions:
+
+- Meta Pixel loads by default for ad measurement.
+- The cookie notice is informational and does not gate tracking.
+- The cookie notice now uses a single `Got it` action; do not reintroduce `Essential only` / `Allow all` unless tracking behavior is redesigned to match.
+- Frontend-visible cookie copy should stay generic and should not mention Meta by name.
+- The base Pixel loads in the page `<head>` through `assets/meta-pixel-base.js`; this was added because Meta Events Manager was not reliably detecting PageView when Pixel initialization only happened later from `script.js`.
+- Do not add the Meta `<noscript>` image tracker unless the privacy/cookie behavior is intentionally revisited.
+- Privacy, Terms, and Refund pages were updated on 2026-05-12 to reflect current default measurement behavior and verified-payment purchase measurement.
+
+Homepage / paid-loop UX updates on 2026-05-12:
+
+- Homepage now includes a paid report sample/email preview section between the free preview and FAQ.
+- `/full-report/` now shows a payment verification status message before the 8 deeper signals.
+- Worker exposes `GET /api/readings/:reading_id/status`, returning only limited payment/delivery state for the post-checkout page.
+- Paid signal submission now tells the user whether report generation is queued or whether payment is not yet verified for that reading.
+
+Relationship scoring model added on 2026-05-12:
+
+- `worker/src/index.js` now computes a deterministic scoring profile before calling the report-generation model.
+- The scoring profile uses all available free + paid answers to derive:
+  - primary/supportive Love Element blend
+  - attachment rhythm
+  - relationship pace
+  - chemistry vs stability lens
+  - boundary clarity
+  - growth focus
+  - desired partner climate
+- Raw numeric scores stay internal in `report_json.scoring_model`.
+- The customer sees a narrative `Your Relationship Signal Profile` report section, not a raw score table.
+- The prompt now uses the scoring profile as the interpretation backbone and requires `relationship_signal_profile` before the partner portrait.
+
+Browser Pixel events verified with Meta Pixel Helper:
+
+- `PageView`
+- `ViewContent`
+- custom `quiz_start`
+- custom `preview_revealed`
+- standard `InitiateCheckout`
+- custom `checkout_created`
+
+Events Manager verification:
+
+- After delay, Events Manager showed the browser events as active for May 11, 2026.
+- `Purchase` showed as active with `使用位置: 轉換 API` and event count `1`, confirming server-side CAPI receipt.
+- If Events Manager appears empty, first check the date filter. It may default to a previous date range and hide today's events.
+
+Server-side Purchase tracking:
+
+- `Purchase` must be sent only from the verified Lemon Squeezy `order_created` webhook.
+- Do not send frontend `Purchase` from checkout click; that would count checkout openers who did not pay.
+- Worker sends Meta CAPI `Purchase` when:
+  - Lemon webhook signature verifies.
+  - event is `order_created`.
+  - `META_CAPI_ACCESS_TOKEN` is present.
+- Worker hashes customer email as `user_data.em`.
+- Worker hashes `reading_id` as `user_data.external_id`.
+- Worker sends:
+  - `event_name: Purchase`
+  - `action_source: website`
+  - `event_source_url: https://yourloveelement.com/full-report/?reading_id=...`
+  - `event_id: lemon_squeezy_order_created:{webhook_id/order_id}`
+  - `custom_data.currency`
+  - `custom_data.value`
+  - `custom_data.order_id`
+  - product metadata for the full report
+- Meta CAPI failures are logged but do not fail the Lemon webhook. Preserve this behavior so payment confirmation and report delivery are not blocked by Meta outages.
+
+Cloudflare Worker Meta runtime:
+
+- `META_CAPI_ACCESS_TOKEN` is configured as a Worker secret.
+- `META_PIXEL_ID = "4282306195342317"` is in `worker/wrangler.toml`.
+- `META_GRAPH_API_VERSION = "v25.0"` is in `worker/wrangler.toml`.
+- `/api/health/meta` confirms Meta runtime config without exposing secrets.
+- Confirmed `/api/health/meta` returned:
+  - `ok: true`
+  - `meta_capi_access_token: true`
+  - `meta_pixel_id: true`
+  - `meta_graph_api_version: true`
+  - `meta_test_event_code: false`
+- `META_TEST_EVENT_CODE` is optional and should only be used temporarily while testing server-side events in Meta Test Events. Remove it after testing so production purchases are not marked as test traffic.
+
+Paid-loop state after Meta setup:
+
+- Browser funnel tracking is confirmed.
+- Server-side `Purchase` is confirmed in Events Manager via CAPI.
+- The remaining paid-loop QA should focus on business flow, not tracking setup:
+  - Lemon payment success
+  - return to `/full-report/?reading_id=...`
+  - 8 deeper signals submitted
+  - `paid_signals_submitted` browser event if observed during the form flow
+  - report email delivery
+  - no duplicate report email
+
+Advertising-readiness note:
+
+- Early ad optimization can use `ViewContent`, `preview_revealed`, `InitiateCheckout`, `checkout_created`, and now server-side `Purchase`.
+- `SubscribedButtonClick` events shown by Pixel Helper are Meta auto-detected events and should not be treated as core funnel metrics.
+- Prefer UTM-tagged links for organic posts and ads so event parameters preserve source/campaign context.
+
+## 2026-05-11 Social Publishing Package And Automation Planning
+
+Facebook Page and Instagram account are now connected by the user.
+
+Social publishing workflow documentation was added:
+
+- `SOCIAL_PUBLISHING_WORKFLOW.md`
+
+Current publishing package:
+
+- Use `assets/social/fresh-posts/` for the first 9 organic Facebook/Instagram posts.
+- Use `assets/social/fresh-posts/POSTING_SCHEDULE.md` for the day-by-day schedule, captions, and 5 hashtags per post.
+- Use `assets/social/your-love-element-fresh-posts.zip` if a single upload/archive package is easier.
+
+Important creative direction:
+
+- Final post images should be text-free, high-quality visual assets.
+- Caption and hashtags carry the copy, link, and CTA.
+- The first two post image directions were rejected because they felt like text-heavy templates or simple crops of existing assets.
+- Those previous publishing image packages were removed:
+  - `assets/social/posts/`
+  - `assets/social/photo-posts/`
+  - previous post zip packages
+  - previous social-generation scripts
+- Keep FB/IG profile and cover assets under `assets/social/`.
+
+Recommended immediate publishing flow:
+
+1. Manually schedule the 9 posts in Meta Business Suite at `20:30` Taiwan time.
+2. Publish to both Facebook and Instagram.
+3. Use the caption blocks from `assets/social/fresh-posts/POSTING_SCHEDULE.md`.
+4. Prefer UTM links before paid promotion starts.
+5. Track which images/captions get profile visits, link clicks, saves, and follows.
+
+Future automation evaluation:
+
+- Near term: Meta Business Suite scheduling is the safest route.
+- Later: evaluate a custom Meta Graph API publisher only after manual posting validates the content direction.
+- A custom publisher will likely need a Meta Developer app, Page/Instagram publishing permissions, long-lived Page access token handling, public image URLs, secure Worker secrets, and logging.
+- See `SOCIAL_PUBLISHING_WORKFLOW.md` for automation architecture notes and official Meta doc links.
 
 ## 2026-05-10 Session Closeout: Paid Loop, Email, And Spacing
 
@@ -643,7 +797,7 @@ Important files:
 - Footer should be centered and professional:
   - customer support email: `support@yourloveelement.com`
   - copyright: `© 2026 Your Love Element. All rights reserved.`
-- Cookie consent currently only stores user preference; no analytics/pixels are loaded yet.
+- Cookie notice is informational and currently uses a single `Got it` action. Meta Pixel loads by default for ad measurement.
 
 ## Free 10 Questions
 
@@ -778,15 +932,14 @@ Important caveat:
 Current behavior:
 
 - Shows a cookie consent popup.
-- Options:
-  - `Essential only`
-  - `Allow all`
+- Uses a single `Got it` action.
 - Stores choice in localStorage key: `yle-cookie-consent`
 - Includes a localStorage safety fallback for browsers/private modes where storage may fail.
+- The notice is informational and does not gate Meta Pixel or other measurement.
 
 Important future task:
 
-- If analytics, Meta pixel, Google tag, or tracking scripts are added, they must respect the stored consent choice.
+- If consent choices are reintroduced, tracking behavior and policy copy must be redesigned to match the choices shown.
 
 ## DNS / GitHub Pages Notes
 

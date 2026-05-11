@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="../styles.css?v=20260510-paid-spacing" />
+    <link rel="stylesheet" href="../styles.css?v=20260512-scoring" />
   </head>
   <body class="legal-page">
     <header class="legal-header">
@@ -38,6 +38,8 @@
         <h1 id="full-report-title">Complete your 8 deeper signals.</h1>
         <p>These questions refine your partner portrait, compatibility map, timing window, and 30-day love guide after checkout.</p>
       </section>
+
+      <div class="payment-status" id="paymentStatus" hidden></div>
 
       <form class="paid-quiz-panel" id="paidSignals" aria-label="Full report deeper signals">
         <div class="quiz-topline">
@@ -128,7 +130,7 @@
         <div class="paid-complete" id="paidComplete" hidden>
           <p class="card-kicker">Signals saved</p>
           <h2>Your deeper answers are ready for report generation.</h2>
-          <p>Your answers were received. Your full report will be delivered to your email after payment is verified.</p>
+          <p id="paidCompleteMessage">Your answers were received. Your full report will be delivered to your email after payment is verified.</p>
           <a class="primary-action" href="/contact/">Contact support</a>
         </div>
       </form>
@@ -147,6 +149,6 @@
     <script>
       window.YLE_API_BASE_URL = "https://your-love-element-api.goodrambo2013.workers.dev";
     </script>
-    <script src="../script.js?v=20260511-meta-default"></script>
+    <script src="../script.js?v=20260512-scoring"></script>
   </body>
 </html>

@@ -6,6 +6,7 @@ Cloudflare Worker backend for the paid report automation flow.
 
 - `POST /api/readings` stores the 10 free answers and returns `reading_id`.
 - `POST /api/create-checkout` creates a Lemon Squeezy checkout for an existing reading.
+- `GET /api/readings/:reading_id/status` returns limited payment/delivery state for the post-checkout page.
 - `POST /api/webhooks/lemon-squeezy` records and verifies Lemon Squeezy order webhooks.
 - `POST /api/readings/:reading_id/paid-signals` stores the 8 paid answers.
 - `POST /api/jobs/process` manually processes one queued report generation job.
@@ -114,10 +115,27 @@ Use `POST /api/test-email` or a full report E2E to verify actual Resend delivery
 Report emails are sent as branded HTML transactional emails with:
 
 - element-specific hero banners from `SITE_URL/assets/elements/{element}-banner.jpg`
+- a deterministic relationship signal profile generated from the 10 free answers and 8 paid signals
 - a personalized emotional summary
 - styled report sections
 - `30-Day Guidance` as timed checkpoint cards
 - reply-to support routing
+
+## Relationship Scoring Model
+
+`worker/src/index.js` computes a deterministic scoring profile before calling the report-generation model. The profile is used as the interpretation backbone for the paid report and is stored inside `report_json.scoring_model`.
+
+Current user-facing dimensions:
+
+- primary/supportive Love Element blend
+- attachment rhythm
+- relationship pace
+- chemistry vs stability lens
+- boundary clarity
+- growth focus
+- desired partner climate
+
+Raw numeric scores are internal. The customer sees a narrative `Your Relationship Signal Profile` section instead of a quiz-score table.
 
 ## Duplicate Email Prevention
 

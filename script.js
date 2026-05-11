@@ -28,6 +28,8 @@ const paidTotalSteps = document.querySelector("#paidTotalSteps");
 const paidProgressBar = document.querySelector("#paidProgressBar");
 const paidQuizMood = document.querySelector("#paidQuizMood");
 const paidComplete = document.querySelector("#paidComplete");
+const paidCompleteMessage = document.querySelector("#paidCompleteMessage");
+const paymentStatus = document.querySelector("#paymentStatus");
 const unlockReportButton = document.querySelector("#unlockReportButton");
 const checkoutEmailInput = document.querySelector("#checkoutEmail");
 const readingSaveStatus = document.querySelector("#readingSaveStatus");
@@ -163,7 +165,7 @@ function loadMetaPixel() {
     return;
   }
 
-  /* Meta's standard Pixel bootstrap, loaded only after marketing consent. */
+  /* Meta's standard Pixel bootstrap. */
   !(function (f, b, e, v, n, t, s) {
     if (f.fbq) {
       return;
@@ -383,6 +385,19 @@ async function apiPost(path, payload) {
     body: JSON.stringify(payload),
   });
 
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || "Request failed");
+  }
+  return data;
+}
+
+async function apiGet(path) {
+  if (!apiBaseUrl) {
+    throw new Error("API is not configured yet");
+  }
+
+  const response = await fetch(`${apiBaseUrl}${path}`);
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(data.error || "Request failed");
@@ -629,17 +644,36 @@ async function completePaidSignals() {
   const readingId = getReadingIdFromUrl() || getStorageItem(readingStorageKey);
   if (apiBaseUrl && readingId) {
     try {
-      await apiPost(`/api/readings/${readingId}/paid-signals`, { paid_answers: paidAnswers });
-      setStatus(paidSaveStatus, "Your deeper signals were saved.", "success");
+      const result = await apiPost(`/api/readings/${readingId}/paid-signals`, { paid_answers: paidAnswers });
+      const verified = Boolean(result.payment_verified || result.queued);
+      setStatus(
+        paidSaveStatus,
+        verified
+          ? "Your deeper signals were saved. Report generation will start shortly."
+          : "Your deeper signals were saved, but payment has not been verified for this reading yet.",
+        verified ? "success" : "error",
+      );
+      if (paidCompleteMessage) {
+        paidCompleteMessage.textContent = verified
+          ? "Your answers were received. Your full report will be generated and delivered to your email shortly."
+          : "Your answers were received, but this reading is not connected to a verified payment yet. If you already purchased, open the full-report link from your Lemon Squeezy receipt or contact support with your order email.";
+      }
       trackMetaCustomEvent("paid_signals_submitted", {
         reading_id: readingId,
       });
     } catch {
+      setStorageItem("yle-paid-answers", JSON.stringify(paidAnswers));
       setStatus(paidSaveStatus, "Your answers are saved in this browser, but online delivery needs support.", "error");
+      if (paidCompleteMessage) {
+        paidCompleteMessage.textContent = "Your answers are saved in this browser, but this reading could not be verified online. If you already purchased, contact support with your order email.";
+      }
     }
   } else {
     setStorageItem("yle-paid-answers", JSON.stringify(paidAnswers));
     setStatus(paidSaveStatus, "Your answers are saved in this browser. Contact support if you already purchased.", "neutral");
+    if (paidCompleteMessage) {
+      paidCompleteMessage.textContent = "Your answers are saved in this browser, but no paid checkout link was found. If you already purchased, open the full-report link from your Lemon Squeezy receipt or contact support with your order email.";
+    }
   }
 
   paidNextButton.hidden = true;
@@ -653,6 +687,8 @@ function initPaidQuiz() {
   if (!paidSteps.length || !paidNextButton || !paidBackButton) {
     return;
   }
+
+  initPaymentStatus();
 
   paidNextButton.addEventListener("click", () => {
     const current = paidSteps[paidCurrentStep];
@@ -682,6 +718,43 @@ function initPaidQuiz() {
   });
 
   updatePaidStep();
+}
+
+async function initPaymentStatus() {
+  if (!paymentStatus || !paidSteps.length) {
+    return;
+  }
+
+  const readingId = getReadingIdFromUrl() || getStorageItem(readingStorageKey);
+  if (!readingId) {
+    setStatus(
+      paymentStatus,
+      "No paid checkout is linked to this page yet. Start from the free preview, unlock the full report, then return here from the Lemon Squeezy receipt link.",
+      "warning",
+    );
+    return;
+  }
+
+  if (!apiBaseUrl) {
+    setStatus(paymentStatus, "Payment verification is not available in this browser session. Your answers can still be saved locally.", "warning");
+    return;
+  }
+
+  try {
+    const status = await apiGet(`/api/readings/${readingId}/status`);
+    if (status.payment_verified) {
+      setStatus(paymentStatus, "Payment verified. Complete these 8 signals to generate your full report.", "success");
+      return;
+    }
+
+    setStatus(
+      paymentStatus,
+      "This reading is not connected to a verified payment yet. If you already purchased, use the full-report link from your Lemon Squeezy receipt; otherwise, return to the free preview and unlock the full report first.",
+      "warning",
+    );
+  } catch {
+    setStatus(paymentStatus, "We could not verify this reading link. If you already purchased, contact support with your order email.", "error");
+  }
 }
 
 function initCookieConsent() {

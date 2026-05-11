@@ -55,6 +55,11 @@ export default {
         return json(await submitPaidSignals(paidSignalsMatch[1], request, env));
       }
 
+      const readingStatusMatch = url.pathname.match(/^\/api\/readings\/([0-9a-f-]+)\/status$/i);
+      if (request.method === "GET" && readingStatusMatch) {
+        return json(await getReadingStatus(readingStatusMatch[1], env));
+      }
+
       if (request.method === "POST" && url.pathname === "/api/jobs/process") {
         return json(await processNextReportJob(request, env));
       }
@@ -452,7 +457,25 @@ async function submitPaidSignals(readingId, request, env) {
     ok: true,
     reading_id: readingId,
     status: nextStatus,
+    payment_verified: Boolean(reading.lemon_squeezy_order_id),
     queued: Boolean(reading.lemon_squeezy_order_id),
+  };
+}
+
+async function getReadingStatus(readingId, env) {
+  requireUuid(readingId, "reading_id");
+  const reading = await getReading(env, readingId);
+  if (!reading) {
+    throw httpError(404, "Reading not found");
+  }
+
+  return {
+    ok: true,
+    reading_id: reading.id,
+    status: reading.status,
+    payment_verified: Boolean(reading.lemon_squeezy_order_id),
+    paid_answers_submitted: Boolean(reading.paid_answers_json),
+    delivered: reading.status === "delivered",
   };
 }
 
@@ -639,16 +662,424 @@ async function processNextQueuedReportJob(env) {
   }
 }
 
+const ELEMENT_NAMES = ["Wood", "Fire", "Earth", "Metal", "Water"];
+
+const ELEMENT_ANSWER_WEIGHTS = {
+  quality: {
+    "Emotional steadiness": { Earth: 3, Water: 1 },
+    "Creative ambition": { Wood: 3, Fire: 1 },
+    "Warm intelligence": { Water: 2, Metal: 2 },
+    "Playful confidence": { Fire: 3, Wood: 1 },
+  },
+  setting: {
+    "Through work, craft, or a shared goal": { Earth: 2, Wood: 1 },
+    "Travel, relocation, or a new city": { Wood: 2, Fire: 1 },
+    "A friend's wider circle": { Fire: 2, Earth: 1 },
+    "Online, but through deeper conversation": { Water: 2, Metal: 1 },
+  },
+  secure: {
+    "A quiet home base": { Earth: 3 },
+    "A shared adventure": { Wood: 2, Fire: 1 },
+    "A clear future plan": { Metal: 2, Earth: 1 },
+    "Emotional honesty without pressure": { Water: 2, Metal: 1 },
+  },
+  mirror: {
+    "You make people feel safe": { Earth: 2 },
+    "You bring people alive": { Fire: 2 },
+    "You see what others miss": { Water: 2 },
+    "You help people become braver": { Wood: 2 },
+  },
+  pace: {
+    "Slow and certain": { Earth: 2, Metal: 1 },
+    "Fast, but honest": { Fire: 2, Metal: 1 },
+    "Playful first, deep later": { Fire: 2, Wood: 1 },
+    "Intense at first, then grounded": { Water: 1, Earth: 1, Fire: 1 },
+  },
+  partnerEnergy: {
+    "Someone grounded and patient": { Earth: 3 },
+    "Someone passionate and expressive": { Fire: 3 },
+    "Someone wise and emotionally mature": { Water: 2, Metal: 1 },
+    "Someone playful and socially warm": { Fire: 2, Wood: 1 },
+    "Someone focused, loyal, and protective": { Metal: 2, Earth: 1 },
+  },
+};
+
+const ATTACHMENT_LABELS = {
+  calm_secure: "Consistency-seeking calm trust",
+  signal_sensitive: "Clarity-seeking sensitivity",
+  momentum_open: "Warm momentum and visible affection",
+  protective_slow: "Protective slow trust",
+};
+
+const PACE_LABELS = {
+  slow_build: "Slow-build clarity",
+  balanced: "Balanced and responsive pace",
+  fast_momentum: "Fast honest momentum",
+  stop_start: "Intensity that needs grounding",
+};
+
+const CHEMISTRY_STABILITY_LABELS = {
+  stability_led: "Stability-led attraction",
+  chemistry_led: "Chemistry-led attraction",
+  clarity_led: "Clarity-led attraction",
+  integration: "Chemistry and stability integration",
+};
+
+const BOUNDARY_LABELS = {
+  emerging: "Emerging standards",
+  strengthening: "Strengthening standards",
+  firm: "Clear and protective standards",
+};
+
+const GROWTH_FOCUS_LABELS = {
+  openness: "Opening to love without rushing",
+  pattern_release: "Releasing an old pattern",
+  recognition: "Recognizing the right person sooner",
+  voice: "Communicating needs with less fear",
+  discernment: "Choosing between chemistry and stability",
+};
+
+function buildRelationshipScoringProfile(reading) {
+  const free = reading.free_answers_json || {};
+  const paid = reading.paid_answers_json || {};
+  const elementScores = scoreElements(free, paid);
+  const [primaryElement, supportiveElement] = topScoreEntries(elementScores);
+  const attachment = pickTopDimension(scoreAttachmentRhythm(free, paid), ATTACHMENT_LABELS);
+  const pace = pickTopDimension(scoreRelationshipPace(free, paid), PACE_LABELS);
+  const chemistryStability = pickTopDimension(scoreChemistryStability(free, paid), CHEMISTRY_STABILITY_LABELS);
+  const boundary = pickTopDimension(scoreBoundaryClarity(free, paid), BOUNDARY_LABELS);
+  const growthFocus = pickTopDimension(scoreGrowthFocus(free, paid), GROWTH_FOCUS_LABELS);
+  const partnerClimate = partnerClimateLabel(free, paid);
+
+  const publicProfile = {
+    primary_element: primaryElement.key,
+    supportive_element: supportiveElement.key,
+    element_blend: `${primaryElement.key} with ${supportiveElement.key} support`,
+    attachment_rhythm: attachment.label,
+    relationship_pace: pace.label,
+    chemistry_stability: chemistryStability.label,
+    boundary_clarity: boundary.label,
+    growth_focus: growthFocus.label,
+    partner_climate: partnerClimate,
+  };
+
+  return {
+    version: "2026-05-12",
+    public_profile: publicProfile,
+    confidence: {
+      element: scoreConfidence(primaryElement.score, supportiveElement.score),
+      attachment_rhythm: attachment.confidence,
+      relationship_pace: pace.confidence,
+      chemistry_stability: chemistryStability.confidence,
+      boundary_clarity: boundary.confidence,
+      growth_focus: growthFocus.confidence,
+    },
+    internal_scores: {
+      element: elementScores,
+      attachment_rhythm: attachment.scores,
+      relationship_pace: pace.scores,
+      chemistry_stability: chemistryStability.scores,
+      boundary_clarity: boundary.scores,
+      growth_focus: growthFocus.scores,
+    },
+    prompt_context: {
+      user_visible_profile: publicProfile,
+      interpretation_notes: {
+        element: `${primaryElement.key} is the strongest symbolic relationship style, with ${supportiveElement.key} as a supporting tone.`,
+        attachment: attachment.note,
+        pace: pace.note,
+        chemistry_stability: chemistryStability.note,
+        boundary: boundary.note,
+        growth_focus: growthFocus.note,
+      },
+    },
+  };
+}
+
+function scoreElements(free, paid) {
+  const scores = initScores(ELEMENT_NAMES);
+  addScore(scores, free.element, 6);
+  addMappedScores(scores, free.quality, ELEMENT_ANSWER_WEIGHTS.quality);
+  addMappedScores(scores, free.setting, ELEMENT_ANSWER_WEIGHTS.setting);
+  addMappedScores(scores, free.secure, ELEMENT_ANSWER_WEIGHTS.secure);
+  addMappedScores(scores, free.mirror, ELEMENT_ANSWER_WEIGHTS.mirror);
+  addMappedScores(scores, free.pace, ELEMENT_ANSWER_WEIGHTS.pace);
+  addMappedScores(scores, paid.partnerEnergy, ELEMENT_ANSWER_WEIGHTS.partnerEnergy);
+  addScore(scores, birthSeasonElement(free.birthdate), 1);
+  return scores;
+}
+
+function scoreAttachmentRhythm(free, paid) {
+  const scores = initScores(Object.keys(ATTACHMENT_LABELS));
+  addMappedScores(scores, paid.activation, {
+    "I become curious but cautious": { protective_slow: 2, calm_secure: 1 },
+    "I overthink small shifts": { signal_sensitive: 3 },
+    "I get excited and want momentum": { momentum_open: 3 },
+    "I stay calm until they prove consistency": { calm_secure: 2, protective_slow: 1 },
+  });
+  addMappedScores(scores, paid.pastPattern, {
+    "I gave too much before feeling chosen": { signal_sensitive: 2, protective_slow: 1 },
+    "I ignored red flags because chemistry was strong": { momentum_open: 1, signal_sensitive: 1 },
+    "I kept my guard up even when things were good": { protective_slow: 3 },
+    "I chose people who were unavailable in some way": { signal_sensitive: 2, protective_slow: 1 },
+  });
+  addMappedScores(scores, paid.reassurance, {
+    "Clear communication": { signal_sensitive: 1, calm_secure: 1 },
+    "Consistent effort": { calm_secure: 2 },
+    "Physical closeness": { momentum_open: 2 },
+    "Future planning": { calm_secure: 1, protective_slow: 1 },
+    "Respect for my independence": { protective_slow: 2 },
+  });
+  addMappedScores(scores, paid.conflict, {
+    "I need space before talking": { protective_slow: 2 },
+    "I want to resolve it immediately": { signal_sensitive: 1, momentum_open: 1 },
+    "I stay calm outside but feel a lot inside": { protective_slow: 1, signal_sensitive: 1 },
+    "I avoid conflict until it becomes unavoidable": { protective_slow: 2 },
+    "I try to understand their side first": { calm_secure: 2 },
+  });
+  addMappedScores(scores, paid.trustSignal, {
+    "Seeing actions match words": { calm_secure: 2 },
+    "Feeling emotionally understood": { signal_sensitive: 2 },
+    "Knowing we want the same future": { calm_secure: 1, protective_slow: 1 },
+    "Being able to move slowly without fear": { protective_slow: 2 },
+    "Feeling desired without being pressured": { momentum_open: 1, calm_secure: 1 },
+  });
+  addMappedScores(scores, free.pace, {
+    "Slow and certain": { calm_secure: 1, protective_slow: 1 },
+    "Fast, but honest": { momentum_open: 1 },
+    "Playful first, deep later": { momentum_open: 1, calm_secure: 1 },
+    "Intense at first, then grounded": { signal_sensitive: 1, calm_secure: 1 },
+  });
+  return scores;
+}
+
+function scoreRelationshipPace(free, paid) {
+  const scores = initScores(Object.keys(PACE_LABELS));
+  addMappedScores(scores, free.pace, {
+    "Slow and certain": { slow_build: 3 },
+    "Fast, but honest": { fast_momentum: 3 },
+    "Playful first, deep later": { balanced: 3 },
+    "Intense at first, then grounded": { stop_start: 2, balanced: 1 },
+  });
+  addMappedScores(scores, paid.activation, {
+    "I become curious but cautious": { slow_build: 1, balanced: 1 },
+    "I overthink small shifts": { stop_start: 2 },
+    "I get excited and want momentum": { fast_momentum: 2 },
+    "I stay calm until they prove consistency": { slow_build: 2 },
+  });
+  addMappedScores(scores, paid.trustSignal, {
+    "Seeing actions match words": { slow_build: 1, balanced: 1 },
+    "Feeling emotionally understood": { balanced: 1 },
+    "Knowing we want the same future": { slow_build: 1 },
+    "Being able to move slowly without fear": { slow_build: 2 },
+    "Feeling desired without being pressured": { balanced: 1, fast_momentum: 1 },
+  });
+  return scores;
+}
+
+function scoreChemistryStability(free, paid) {
+  const scores = initScores(Object.keys(CHEMISTRY_STABILITY_LABELS));
+  addMappedScores(scores, free.quality, {
+    "Emotional steadiness": { stability_led: 2 },
+    "Creative ambition": { chemistry_led: 1, integration: 1 },
+    "Warm intelligence": { clarity_led: 2 },
+    "Playful confidence": { chemistry_led: 2 },
+  });
+  addMappedScores(scores, paid.pastPattern, {
+    "I gave too much before feeling chosen": { clarity_led: 1, stability_led: 1 },
+    "I ignored red flags because chemistry was strong": { chemistry_led: 2 },
+    "I kept my guard up even when things were good": { stability_led: 1, clarity_led: 1 },
+    "I chose people who were unavailable in some way": { chemistry_led: 1, clarity_led: 1 },
+  });
+  addMappedScores(scores, paid.boundary, {
+    "Inconsistent communication": { stability_led: 1, clarity_led: 1 },
+    "Avoiding commitment": { stability_led: 2 },
+    "Emotional unavailability": { stability_led: 1, clarity_led: 1 },
+    "Being hidden or deprioritized": { clarity_led: 2 },
+    "Confusing chemistry with care": { integration: 2 },
+  });
+  addMappedScores(scores, paid.guidance, {
+    "How to choose between chemistry and stability": { integration: 3 },
+    "How to recognize the right person sooner": { clarity_led: 2 },
+  });
+  return scores;
+}
+
+function scoreBoundaryClarity(free, paid) {
+  const scores = initScores(Object.keys(BOUNDARY_LABELS));
+  addMappedScores(scores, paid.boundary, {
+    "Inconsistent communication": { strengthening: 2 },
+    "Avoiding commitment": { firm: 2 },
+    "Emotional unavailability": { strengthening: 2 },
+    "Being hidden or deprioritized": { firm: 2 },
+    "Confusing chemistry with care": { strengthening: 2 },
+  });
+  addMappedScores(scores, paid.pastPattern, {
+    "I gave too much before feeling chosen": { emerging: 1, strengthening: 1 },
+    "I ignored red flags because chemistry was strong": { strengthening: 2 },
+    "I kept my guard up even when things were good": { firm: 1, strengthening: 1 },
+    "I chose people who were unavailable in some way": { strengthening: 2 },
+  });
+  addMappedScores(scores, paid.conflict, {
+    "I need space before talking": { firm: 1 },
+    "I want to resolve it immediately": { emerging: 1 },
+    "I stay calm outside but feel a lot inside": { emerging: 1, strengthening: 1 },
+    "I avoid conflict until it becomes unavoidable": { emerging: 2 },
+    "I try to understand their side first": { strengthening: 1 },
+  });
+  addMappedScores(scores, free.block, {
+    "Mixed signals": { strengthening: 1 },
+    "Feeling rushed": { firm: 1 },
+    "Emotional distance": { strengthening: 1 },
+    "Too much intensity too soon": { firm: 1 },
+    "Losing my sense of independence": { firm: 1 },
+  });
+  return scores;
+}
+
+function scoreGrowthFocus(free, paid) {
+  const scores = initScores(Object.keys(GROWTH_FOCUS_LABELS));
+  addMappedScores(scores, paid.guidance, {
+    "How to become more open to love": { openness: 3 },
+    "How to stop repeating the same pattern": { pattern_release: 3 },
+    "How to recognize the right person sooner": { recognition: 3 },
+    "How to communicate needs without fear": { voice: 3 },
+    "How to choose between chemistry and stability": { discernment: 3 },
+  });
+  addMappedScores(scores, free.intent, {
+    "Who I naturally attract": { recognition: 1 },
+    "Why old patterns repeat": { pattern_release: 2 },
+    "When love may feel easier": { openness: 1 },
+    "What kind of partner truly fits me": { discernment: 1, recognition: 1 },
+  });
+  addMappedScores(scores, free.block, {
+    "Mixed signals": { discernment: 1, pattern_release: 1 },
+    "Feeling rushed": { voice: 1 },
+    "Emotional distance": { openness: 1 },
+    "Too much intensity too soon": { discernment: 1 },
+    "Losing my sense of independence": { voice: 1 },
+  });
+  return scores;
+}
+
+function partnerClimateLabel(free, paid) {
+  const direct = {
+    "Someone grounded and patient": "Grounded and patient",
+    "Someone passionate and expressive": "Passionate and expressive",
+    "Someone wise and emotionally mature": "Wise and emotionally mature",
+    "Someone playful and socially warm": "Playful and socially warm",
+    "Someone focused, loyal, and protective": "Focused, loyal, and protective",
+  }[paid.partnerEnergy];
+  if (direct) {
+    return direct;
+  }
+
+  return {
+    "Emotional steadiness": "Calm, consistent, and quietly ambitious",
+    "Creative ambition": "Expressive, decisive, and self-directed",
+    "Warm intelligence": "Thoughtful, witty, and emotionally generous",
+    "Playful confidence": "Socially warm, expressive, and emotionally awake",
+  }[free.quality] || "Emotionally steady and clear";
+}
+
+function buildSignalProfileSection(scoringProfile) {
+  const profile = scoringProfile.public_profile;
+  return [
+    `Primary signal: ${profile.element_blend}. This means your relationship field is led by ${profile.primary_element} qualities, while ${profile.supportive_element} adds a secondary tone to how you recognize safety, attraction, and timing.`,
+    `Attachment rhythm: ${profile.attachment_rhythm}. Your answers suggest that the most useful love will not only create chemistry; it will also speak to the pace and reassurance your nervous system actually trusts.`,
+    `Decision lens: ${profile.chemistry_stability}, with ${profile.boundary_clarity.toLowerCase()}. This is the part of the reading that helps separate a real signal from an old pattern asking for another chance.`,
+    `Growth focus: ${profile.growth_focus}. The 30-day guidance is built around this theme so the report gives you something practical to notice, practice, and repeat.`,
+  ].join("\n\n");
+}
+
+function initScores(keys) {
+  return keys.reduce((scores, key) => {
+    scores[key] = 0;
+    return scores;
+  }, {});
+}
+
+function addMappedScores(scores, answer, mapping) {
+  const weights = mapping?.[answer];
+  if (!weights) {
+    return;
+  }
+  Object.entries(weights).forEach(([key, points]) => addScore(scores, key, points));
+}
+
+function addScore(scores, key, points) {
+  if (!key || scores[key] === undefined || !Number.isFinite(points)) {
+    return;
+  }
+  scores[key] += points;
+}
+
+function topScoreEntries(scores) {
+  const entries = Object.entries(scores)
+    .map(([key, score]) => ({ key, score }))
+    .sort((left, right) => right.score - left.score || left.key.localeCompare(right.key));
+  return [entries[0], entries[1] || entries[0]];
+}
+
+function pickTopDimension(scores, labels) {
+  const [top, second] = topScoreEntries(scores);
+  const label = labels[top.key] || titleCase(top.key);
+  return {
+    key: top.key,
+    label,
+    score: top.score,
+    scores,
+    confidence: scoreConfidence(top.score, second.score),
+    note: `${label} is the strongest signal in this dimension; ${labels[second.key] || titleCase(second.key)} is the nearest secondary signal.`,
+  };
+}
+
+function scoreConfidence(topScore, secondScore) {
+  const gap = Number(topScore || 0) - Number(secondScore || 0);
+  if (gap >= 3) {
+    return "dominant";
+  }
+  if (gap >= 1) {
+    return "clear";
+  }
+  return "blended";
+}
+
+function birthSeasonElement(birthdate = {}) {
+  const month = String(birthdate.month || "").trim();
+  if (["March", "April"].includes(month)) {
+    return "Wood";
+  }
+  if (["May", "June"].includes(month)) {
+    return "Fire";
+  }
+  if (["July", "August"].includes(month)) {
+    return "Earth";
+  }
+  if (["September", "October"].includes(month)) {
+    return "Metal";
+  }
+  if (["November", "December", "January", "February"].includes(month)) {
+    return "Water";
+  }
+  return null;
+}
+
 async function generateReport(env, reading) {
+  const scoringProfile = buildRelationshipScoringProfile(reading);
   const prompt = [
     "Create a premium Your Love Element relationship report.",
     "Use the user's free 10 answers and paid 8 signals.",
+    "Use the computed relationship signal profile as the report's interpretation backbone.",
     "Tone: intimate, grounded, emotionally intelligent, practical.",
     "Do not make medical, legal, or deterministic claims.",
-    "Return JSON with keys: title, emotional_summary, sections, text.",
+    "Do not expose raw numeric scores. Translate scoring labels into warm user-facing language.",
+    "Return JSON with keys: title, emotional_summary, signal_profile, sections, text.",
     "emotional_summary should be a warm 2-3 sentence note that makes the reader feel seen and reassured.",
-    "sections must be an object with exactly these keys: partner_portrait, element_profile, compatibility_map, pattern_to_release, timing_window, thirty_day_guidance.",
+    "signal_profile must mirror the provided user_visible_profile labels without raw numeric scores.",
+    "sections must be an object with exactly these keys: relationship_signal_profile, partner_portrait, element_profile, compatibility_map, pattern_to_release, timing_window, thirty_day_guidance.",
     "Each sections value must be a plain string, not an object or array.",
+    "The relationship_signal_profile section should explain the primary element blend, attachment rhythm, pace, chemistry/stability lens, boundary clarity, and growth focus in 180-260 words.",
     "The thirty_day_guidance section must be a practical 30-day timeline with exactly these nodes: Day 1, Day 3, Day 7, Day 14, Day 21, Day 30.",
     "Write each timeline node on its own line in this format: Day N — Goal: specific emotional or relational outcome. Practice: concrete action, reflection prompt, or conversation script. Notice: one observable signal the reader can use to track progress.",
     "Each thirty_day_guidance node should be 35-60 words, specific to the user's answers, and useful enough that a paying reader feels they received a clear exercise rather than a vague affirmation.",
@@ -656,6 +1087,7 @@ async function generateReport(env, reading) {
     "",
     `Free answers: ${JSON.stringify(reading.free_answers_json)}`,
     `Paid answers: ${JSON.stringify(reading.paid_answers_json)}`,
+    `Computed relationship signal profile: ${JSON.stringify(scoringProfile.prompt_context)}`,
   ].join("\n");
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -683,7 +1115,20 @@ async function generateReport(env, reading) {
 
   const data = await response.json();
   const report = JSON.parse(data.choices?.[0]?.message?.content || "{}");
-  const text = report.text || stringifySections(report.sections);
+  const generatedSections = report.sections || {};
+  report.signal_profile = scoringProfile.public_profile;
+  report.scoring_model = scoringProfile;
+  report.sections = {
+    relationship_signal_profile: generatedSections.relationship_signal_profile || buildSignalProfileSection(scoringProfile),
+    partner_portrait: generatedSections.partner_portrait,
+    element_profile: generatedSections.element_profile,
+    compatibility_map: generatedSections.compatibility_map,
+    pattern_to_release: generatedSections.pattern_to_release,
+    timing_window: generatedSections.timing_window,
+    thirty_day_guidance: generatedSections.thirty_day_guidance,
+  };
+  const text = stringifySections(report.sections);
+  report.text = text;
   const html = buildStandaloneReportHtml(env, reading, report, text);
 
   return {
@@ -1032,6 +1477,7 @@ function timingSafeEqual(a, b) {
 }
 
 const REPORT_SECTION_LABELS = {
+  relationship_signal_profile: "Your Relationship Signal Profile",
   partner_portrait: "The Partner Who Fits You Best",
   element_profile: "Your Love Element",
   compatibility_map: "Your Compatibility Map",
