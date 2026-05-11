@@ -38,6 +38,8 @@ const paidValidation = document.querySelector("#paidValidation");
 const apiBaseUrl = window.YLE_API_BASE_URL || "";
 const readingStorageKey = "yle-reading-id";
 const freeAnswersStorageKey = "yle-free-answers";
+const cookieConsentStorageKey = "yle-cookie-consent";
+const metaPixelId = String(window.YLE_META_PIXEL_ID || "").trim();
 const monthDayLimits = {
   January: 31,
   February: 29,
@@ -117,6 +119,8 @@ let currentStep = 0;
 let paidCurrentStep = 0;
 let previewReadyForCheckout = false;
 let currentReadingId = null;
+let metaPixelLoaded = false;
+let quizStartTracked = false;
 
 function getStorageItem(key) {
   try {
@@ -132,6 +136,85 @@ function setStorageItem(key, value) {
   } catch {
     // Browser storage is a convenience only; the backend remains authoritative.
   }
+}
+
+function hasMarketingConsent() {
+  return getStorageItem(cookieConsentStorageKey) === "all";
+}
+
+function getAttributionParams() {
+  const params = new URLSearchParams(window.location.search);
+  return ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"].reduce(
+    (tracking, key) => {
+      const value = params.get(key);
+      if (value) {
+        tracking[key] = value;
+      }
+      return tracking;
+    },
+    { page_path: window.location.pathname },
+  );
+}
+
+function loadMetaPixel() {
+  if (!metaPixelId || metaPixelLoaded || !hasMarketingConsent()) {
+    return;
+  }
+
+  /* Meta's standard Pixel bootstrap, loaded only after marketing consent. */
+  !(function (f, b, e, v, n, t, s) {
+    if (f.fbq) {
+      return;
+    }
+    n = f.fbq = function () {
+      n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+    };
+    if (!f._fbq) {
+      f._fbq = n;
+    }
+    n.push = n;
+    n.loaded = true;
+    n.version = "2.0";
+    n.queue = [];
+    t = b.createElement(e);
+    t.async = true;
+    t.src = v;
+    s = b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t, s);
+  })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+
+  window.fbq("init", metaPixelId);
+  window.fbq("track", "PageView", getAttributionParams());
+  if (window.location.pathname === "/" || window.location.pathname === "/index.html") {
+    window.fbq("track", "ViewContent", {
+      content_name: "Free Love Element Reading",
+      content_category: "Digital relationship reading",
+      ...getAttributionParams(),
+    });
+  }
+  metaPixelLoaded = true;
+}
+
+function trackMetaEvent(name, params = {}) {
+  loadMetaPixel();
+  if (typeof window.fbq !== "function" || !hasMarketingConsent()) {
+    return;
+  }
+  window.fbq("track", name, {
+    ...getAttributionParams(),
+    ...params,
+  });
+}
+
+function trackMetaCustomEvent(name, params = {}) {
+  loadMetaPixel();
+  if (typeof window.fbq !== "function" || !hasMarketingConsent()) {
+    return;
+  }
+  window.fbq("trackCustom", name, {
+    ...getAttributionParams(),
+    ...params,
+  });
 }
 
 function setStatus(element, message, tone = "neutral") {
@@ -349,6 +432,17 @@ async function startCheckout(event) {
       reading_id: readingId,
       email: checkoutEmail,
     });
+    trackMetaEvent("InitiateCheckout", {
+      content_name: "Full Relationship Report",
+      content_category: "Digital relationship reading",
+      value: 9.99,
+      currency: "USD",
+    });
+    trackMetaCustomEvent("checkout_created", {
+      reading_id: readingId,
+      value: 9.99,
+      currency: "USD",
+    });
     window.location.href = result.checkout_url;
   } catch (error) {
     setStatus(readingSaveStatus, "Checkout is not available yet. Please contact support.", "error");
@@ -413,6 +507,11 @@ async function revealPreview() {
   adviceText.textContent = `Because you are seeking "${intent}", choose the person who makes ${lowerInitial(secure)} feel possible in ordinary life.`;
 
   document.querySelector("#preview").scrollIntoView({ behavior: "smooth", block: "start" });
+  trackMetaCustomEvent("preview_revealed", {
+    element,
+    relationship_status: status,
+    intent,
+  });
 
   try {
     currentReadingId = await saveFreeAnswers();
@@ -436,6 +535,11 @@ function initQuiz() {
     const current = steps[currentStep];
     if (!validateStep(current, quizValidation, document.querySelector("#reading"))) {
       return;
+    }
+
+    if (!quizStartTracked) {
+      trackMetaCustomEvent("quiz_start");
+      quizStartTracked = true;
     }
 
     if (currentStep < steps.length - 1) {
@@ -515,6 +619,9 @@ async function completePaidSignals() {
     try {
       await apiPost(`/api/readings/${readingId}/paid-signals`, { paid_answers: paidAnswers });
       setStatus(paidSaveStatus, "Your deeper signals were saved.", "success");
+      trackMetaCustomEvent("paid_signals_submitted", {
+        reading_id: readingId,
+      });
     } catch {
       setStatus(paidSaveStatus, "Your answers are saved in this browser, but online delivery needs support.", "error");
     }
@@ -570,27 +677,31 @@ function initCookieConsent() {
     return;
   }
 
-  const storageKey = "yle-cookie-consent";
   const canStoreChoice = (() => {
     try {
-      localStorage.setItem(`${storageKey}-test`, "1");
-      localStorage.removeItem(`${storageKey}-test`);
+      localStorage.setItem(`${cookieConsentStorageKey}-test`, "1");
+      localStorage.removeItem(`${cookieConsentStorageKey}-test`);
       return true;
     } catch {
       return false;
     }
   })();
 
-  const storedChoice = canStoreChoice ? localStorage.getItem(storageKey) : null;
+  const storedChoice = canStoreChoice ? localStorage.getItem(cookieConsentStorageKey) : null;
   if (!storedChoice) {
     cookieConsent.hidden = false;
+  } else if (storedChoice === "all") {
+    loadMetaPixel();
   }
 
   function saveChoice(choice) {
     if (canStoreChoice) {
-      localStorage.setItem(storageKey, choice);
+      localStorage.setItem(cookieConsentStorageKey, choice);
     }
     cookieConsent.hidden = true;
+    if (choice === "all") {
+      loadMetaPixel();
+    }
   }
 
   cookieAccept.addEventListener("click", () => saveChoice("all"));
