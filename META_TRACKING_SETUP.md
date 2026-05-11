@@ -4,10 +4,10 @@ Last updated: 2026-05-11
 
 ## What Is Already Configured In The Site
 
-The website now has consent-aware Meta Pixel support.
+The website now has default Meta Pixel support for ad measurement.
 
 - Pixel code loads by default for ad measurement.
-- If the visitor chooses `Essential only`, optional Meta tracking stops on later events and future page loads in that browser.
+- The cookie notice is informational and does not gate tracking.
 - Pixel ID is centralized in `assets/tracking-config.js`.
 - The site sends:
   - `PageView`
@@ -75,7 +75,7 @@ The pages already load this config file before `script.js`:
 2. Go to `Test events`.
 3. Enter `https://yourloveelement.com/`.
 4. Open the site from Meta's test flow.
-5. Confirm `PageView` appears. You no longer need to click `Allow all` first.
+5. Confirm `PageView` appears. You do not need to click the cookie notice first.
 6. Confirm `ViewContent` appears on the homepage.
 7. Start the free reading and answer the first question.
 8. Confirm `quiz_start` appears.

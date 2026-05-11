@@ -20,7 +20,6 @@ const portraitKicker = document.querySelector("#portraitKicker");
 const quizValidation = document.querySelector("#quizValidation");
 const cookieConsent = document.querySelector("#cookieConsent");
 const cookieAccept = document.querySelector("#cookieAccept");
-const cookieReject = document.querySelector("#cookieReject");
 const paidSteps = Array.from(document.querySelectorAll(".paid-step"));
 const paidNextButton = document.querySelector("#paidNextButton");
 const paidBackButton = document.querySelector("#paidBackButton");
@@ -138,10 +137,6 @@ function setStorageItem(key, value) {
   }
 }
 
-function allowsMarketingTracking() {
-  return getStorageItem(cookieConsentStorageKey) !== "essential";
-}
-
 function getAttributionParams() {
   const params = new URLSearchParams(window.location.search);
   return ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"].reduce(
@@ -157,7 +152,7 @@ function getAttributionParams() {
 }
 
 function loadMetaPixel() {
-  if (!metaPixelId || metaPixelLoaded || !allowsMarketingTracking()) {
+  if (!metaPixelId || metaPixelLoaded) {
     return;
   }
 
@@ -198,7 +193,7 @@ function loadMetaPixel() {
 
 function trackMetaEvent(name, params = {}) {
   loadMetaPixel();
-  if (typeof window.fbq !== "function" || !allowsMarketingTracking()) {
+  if (typeof window.fbq !== "function") {
     return;
   }
   window.fbq("track", name, {
@@ -209,7 +204,7 @@ function trackMetaEvent(name, params = {}) {
 
 function trackMetaCustomEvent(name, params = {}) {
   loadMetaPixel();
-  if (typeof window.fbq !== "function" || !allowsMarketingTracking()) {
+  if (typeof window.fbq !== "function") {
     return;
   }
   window.fbq("trackCustom", name, {
@@ -674,7 +669,9 @@ function initPaidQuiz() {
 }
 
 function initCookieConsent() {
-  if (!cookieConsent || !cookieAccept || !cookieReject) {
+  loadMetaPixel();
+
+  if (!cookieConsent || !cookieAccept) {
     return;
   }
 
@@ -691,25 +688,16 @@ function initCookieConsent() {
   const storedChoice = canStoreChoice ? localStorage.getItem(cookieConsentStorageKey) : null;
   if (!storedChoice) {
     cookieConsent.hidden = false;
-    loadMetaPixel();
-  } else if (storedChoice !== "essential") {
-    loadMetaPixel();
   }
 
-  function saveChoice(choice) {
+  function saveChoice() {
     if (canStoreChoice) {
-      localStorage.setItem(cookieConsentStorageKey, choice);
+      localStorage.setItem(cookieConsentStorageKey, "acknowledged");
     }
     cookieConsent.hidden = true;
-    if (choice === "all") {
-      loadMetaPixel();
-    } else if (typeof window.fbq === "function") {
-      window.fbq("consent", "revoke");
-    }
   }
 
-  cookieAccept.addEventListener("click", () => saveChoice("all"));
-  cookieReject.addEventListener("click", () => saveChoice("essential"));
+  cookieAccept.addEventListener("click", saveChoice);
 }
 
 initQuiz();
