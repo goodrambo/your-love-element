@@ -119,6 +119,7 @@ let paidCurrentStep = 0;
 let previewReadyForCheckout = false;
 let currentReadingId = null;
 let metaPixelLoaded = false;
+let metaViewContentTracked = false;
 let quizStartTracked = false;
 
 function getStorageItem(key) {
@@ -156,6 +157,12 @@ function loadMetaPixel() {
     return;
   }
 
+  if (typeof window.fbq === "function") {
+    metaPixelLoaded = true;
+    trackHomepageViewContent();
+    return;
+  }
+
   /* Meta's standard Pixel bootstrap, loaded only after marketing consent. */
   !(function (f, b, e, v, n, t, s) {
     if (f.fbq) {
@@ -181,14 +188,23 @@ function loadMetaPixel() {
   window.fbq("init", metaPixelId);
   window.fbq("consent", "grant");
   window.fbq("track", "PageView", getAttributionParams());
-  if (window.location.pathname === "/" || window.location.pathname === "/index.html") {
-    window.fbq("track", "ViewContent", {
-      content_name: "Free Love Element Reading",
-      content_category: "Digital relationship reading",
-      ...getAttributionParams(),
-    });
-  }
   metaPixelLoaded = true;
+  trackHomepageViewContent();
+}
+
+function trackHomepageViewContent() {
+  if (metaViewContentTracked || typeof window.fbq !== "function") {
+    return;
+  }
+  if (window.location.pathname !== "/" && window.location.pathname !== "/index.html") {
+    return;
+  }
+  window.fbq("track", "ViewContent", {
+    content_name: "Free Love Element Reading",
+    content_category: "Digital relationship reading",
+    ...getAttributionParams(),
+  });
+  metaViewContentTracked = true;
 }
 
 function trackMetaEvent(name, params = {}) {

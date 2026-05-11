@@ -9,6 +9,7 @@ The website now has default Meta Pixel support for ad measurement.
 - Pixel code loads by default for ad measurement.
 - The cookie notice is informational and does not gate tracking.
 - Pixel ID is centralized in `assets/tracking-config.js`.
+- The base pixel loads in the page `<head>` through `assets/meta-pixel-base.js`.
 - The site sends:
   - `PageView`
   - `ViewContent` on the homepage
