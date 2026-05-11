@@ -28,6 +28,7 @@ const paidTotalSteps = document.querySelector("#paidTotalSteps");
 const paidProgressBar = document.querySelector("#paidProgressBar");
 const paidQuizMood = document.querySelector("#paidQuizMood");
 const paidComplete = document.querySelector("#paidComplete");
+const paidCompleteTitle = paidComplete?.querySelector("h2");
 const paidCompleteMessage = document.querySelector("#paidCompleteMessage");
 const paymentStatus = document.querySelector("#paymentStatus");
 const unlockReportButton = document.querySelector("#unlockReportButton");
@@ -158,6 +159,7 @@ let quizStartTracked = false;
 let currentShareCardData = null;
 let currentShareCardBlob = null;
 let currentShareCardObjectUrl = null;
+let paidQuizLocked = false;
 
 function getStorageItem(key) {
   try {
@@ -957,11 +959,43 @@ function updatePaidStep() {
   paidTotalSteps.textContent = String(paidSteps.length);
   paidProgressBar.style.width = `${((paidCurrentStep + 1) / paidSteps.length) * 100}%`;
   paidQuizMood.textContent = paidMoods[paidCurrentStep];
-  paidBackButton.disabled = paidCurrentStep === 0;
+  paidBackButton.disabled = paidQuizLocked || paidCurrentStep === 0;
+  paidNextButton.disabled = paidQuizLocked;
   paidNextButton.textContent = paidCurrentStep === paidSteps.length - 1 ? "Finish signals" : "Continue";
 }
 
+function setPaidQuizLocked(isLocked) {
+  paidQuizLocked = Boolean(isLocked);
+  document.querySelector("#paidSignals")?.classList.toggle("is-locked", paidQuizLocked);
+  paidSteps.forEach((step) => {
+    step.disabled = paidQuizLocked;
+  });
+  updatePaidStep();
+}
+
+function showPaidCompleteState(title, message, mood = "Ready for report") {
+  paidSteps.forEach((step) => {
+    step.classList.remove("is-active");
+  });
+  if (paidCompleteTitle) {
+    paidCompleteTitle.textContent = title;
+  }
+  if (paidCompleteMessage) {
+    paidCompleteMessage.textContent = message;
+  }
+  paidNextButton.hidden = true;
+  paidBackButton.hidden = true;
+  paidComplete.hidden = false;
+  paidProgressBar.style.width = "100%";
+  paidQuizMood.textContent = mood;
+}
+
 async function completePaidSignals() {
+  if (paidQuizLocked) {
+    setStatus(paidValidation, "Payment must be verified before these signals can be submitted.", "error");
+    return;
+  }
+
   let paidAnswers;
   try {
     paidAnswers = getPaidAnswers();
@@ -981,17 +1015,36 @@ async function completePaidSignals() {
     try {
       const result = await apiPost(`/api/readings/${readingId}/paid-signals`, { paid_answers: paidAnswers });
       const verified = Boolean(result.payment_verified || result.queued);
-      setStatus(
-        paidSaveStatus,
-        verified
-          ? "Your deeper signals were saved. Report generation will start shortly."
-          : "Your deeper signals were saved, but payment has not been verified for this reading yet.",
-        verified ? "success" : "error",
-      );
+      const blocked = result.status === "failed";
+      const alreadyHandled = Boolean(result.delivered || result.already_submitted);
+      const saveMessage = blocked
+        ? "This reading cannot generate a report right now. Contact support with your order email."
+        : result.delivered
+        ? "Your full report has already been delivered to the checkout email."
+        : alreadyHandled
+          ? "Your deeper signals were already saved. Report generation is in progress."
+          : verified
+            ? "Your deeper signals were saved. Report generation will start shortly."
+            : "Your deeper signals were saved, but payment has not been verified for this reading yet.";
+      setStatus(paidSaveStatus, saveMessage, verified && !blocked ? "success" : "error");
+      if (paidCompleteTitle) {
+        paidCompleteTitle.textContent = blocked
+          ? "This report needs support."
+          : result.delivered
+          ? "Your report has already been delivered."
+          : "Your deeper answers are ready for report generation.";
+      }
       if (paidCompleteMessage) {
-        paidCompleteMessage.textContent = verified
-          ? "Your answers were received. Your full report will be generated and delivered to your email shortly."
-          : "Your answers were received, but this reading is not connected to a verified payment yet. If you already purchased, open the full-report link from your Lemon Squeezy receipt or contact support with your order email.";
+        const completeMessage = blocked
+          ? "Please contact support with your order email so we can review the payment and report status."
+          : result.delivered
+          ? "If you cannot find it, check the email address used at checkout or contact support with your order email."
+          : alreadyHandled
+            ? "Your answers were already received. Your full report will be generated and delivered to your checkout email."
+            : verified
+              ? "Your answers were received. Your full report will be generated and delivered to your email shortly."
+              : "Your answers were received, but this reading is not connected to a verified payment yet. If you already purchased, open the full-report link from your Lemon Squeezy receipt or contact support with your order email.";
+        paidCompleteMessage.textContent = completeMessage;
       }
       trackMetaCustomEvent("paid_signals_submitted", {
         reading_id: readingId,
@@ -1023,6 +1076,7 @@ function initPaidQuiz() {
     return;
   }
 
+  setPaidQuizLocked(true);
   initPaymentStatus();
 
   paidNextButton.addEventListener("click", () => {
@@ -1062,6 +1116,7 @@ async function initPaymentStatus() {
 
   const readingId = getReadingIdFromUrl() || getStorageItem(readingStorageKey);
   if (!readingId) {
+    setPaidQuizLocked(true);
     setStatus(
       paymentStatus,
       "No paid checkout is linked to this page yet. Start from the free preview, unlock the full report, then return here from the Lemon Squeezy receipt link.",
@@ -1071,23 +1126,54 @@ async function initPaymentStatus() {
   }
 
   if (!apiBaseUrl) {
+    setPaidQuizLocked(false);
     setStatus(paymentStatus, "Payment verification is not available in this browser session. Your answers can still be saved locally.", "warning");
     return;
   }
 
   try {
     const status = await apiGet(`/api/readings/${readingId}/status`);
+    if (status.status === "failed") {
+      setPaidQuizLocked(true);
+      setStatus(paymentStatus, "This reading cannot generate a report right now. Contact support with your order email so we can review it.", "error");
+      return;
+    }
+
+    if (status.delivered) {
+      setPaidQuizLocked(true);
+      setStatus(paymentStatus, "Your full report has already been delivered to the checkout email.", "success");
+      showPaidCompleteState(
+        "Your report has already been delivered.",
+        "If you cannot find it, check the email address used at checkout or contact support with your order email.",
+        "Report delivered",
+      );
+      return;
+    }
+
+    if (status.payment_verified && status.paid_answers_submitted) {
+      setPaidQuizLocked(true);
+      setStatus(paymentStatus, "Your deeper signals are already saved. Report generation is in progress.", "success");
+      showPaidCompleteState(
+        "Your deeper answers are already saved.",
+        "Your full report will be generated and delivered to your checkout email. Most reports arrive within a few minutes.",
+      );
+      return;
+    }
+
     if (status.payment_verified) {
+      setPaidQuizLocked(false);
       setStatus(paymentStatus, "Payment verified. Complete these 8 signals to generate your full report.", "success");
       return;
     }
 
+    setPaidQuizLocked(true);
     setStatus(
       paymentStatus,
       "This reading is not connected to a verified payment yet. If you already purchased, use the full-report link from your Lemon Squeezy receipt; otherwise, return to the free preview and unlock the full report first.",
       "warning",
     );
   } catch {
+    setPaidQuizLocked(true);
     setStatus(paymentStatus, "We could not verify this reading link. If you already purchased, contact support with your order email.", "error");
   }
 }

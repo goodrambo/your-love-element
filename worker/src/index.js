@@ -29,6 +29,10 @@ const PAID_ANSWER_KEYS = [
   "guidance",
 ];
 
+const REPORT_PROGRESS_STATUSES = new Set(["paid_answers_submitted", "generating", "report_generated", "delivered", "failed"]);
+const REPORT_LOCKED_STATUSES = new Set(["generating", "report_generated", "delivered", "failed"]);
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") {
@@ -218,6 +222,10 @@ async function createCheckout(request, env) {
     throw httpError(404, "Reading not found");
   }
 
+  if (reading.lemon_squeezy_order_id || REPORT_PROGRESS_STATUSES.has(reading.status)) {
+    throw httpError(409, "This reading already has a verified payment or report in progress");
+  }
+
   const siteUrl = env.SITE_URL || "https://yourloveelement.com";
   const checkout = await lemonSqueezy(env, "/v1/checkouts", {
     method: "POST",
@@ -295,70 +303,98 @@ async function handleLemonSqueezyWebhook(request, env) {
   const event = JSON.parse(rawBody);
   const eventName = event.meta?.event_name || "unknown";
   const externalEventId = event.meta?.webhook_id || event.data?.id || null;
+  const attrs = event.data?.attributes || {};
+  const readingId = event.meta?.custom_data?.reading_id || attrs.custom_data?.reading_id;
+  const validReadingId = isUuid(readingId) ? String(readingId) : null;
 
-  let webhookRows = [];
+  let webhookRow = null;
   try {
-    webhookRows = await supabase(env, "/rest/v1/webhook_events?select=id", {
+    const webhookRows = await supabase(env, "/rest/v1/webhook_events?select=id,processed_at", {
       method: "POST",
       body: {
         provider: "lemon_squeezy",
         event_name: eventName,
         external_event_id: externalEventId,
+        reading_id: validReadingId,
         payload_json: event,
       },
       prefer: "return=representation",
     });
+    webhookRow = webhookRows[0] || null;
   } catch (error) {
     if (!String(error.message).includes("duplicate key")) {
       throw error;
     }
+    if (!externalEventId) {
+      throw error;
+    }
+
+    const existingRows = await supabase(
+      env,
+      `/rest/v1/webhook_events?provider=eq.lemon_squeezy&external_event_id=eq.${encodeURIComponent(externalEventId)}&select=id,processed_at&limit=1`,
+    );
+    webhookRow = existingRows[0] || null;
+    if (webhookRow?.processed_at) {
+      return { ok: true, duplicate: true };
+    }
   }
 
   if (eventName !== "order_created" && eventName !== "order_refunded") {
-    await markWebhookProcessed(env, webhookRows[0]?.id);
+    await markWebhookProcessed(env, webhookRow?.id, null, validReadingId);
     return { ok: true, ignored: true };
   }
 
-  const readingId = event.meta?.custom_data?.reading_id || event.data?.attributes?.custom_data?.reading_id;
   if (!readingId) {
-    await markWebhookProcessed(env, webhookRows[0]?.id, "Missing reading_id");
+    await markWebhookProcessed(env, webhookRow?.id, "Missing reading_id");
     return { ok: true, ignored: true };
   }
 
-  const attrs = event.data?.attributes || {};
+  if (!validReadingId) {
+    await markWebhookProcessed(env, webhookRow?.id, "Invalid reading_id");
+    return { ok: true, ignored: true };
+  }
+
+  const reading = await getReading(env, validReadingId);
+  if (!reading) {
+    await markWebhookProcessed(env, webhookRow?.id, "Reading not found", validReadingId);
+    return { ok: true, ignored: true };
+  }
+
   const orderId = String(event.data?.id || attrs.order_id || "");
   const customerEmail = attrs.user_email || attrs.customer_email || attrs.email || null;
-  const status = eventName === "order_refunded" ? "failed" : "paid";
+  const status = eventName === "order_refunded"
+    ? "failed"
+    : nextPaymentStatus(reading.status, Boolean(reading.paid_answers_json));
 
-  await supabase(env, `/rest/v1/readings?id=eq.${encodeURIComponent(readingId)}`, {
+  await supabase(env, `/rest/v1/readings?id=eq.${encodeURIComponent(validReadingId)}`, {
     method: "PATCH",
     body: {
       status,
-      customer_email: customerEmail,
-      lemon_squeezy_order_id: orderId,
-      lemon_squeezy_order_number: attrs.order_number ? String(attrs.order_number) : null,
-      lemon_squeezy_customer_id: attrs.customer_id ? String(attrs.customer_id) : null,
-      lemon_squeezy_variant_id: attrs.first_order_item?.variant_id ? String(attrs.first_order_item.variant_id) : null,
-      lemon_squeezy_product_id: attrs.first_order_item?.product_id ? String(attrs.first_order_item.product_id) : null,
+      customer_email: customerEmail || reading.customer_email,
+      lemon_squeezy_order_id: orderId || reading.lemon_squeezy_order_id,
+      lemon_squeezy_order_number: attrs.order_number ? String(attrs.order_number) : reading.lemon_squeezy_order_number,
+      lemon_squeezy_customer_id: attrs.customer_id ? String(attrs.customer_id) : reading.lemon_squeezy_customer_id,
+      lemon_squeezy_variant_id: attrs.first_order_item?.variant_id ? String(attrs.first_order_item.variant_id) : reading.lemon_squeezy_variant_id,
+      lemon_squeezy_product_id: attrs.first_order_item?.product_id ? String(attrs.first_order_item.product_id) : reading.lemon_squeezy_product_id,
       payment_status: attrs.status || eventName,
-      paid_at: eventName === "order_created" ? new Date().toISOString() : null,
+      paid_at: eventName === "order_created" ? new Date().toISOString() : reading.paid_at,
     },
   });
 
   if (eventName === "order_created") {
     await sendMetaPurchaseEvent(env, {
-      readingId,
+      readingId: validReadingId,
       orderId,
       customerEmail,
       attrs,
-      eventId: externalEventId || orderId || readingId,
+      eventId: externalEventId || orderId || validReadingId,
     }).catch((error) => {
       console.error("Meta Purchase event failed", error);
     });
   }
 
-  await markWebhookProcessed(env, webhookRows[0]?.id);
-  return { ok: true, reading_id: readingId };
+  await markWebhookProcessed(env, webhookRow?.id, null, validReadingId);
+  return { ok: true, reading_id: validReadingId };
 }
 
 async function sendMetaPurchaseEvent(env, { readingId, orderId, customerEmail, attrs, eventId }) {
@@ -442,6 +478,18 @@ async function submitPaidSignals(readingId, request, env) {
     throw httpError(404, "Reading not found");
   }
 
+  if (REPORT_LOCKED_STATUSES.has(reading.status)) {
+    return {
+      ok: true,
+      reading_id: readingId,
+      status: reading.status,
+      payment_verified: Boolean(reading.lemon_squeezy_order_id),
+      queued: false,
+      already_submitted: true,
+      delivered: reading.status === "delivered",
+    };
+  }
+
   const nextStatus = reading.lemon_squeezy_order_id ? "paid_answers_submitted" : reading.status;
   await supabase(env, `/rest/v1/readings?id=eq.${encodeURIComponent(readingId)}`, {
     method: "PATCH",
@@ -459,6 +507,8 @@ async function submitPaidSignals(readingId, request, env) {
     status: nextStatus,
     payment_verified: Boolean(reading.lemon_squeezy_order_id),
     queued: Boolean(reading.lemon_squeezy_order_id),
+    already_submitted: reading.status === "paid_answers_submitted",
+    delivered: false,
   };
 }
 
@@ -476,6 +526,9 @@ async function getReadingStatus(readingId, env) {
     payment_verified: Boolean(reading.lemon_squeezy_order_id),
     paid_answers_submitted: Boolean(reading.paid_answers_json),
     delivered: reading.status === "delivered",
+    can_submit_paid_signals: Boolean(reading.lemon_squeezy_order_id)
+      && !REPORT_LOCKED_STATUSES.has(reading.status)
+      && reading.status !== "paid_answers_submitted",
   };
 }
 
@@ -557,7 +610,7 @@ async function processNextQueuedReportJob(env) {
   }
 
   const job = jobs[0];
-  await supabase(env, `/rest/v1/report_generation_jobs?id=eq.${job.id}`, {
+  const claimedJobs = await supabase(env, `/rest/v1/report_generation_jobs?id=eq.${job.id}&status=eq.queued`, {
     method: "PATCH",
     body: {
       status: "running",
@@ -566,7 +619,11 @@ async function processNextQueuedReportJob(env) {
       locked_by: workerId,
       started_at: new Date().toISOString(),
     },
+    prefer: "return=representation",
   });
+  if (!claimedJobs?.length) {
+    return { ok: true, processed: false, skipped: "already_claimed" };
+  }
 
   const reading = job.readings;
   try {
@@ -639,24 +696,32 @@ async function processNextQueuedReportJob(env) {
     return { ok: true, processed: true, reading_id: reading.id };
   } catch (error) {
     const terminal = job.attempts + 1 >= job.max_attempts;
+    const latestReading = reading?.id ? await getReading(env, reading.id).catch(() => null) : null;
+    const alreadyDelivered = latestReading?.status === "delivered" && latestReading.email_message_id;
     await supabase(env, `/rest/v1/report_generation_jobs?id=eq.${job.id}`, {
       method: "PATCH",
       body: {
-        status: terminal ? "failed" : "queued",
-        last_error: error.message,
-        scheduled_for: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
-        completed_at: terminal ? new Date().toISOString() : null,
+        status: alreadyDelivered ? "succeeded" : terminal ? "failed" : "queued",
+        last_error: alreadyDelivered ? null : error.message,
+        scheduled_for: alreadyDelivered ? job.scheduled_for : new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+        completed_at: alreadyDelivered || terminal ? new Date().toISOString() : null,
       },
     });
 
-    await supabase(env, `/rest/v1/readings?id=eq.${reading.id}`, {
-      method: "PATCH",
-      body: {
-        status: terminal ? "failed" : reading.status,
-        error_message: error.message,
-        failed_at: terminal ? new Date().toISOString() : null,
-      },
-    });
+    if (alreadyDelivered) {
+      return { ok: true, processed: true, reading_id: reading.id, skipped: "already_delivered_after_side_effect" };
+    }
+
+    if (reading?.id) {
+      await supabase(env, `/rest/v1/readings?id=eq.${reading.id}`, {
+        method: "PATCH",
+        body: {
+          status: terminal ? "failed" : reading.status,
+          error_message: error.message,
+          failed_at: terminal ? new Date().toISOString() : null,
+        },
+      });
+    }
 
     throw error;
   }
@@ -1281,17 +1346,23 @@ async function getReading(env, readingId) {
   return rows[0] || null;
 }
 
-async function markWebhookProcessed(env, webhookId, processingError = null) {
+async function markWebhookProcessed(env, webhookId, processingError = null, readingId = null) {
   if (!webhookId) {
     return;
   }
 
+  const body = {
+    processed_at: new Date().toISOString(),
+    processing_error: processingError,
+  };
+
+  if (isUuid(readingId)) {
+    body.reading_id = readingId;
+  }
+
   await supabase(env, `/rest/v1/webhook_events?id=eq.${webhookId}`, {
     method: "PATCH",
-    body: {
-      processed_at: new Date().toISOString(),
-      processing_error: processingError,
-    },
+    body,
   });
 }
 
@@ -1361,8 +1432,19 @@ function requireAnswers(answers, keys, label) {
   }
 }
 
+function nextPaymentStatus(currentStatus, hasPaidAnswers) {
+  if (REPORT_PROGRESS_STATUSES.has(currentStatus)) {
+    return currentStatus;
+  }
+  return hasPaidAnswers ? "paid_answers_submitted" : "paid";
+}
+
+function isUuid(value) {
+  return UUID_PATTERN.test(String(value || ""));
+}
+
 function requireUuid(value, label) {
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""))) {
+  if (!isUuid(value)) {
     throw httpError(400, `Invalid ${label}`);
   }
   return String(value);
