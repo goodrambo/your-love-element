@@ -22,6 +22,7 @@ Cloudflare Worker backend for the paid report automation flow.
 - `OPENAI_API_KEY`
 - `RESEND_API_KEY`
 - `JOB_RUNNER_SECRET`
+- `META_CAPI_ACCESS_TOKEN` (required only for server-side Meta `Purchase` events)
 
 ## Optional Variables
 
@@ -29,6 +30,9 @@ Cloudflare Worker backend for the paid report automation flow.
 - `SUPPORT_EMAIL` defaults to `support@yourloveelement.com`
 - `FROM_EMAIL` should be `Your Love Element <reports@yourloveelement.com>` once Resend is verified
 - `OPENAI_MODEL` is currently configured as `gpt-5.5`
+- `META_PIXEL_ID` is configured as `4282306195342317`
+- `META_GRAPH_API_VERSION` defaults to `v25.0`
+- `META_TEST_EVENT_CODE` can be set temporarily while testing Conversions API events in Meta Events Manager
 
 Plaintext runtime variables are managed in `wrangler.toml` so GitHub deployments do not overwrite Dashboard edits with stale values. Secrets still live only in Cloudflare Worker runtime secrets.
 
@@ -51,6 +55,30 @@ The production checkout is intentionally created by the Worker, not by a static 
 5. Lemon Squeezy sends `order_created` and `order_refunded` events to `/api/webhooks/lemon-squeezy`.
 6. The webhook verifies the `X-Signature` with `LEMON_SQUEEZY_WEBHOOK_SECRET`.
 7. Payment and paid answers are joined by `reading_id`; report generation should only happen once both are present.
+8. If `META_CAPI_ACCESS_TOKEN` is configured, the verified `order_created` webhook sends a server-side Meta Conversions API `Purchase` event.
+
+## Meta Conversions API Purchase Tracking
+
+The Worker sends `Purchase` only from the verified Lemon Squeezy `order_created` webhook. Do not send `Purchase` from the frontend checkout click; that would count people who opened checkout but never paid.
+
+Runtime behavior:
+
+- `META_CAPI_ACCESS_TOKEN` is a Cloudflare Worker secret and must not be committed.
+- `META_PIXEL_ID` is a non-secret Worker variable.
+- The purchase event uses `event_id = lemon_squeezy_order_created:{webhook_id/order_id}` for idempotency.
+- Customer email is normalized, SHA-256 hashed, and sent as `user_data.em`.
+- `reading_id` is SHA-256 hashed and sent as `user_data.external_id`.
+- `value` and `currency` are read from the Lemon Squeezy order payload when available, with a `$9.99 USD` fallback.
+- Meta failures are logged but do not fail the Lemon webhook, so payment confirmation and report delivery stay reliable.
+
+To test in Meta Events Manager:
+
+1. In Events Manager, open the dataset and go to `Test events`.
+2. Copy the current server `test_event_code`.
+3. Temporarily set Worker secret/variable `META_TEST_EVENT_CODE` to that value.
+4. Complete a real or test Lemon Squeezy purchase.
+5. Confirm `Purchase` appears under server events.
+6. Remove or rotate `META_TEST_EVENT_CODE` after testing so production events are not marked as test traffic.
 
 Production Lemon Squeezy store id is `365266`. Store id, variant id, API key, and webhook secret are Cloudflare Worker Secrets.
 

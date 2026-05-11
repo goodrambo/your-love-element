@@ -25,7 +25,7 @@ The website now has default Meta Pixel support for ad measurement.
   - `utm_content`
   - `utm_term`
 
-Do not send `Purchase` from the frontend yet. Payment happens in Lemon Squeezy, so a reliable purchase event should later come from the Lemon Squeezy webhook through Meta Conversions API.
+Do not send `Purchase` from the frontend. Payment happens in Lemon Squeezy, so reliable purchase tracking comes from the Lemon Squeezy webhook through Meta Conversions API.
 
 ## Step 1: Create The Meta Pixel / Dataset
 

@@ -319,8 +319,90 @@ async function handleLemonSqueezyWebhook(request, env) {
     },
   });
 
+  if (eventName === "order_created") {
+    await sendMetaPurchaseEvent(env, {
+      readingId,
+      orderId,
+      customerEmail,
+      attrs,
+      eventId: externalEventId || orderId || readingId,
+    }).catch((error) => {
+      console.error("Meta Purchase event failed", error);
+    });
+  }
+
   await markWebhookProcessed(env, webhookRows[0]?.id);
   return { ok: true, reading_id: readingId };
+}
+
+async function sendMetaPurchaseEvent(env, { readingId, orderId, customerEmail, attrs, eventId }) {
+  if (!env.META_CAPI_ACCESS_TOKEN) {
+    console.log("Skipping Meta Purchase event: META_CAPI_ACCESS_TOKEN is not configured");
+    return { skipped: true, reason: "missing_token" };
+  }
+
+  const pixelId = env.META_PIXEL_ID || "4282306195342317";
+  const graphVersion = env.META_GRAPH_API_VERSION || "v25.0";
+  const siteUrl = env.SITE_URL || "https://yourloveelement.com";
+  const email = optionalEmail(customerEmail);
+  const userData = {};
+
+  if (email) {
+    userData.em = [await sha256Hex(email.trim().toLowerCase())];
+  }
+
+  if (readingId) {
+    userData.external_id = [await sha256Hex(String(readingId))];
+  }
+
+  if (!Object.keys(userData).length) {
+    console.log("Skipping Meta Purchase event: no matchable user_data");
+    return { skipped: true, reason: "missing_user_data" };
+  }
+
+  const payload = {
+    data: [
+      {
+        event_name: "Purchase",
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: `lemon_squeezy_order_created:${eventId}`,
+        action_source: "website",
+        event_source_url: `${siteUrl}/full-report/?reading_id=${encodeURIComponent(readingId)}`,
+        user_data: userData,
+        custom_data: {
+          currency: orderCurrency(attrs),
+          value: orderValue(attrs),
+          order_id: orderId || String(eventId || ""),
+          content_name: "Full Relationship Report",
+          content_category: "Digital relationship reading",
+          content_ids: ["your-love-element-full-report"],
+          content_type: "product",
+        },
+      },
+    ],
+  };
+
+  if (env.META_TEST_EVENT_CODE) {
+    payload.test_event_code = env.META_TEST_EVENT_CODE;
+  }
+
+  const response = await fetch(
+    `https://graph.facebook.com/${graphVersion}/${encodeURIComponent(pixelId)}/events?access_token=${encodeURIComponent(env.META_CAPI_ACCESS_TOKEN)}`,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  const result = await response.json().catch(async () => ({ error: await response.text() }));
+  if (!response.ok || result.error) {
+    throw new Error(`Meta CAPI failed: ${JSON.stringify(result)}`);
+  }
+
+  return result;
 }
 
 async function submitPaidSignals(readingId, request, env) {
@@ -832,6 +914,35 @@ function optionalEmail(value) {
   return email;
 }
 
+function orderCurrency(attrs = {}) {
+  return String(attrs.currency || attrs.currency_code || "USD").trim().toUpperCase();
+}
+
+function orderValue(attrs = {}) {
+  const cents = Number(
+    attrs.total_usd ??
+    attrs.total ??
+    attrs.subtotal_usd ??
+    attrs.subtotal ??
+    attrs.first_order_item?.price ??
+    "",
+  );
+
+  if (Number.isFinite(cents) && cents > 0) {
+    return Number((cents / 100).toFixed(2));
+  }
+
+  const formatted = String(attrs.total_formatted || attrs.subtotal_formatted || "").match(/[\d.]+/);
+  if (formatted) {
+    const parsed = Number(formatted[0]);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+
+  return 9.99;
+}
+
 function emailDomain(value) {
   const match = String(value || "").match(/[A-Z0-9._%+-]+@([A-Z0-9.-]+\.[A-Z]{2,})/i);
   return match ? match[1].toLowerCase() : null;
@@ -878,6 +989,11 @@ async function hmacHex(secret, message) {
   );
   const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
   return [...new Uint8Array(signature)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function sha256Hex(value) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(value)));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function timingSafeEqual(a, b) {
