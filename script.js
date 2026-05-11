@@ -326,6 +326,25 @@ function drawCenteredWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines
   return y + lines.length * lineHeight;
 }
 
+function drawShareCopyVeil(ctx) {
+  ctx.save();
+  const centerWash = ctx.createRadialGradient(540, 850, 70, 540, 850, 315);
+  centerWash.addColorStop(0, "rgba(255, 250, 241, 0.76)");
+  centerWash.addColorStop(0.48, "rgba(255, 250, 241, 0.5)");
+  centerWash.addColorStop(0.8, "rgba(255, 250, 241, 0.08)");
+  centerWash.addColorStop(1, "rgba(255, 250, 241, 0)");
+  ctx.fillStyle = centerWash;
+  ctx.fillRect(0, 0, shareCardWidth, shareCardHeight);
+
+  const leftWash = ctx.createRadialGradient(350, 852, 36, 350, 852, 230);
+  leftWash.addColorStop(0, "rgba(255, 250, 241, 0.5)");
+  leftWash.addColorStop(0.62, "rgba(255, 250, 241, 0.24)");
+  leftWash.addColorStop(1, "rgba(255, 250, 241, 0)");
+  ctx.fillStyle = leftWash;
+  ctx.fillRect(0, 0, shareCardWidth, shareCardHeight);
+  ctx.restore();
+}
+
 function drawCanvasHeart(ctx, x, y, scale) {
   ctx.beginPath();
   ctx.moveTo(x, y + 9 * scale);
@@ -376,20 +395,25 @@ function loadShareTemplate(element) {
 function drawShareCardDynamicCopy(ctx, data, palette) {
   const title = data.title || "Your Love Element";
   const description = data.description || elementCopy[data.element] || "A private love signal from Your Love Element.";
-
+  const titleLineHeight = 68;
   ctx.save();
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
-
   ctx.font = '700 62px "Playfair Display", Georgia, serif';
+  const titleLines = wrapCanvasText(ctx, title, 840, 2);
+  const titleY = titleLines.length > 1 ? 706 : 734;
+  const dividerY = titleY + (titleLines.length - 1) * titleLineHeight + 66;
+  const descriptionY = dividerY + 48;
+
+  drawShareCopyVeil(ctx);
+
   ctx.fillStyle = palette.deep;
-  const titleBottom = drawCenteredWrappedText(ctx, title, 540, 744, 840, 72, 2);
-  const dividerY = Math.min(870, titleBottom + 10);
+  drawCenteredWrappedText(ctx, title, 540, titleY, 840, titleLineHeight, 2);
   drawTinyDivider(ctx, palette, dividerY, "heart");
 
   ctx.font = '500 40px Inter, system-ui, sans-serif';
   ctx.fillStyle = palette.deep;
-  drawCenteredWrappedText(ctx, description, 540, dividerY + 42, 700, 54, 3);
+  drawCenteredWrappedText(ctx, description, 540, descriptionY, 640, 52, 3);
 
   ctx.restore();
 }
