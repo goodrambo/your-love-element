@@ -383,13 +383,13 @@ function drawShareCardDynamicCopy(ctx, data, palette) {
 
   ctx.font = '700 62px "Playfair Display", Georgia, serif';
   ctx.fillStyle = palette.deep;
-  const titleBottom = drawCenteredWrappedText(ctx, title, 540, 768, 840, 72, 2);
-  const dividerY = Math.min(890, titleBottom + 26);
+  const titleBottom = drawCenteredWrappedText(ctx, title, 540, 744, 840, 72, 2);
+  const dividerY = Math.min(870, titleBottom + 10);
   drawTinyDivider(ctx, palette, dividerY, "heart");
 
   ctx.font = '500 40px Inter, system-ui, sans-serif';
   ctx.fillStyle = palette.deep;
-  drawCenteredWrappedText(ctx, description, 540, dividerY + 60, 700, 54, 3);
+  drawCenteredWrappedText(ctx, description, 540, dividerY + 42, 700, 54, 3);
 
   ctx.restore();
 }
