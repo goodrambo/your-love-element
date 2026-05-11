@@ -423,6 +423,11 @@ function shareCardFileName() {
   return `your-love-element-${element}.png`;
 }
 
+function buildShareText() {
+  const element = currentShareCardData?.element || "ready";
+  return `My Love Element is ${element}.\nTake the free reading and discover yours:\nhttps://yourloveelement.com/`;
+}
+
 function setShareButtonsLoading(isLoading) {
   if (shareImageButton) {
     shareImageButton.disabled = isLoading;
@@ -531,18 +536,33 @@ async function shareCardImage() {
     setShareButtonsLoading(true);
     const blob = await ensureShareCardBlob();
     const file = new File([blob], shareCardFileName(), { type: "image/png" });
-    const sharePayload = {
-      title: `My Love Element is ${currentShareCardData?.element || "ready"}`,
-      text: `My Love Element is ${currentShareCardData?.element || "ready"}. Take the free reading and discover yours:`,
-      url: "https://yourloveelement.com/",
+    const shareTitle = `My Love Element is ${currentShareCardData?.element || "ready"}`;
+    const shareText = buildShareText();
+    const imageSharePayload = {
+      title: shareTitle,
+      text: shareText,
       files: [file],
     };
+    const textSharePayload = {
+      title: shareTitle,
+      text: shareText,
+    };
 
-    if (navigator.canShare?.({ files: [file] }) && navigator.share) {
-      await navigator.share(sharePayload);
+    if (navigator.canShare?.(imageSharePayload) && navigator.share) {
+      await navigator.share(imageSharePayload);
       setShareButtonsLoading(false);
       setStatus(shareStatus, "Share image sent.", "success");
       trackMetaCustomEvent("share_card_shared", {
+        element: currentShareCardData?.element,
+      });
+      return;
+    }
+
+    if (navigator.share) {
+      await navigator.share(textSharePayload);
+      setShareButtonsLoading(false);
+      setStatus(shareStatus, "Share link sent. Image sharing is not available in this browser.", "neutral");
+      trackMetaCustomEvent("share_card_link_shared", {
         element: currentShareCardData?.element,
       });
       return;
