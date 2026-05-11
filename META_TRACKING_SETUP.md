@@ -6,7 +6,8 @@ Last updated: 2026-05-11
 
 The website now has consent-aware Meta Pixel support.
 
-- Pixel code only loads after the visitor chooses `Allow all` in the cookie banner.
+- Pixel code loads by default for ad measurement.
+- If the visitor chooses `Essential only`, optional Meta tracking stops on later events and future page loads in that browser.
 - Pixel ID is centralized in `assets/tracking-config.js`.
 - The site sends:
   - `PageView`
@@ -74,8 +75,8 @@ The pages already load this config file before `script.js`:
 2. Go to `Test events`.
 3. Enter `https://yourloveelement.com/`.
 4. Open the site from Meta's test flow.
-5. Click `Allow all` in the cookie banner.
-6. Confirm `PageView` appears.
+5. Confirm `PageView` appears. You no longer need to click `Allow all` first.
+6. Confirm `ViewContent` appears on the homepage.
 7. Start the free reading and answer the first question.
 8. Confirm `quiz_start` appears.
 9. Finish the free reading.
@@ -85,7 +86,7 @@ The pages already load this config file before `script.js`:
 
 For the paid form:
 
-1. After a real or test checkout redirects to `/full-report/?reading_id=...`, click `Allow all` if needed.
+1. After a real or test checkout redirects to `/full-report/?reading_id=...`, keep the test events page open.
 2. Complete the 8 deeper signals.
 3. Confirm `paid_signals_submitted` appears.
 

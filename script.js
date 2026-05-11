@@ -138,8 +138,8 @@ function setStorageItem(key, value) {
   }
 }
 
-function hasMarketingConsent() {
-  return getStorageItem(cookieConsentStorageKey) === "all";
+function allowsMarketingTracking() {
+  return getStorageItem(cookieConsentStorageKey) !== "essential";
 }
 
 function getAttributionParams() {
@@ -157,7 +157,7 @@ function getAttributionParams() {
 }
 
 function loadMetaPixel() {
-  if (!metaPixelId || metaPixelLoaded || !hasMarketingConsent()) {
+  if (!metaPixelId || metaPixelLoaded || !allowsMarketingTracking()) {
     return;
   }
 
@@ -184,6 +184,7 @@ function loadMetaPixel() {
   })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
 
   window.fbq("init", metaPixelId);
+  window.fbq("consent", "grant");
   window.fbq("track", "PageView", getAttributionParams());
   if (window.location.pathname === "/" || window.location.pathname === "/index.html") {
     window.fbq("track", "ViewContent", {
@@ -197,7 +198,7 @@ function loadMetaPixel() {
 
 function trackMetaEvent(name, params = {}) {
   loadMetaPixel();
-  if (typeof window.fbq !== "function" || !hasMarketingConsent()) {
+  if (typeof window.fbq !== "function" || !allowsMarketingTracking()) {
     return;
   }
   window.fbq("track", name, {
@@ -208,7 +209,7 @@ function trackMetaEvent(name, params = {}) {
 
 function trackMetaCustomEvent(name, params = {}) {
   loadMetaPixel();
-  if (typeof window.fbq !== "function" || !hasMarketingConsent()) {
+  if (typeof window.fbq !== "function" || !allowsMarketingTracking()) {
     return;
   }
   window.fbq("trackCustom", name, {
@@ -690,7 +691,8 @@ function initCookieConsent() {
   const storedChoice = canStoreChoice ? localStorage.getItem(cookieConsentStorageKey) : null;
   if (!storedChoice) {
     cookieConsent.hidden = false;
-  } else if (storedChoice === "all") {
+    loadMetaPixel();
+  } else if (storedChoice !== "essential") {
     loadMetaPixel();
   }
 
@@ -701,6 +703,8 @@ function initCookieConsent() {
     cookieConsent.hidden = true;
     if (choice === "all") {
       loadMetaPixel();
+    } else if (typeof window.fbq === "function") {
+      window.fbq("consent", "revoke");
     }
   }
 
