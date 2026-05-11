@@ -75,6 +75,10 @@ export default {
         return json(await checkEmailHealth(env));
       }
 
+      if (request.method === "GET" && url.pathname === "/api/health/meta") {
+        return json(checkMetaHealth(env));
+      }
+
       return json({ error: "Not found" }, 404);
     } catch (error) {
       console.error(error);
@@ -173,6 +177,23 @@ async function checkEmailHealth(env) {
     configured,
     delivery_check: "configuration_only",
     note: "Resend Sending access keys may not have permission to read domains. Use POST /api/test-email or a report E2E to verify actual delivery.",
+  };
+}
+
+function checkMetaHealth(env) {
+  const configured = {
+    meta_capi_access_token: Boolean(env.META_CAPI_ACCESS_TOKEN),
+    meta_pixel_id: Boolean(env.META_PIXEL_ID),
+    meta_graph_api_version: Boolean(env.META_GRAPH_API_VERSION),
+    meta_test_event_code: Boolean(env.META_TEST_EVENT_CODE),
+  };
+
+  return {
+    ok: configured.meta_capi_access_token && configured.meta_pixel_id,
+    configured,
+    pixel_id: configured.meta_pixel_id ? env.META_PIXEL_ID : null,
+    graph_api_version: env.META_GRAPH_API_VERSION || "v25.0",
+    note: "This endpoint only reports whether Meta runtime settings are present. It never returns secrets.",
   };
 }
 
