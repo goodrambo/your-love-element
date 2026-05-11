@@ -1,6 +1,6 @@
 # Meta Tracking Setup
 
-Last updated: 2026-05-11
+Last updated: 2026-05-12
 
 ## What Is Already Configured In The Site
 
@@ -26,6 +26,19 @@ The website now has default Meta Pixel support for ad measurement.
   - `utm_term`
 
 Do not send `Purchase` from the frontend. Payment happens in Lemon Squeezy, so reliable purchase tracking comes from the Lemon Squeezy webhook through Meta Conversions API.
+
+Current confirmed Pixel/Dataset ID:
+
+```text
+4282306195342317
+```
+
+Confirmed production state:
+
+- Browser Pixel events are active.
+- Server-side CAPI `Purchase` is active.
+- `META_CAPI_ACCESS_TOKEN` is configured in Cloudflare Worker secrets.
+- `/api/health/meta` returns `ok: true`.
 
 ## Step 1: Create The Meta Pixel / Dataset
 
@@ -104,7 +117,7 @@ Recommended early optimization:
 - First traffic campaign: optimize for landing page views or `ViewContent`.
 - After enough data: optimize for `preview_revealed`.
 - After checkout starts happen reliably: optimize for `InitiateCheckout` or `checkout_created`.
-- Later: add server-side `Purchase` via Conversions API and optimize toward purchase.
+- Server-side `Purchase` is now connected through Lemon Squeezy webhook and can be used once enough purchase data exists.
 
 ## Step 6: Keep Organic Links Tagged
 
@@ -117,3 +130,13 @@ https://yourloveelement.com/?utm_source=instagram&utm_medium=organic_social&utm_
 ```
 
 This does not replace Meta Pixel. UTM links explain where the click came from; Pixel events explain what the visitor did after arriving. The site now passes UTM parameters into Meta event parameters when they exist in the URL.
+
+## Guardrails
+
+- Do not send `Purchase` from frontend JavaScript.
+- Keep `Purchase` tied to verified Lemon Squeezy `order_created` webhooks.
+- Do not commit `META_CAPI_ACCESS_TOKEN`; keep it as a Cloudflare Worker secret.
+- Keep `META_TEST_EVENT_CODE` unset in normal production traffic.
+- Do not remove `/api/health/meta`; it is the safe way to confirm runtime Meta config without exposing secrets.
+- Do not reintroduce consent buttons unless the tracking behavior is updated to truly respect them.
+- Treat Pixel Helper auto-detected `SubscribedButtonClick` as noise unless intentionally promoted to a campaign metric.
