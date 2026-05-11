@@ -27,7 +27,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=20260512-scoring" />
+    <link rel="stylesheet" href="styles.css?v=20260512-share-card" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -318,6 +318,22 @@
             </div>
           </article>
 
+          <article class="share-card" id="shareCardPanel" hidden>
+            <div class="share-card-copy">
+              <p class="card-kicker">Share card</p>
+              <h3>Your love element card is ready.</h3>
+              <p>A lightweight result card with your element and archetype only.</p>
+              <div class="share-actions">
+                <button class="share-button" id="shareImageButton" type="button">Share image</button>
+                <button class="download-button" id="downloadShareImageButton" type="button">Download</button>
+              </div>
+              <p class="share-status" id="shareStatus" hidden></p>
+            </div>
+            <div class="share-preview-frame">
+              <img id="shareCardPreview" alt="Your Love Element share card preview" />
+            </div>
+          </article>
+
           <article class="unlock-box">
             <div>
               <p class="card-kicker">Full report - $9.99</p>
@@ -456,6 +472,6 @@
     <script>
       window.YLE_API_BASE_URL = "https://your-love-element-api.goodrambo2013.workers.dev";
     </script>
-    <script src="script.js?v=20260512-scoring"></script>
+    <script src="script.js?v=20260512-share-card"></script>
   </body>
 </html>

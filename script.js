@@ -35,11 +35,18 @@ const checkoutEmailInput = document.querySelector("#checkoutEmail");
 const readingSaveStatus = document.querySelector("#readingSaveStatus");
 const paidSaveStatus = document.querySelector("#paidSaveStatus");
 const paidValidation = document.querySelector("#paidValidation");
+const shareCardPanel = document.querySelector("#shareCardPanel");
+const shareCardPreview = document.querySelector("#shareCardPreview");
+const shareImageButton = document.querySelector("#shareImageButton");
+const downloadShareImageButton = document.querySelector("#downloadShareImageButton");
+const shareStatus = document.querySelector("#shareStatus");
 
 const apiBaseUrl = window.YLE_API_BASE_URL || "";
 const readingStorageKey = "yle-reading-id";
 const freeAnswersStorageKey = "yle-free-answers";
 const cookieConsentStorageKey = "yle-cookie-consent";
+const shareCardWidth = 1080;
+const shareCardHeight = 1350;
 const metaPixelId = String(window.YLE_META_PIXEL_ID || "").trim();
 const monthDayLimits = {
   January: 31,
@@ -89,6 +96,22 @@ const elementCopy = {
   Water: "Intuitive depth, emotional tenderness, and a bond that begins beneath the surface.",
 };
 
+const elementShareCopy = {
+  Wood: "You move toward love through growth, patience, and becoming.",
+  Fire: "You move toward love through aliveness, courage, and honest spark.",
+  Earth: "You move toward love through steadiness, loyalty, and grounded care.",
+  Metal: "You move toward love through clarity, devotion, and self-respect.",
+  Water: "You move toward love through emotional depth, quiet trust, and tenderness.",
+};
+
+const elementSharePalettes = {
+  Wood: { accent: "#4f877b", deep: "#244e43", soft: "#dce9dc", warm: "#d8a74f" },
+  Fire: { accent: "#b84d63", deep: "#6f263d", soft: "#f5d9d5", warm: "#d8a74f" },
+  Earth: { accent: "#9b7650", deep: "#5a3d2e", soft: "#eadfca", warm: "#d8a74f" },
+  Metal: { accent: "#64727a", deep: "#323f45", soft: "#e3e7e6", warm: "#d8a74f" },
+  Water: { accent: "#1f706a", deep: "#173f4a", soft: "#d9ece9", warm: "#d8a74f" },
+};
+
 const qualityProfiles = {
   "Emotional steadiness": {
     title: "The Grounded Visionary",
@@ -123,6 +146,9 @@ let currentReadingId = null;
 let metaPixelLoaded = false;
 let metaViewContentTracked = false;
 let quizStartTracked = false;
+let currentShareCardData = null;
+let currentShareCardBlob = null;
+let currentShareCardObjectUrl = null;
 
 function getStorageItem(key) {
   try {
@@ -249,6 +275,303 @@ function clearStatus(element) {
   element.textContent = "";
   element.hidden = true;
   delete element.dataset.tone;
+}
+
+function drawRoundedRect(ctx, x, y, width, height, radius) {
+  const safeRadius = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + safeRadius, y);
+  ctx.arcTo(x + width, y, x + width, y + height, safeRadius);
+  ctx.arcTo(x + width, y + height, x, y + height, safeRadius);
+  ctx.arcTo(x, y + height, x, y, safeRadius);
+  ctx.arcTo(x, y, x + width, y, safeRadius);
+  ctx.closePath();
+}
+
+function drawTrackedText(ctx, text, centerX, y, tracking) {
+  const letters = Array.from(text);
+  const totalWidth = letters.reduce((width, letter, index) => {
+    return width + ctx.measureText(letter).width + (index === letters.length - 1 ? 0 : tracking);
+  }, 0);
+  let x = centerX - totalWidth / 2;
+
+  letters.forEach((letter) => {
+    ctx.fillText(letter, x, y);
+    x += ctx.measureText(letter).width + tracking;
+  });
+}
+
+function wrapCanvasText(ctx, text, maxWidth, maxLines = Infinity) {
+  const words = String(text || "").split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = "";
+
+  words.forEach((word) => {
+    const testLine = line ? `${line} ${word}` : word;
+    if (ctx.measureText(testLine).width <= maxWidth || !line) {
+      line = testLine;
+      return;
+    }
+    lines.push(line);
+    line = word;
+  });
+
+  if (line) {
+    lines.push(line);
+  }
+
+  if (lines.length <= maxLines) {
+    return lines;
+  }
+
+  const visibleLines = lines.slice(0, maxLines);
+  let lastLine = visibleLines[visibleLines.length - 1] || "";
+  while (ctx.measureText(`${lastLine}...`).width > maxWidth && lastLine.includes(" ")) {
+    lastLine = lastLine.replace(/\s+\S+$/, "");
+  }
+  visibleLines[visibleLines.length - 1] = `${lastLine}...`;
+  return visibleLines;
+}
+
+function drawCenteredWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+  const lines = wrapCanvasText(ctx, text, maxWidth, maxLines);
+  lines.forEach((line, index) => {
+    ctx.fillText(line, x, y + index * lineHeight);
+  });
+  return y + lines.length * lineHeight;
+}
+
+function shareCardFileName() {
+  const element = String(currentShareCardData?.element || "love-element").toLowerCase();
+  return `your-love-element-${element}.png`;
+}
+
+function setShareButtonsLoading(isLoading) {
+  if (shareImageButton) {
+    shareImageButton.disabled = isLoading;
+  }
+  if (downloadShareImageButton) {
+    downloadShareImageButton.disabled = isLoading;
+  }
+}
+
+async function createShareCardBlob(data) {
+  if (document.fonts?.ready) {
+    await document.fonts.ready.catch(() => {});
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = shareCardWidth;
+  canvas.height = shareCardHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Canvas is not available");
+  }
+
+  const palette = elementSharePalettes[data.element] || elementSharePalettes.Water;
+  const title = data.title || "Your Love Element";
+  const description = data.description || elementCopy[data.element] || "A private love signal from Your Love Element.";
+
+  ctx.fillStyle = "#fff7ee";
+  ctx.fillRect(0, 0, shareCardWidth, shareCardHeight);
+
+  const gradient = ctx.createLinearGradient(0, 0, shareCardWidth, shareCardHeight);
+  gradient.addColorStop(0, "#fffaf5");
+  gradient.addColorStop(0.56, palette.soft);
+  gradient.addColorStop(1, "#fff1e0");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, shareCardWidth, shareCardHeight);
+
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = palette.accent;
+  ctx.beginPath();
+  ctx.ellipse(880, 136, 260, 170, -0.28, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = palette.warm;
+  ctx.beginPath();
+  ctx.ellipse(172, 1120, 230, 150, 0.35, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  ctx.strokeStyle = "rgba(34, 27, 24, 0.12)";
+  ctx.lineWidth = 3;
+  drawRoundedRect(ctx, 64, 64, 952, 1222, 46);
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(31, 112, 106, 0.22)";
+  ctx.lineWidth = 5;
+  for (let i = 0; i < 4; i += 1) {
+    const y = 268 + i * 34;
+    ctx.beginPath();
+    ctx.moveTo(188, y);
+    ctx.bezierCurveTo(318, y - 42, 388, y + 42, 518, y);
+    ctx.bezierCurveTo(648, y - 42, 718, y + 42, 848, y);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = "#fffaf5";
+  drawRoundedRect(ctx, 128, 170, 824, 1010, 34);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(34, 27, 24, 0.1)";
+  ctx.stroke();
+
+  ctx.fillStyle = palette.accent;
+  ctx.beginPath();
+  ctx.arc(540, 246, 50, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#fffaf5";
+  ctx.font = '700 38px Inter, system-ui, sans-serif';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("YLE", 540, 247);
+
+  ctx.textBaseline = "alphabetic";
+  ctx.font = '800 28px Inter, system-ui, sans-serif';
+  ctx.fillStyle = palette.deep;
+  drawTrackedText(ctx, "YOUR LOVE ELEMENT", 540, 354, 4);
+
+  ctx.font = '600 38px Inter, system-ui, sans-serif';
+  ctx.fillStyle = "#6f625b";
+  ctx.fillText("My Love Element is", 540, 468);
+
+  ctx.font = '700 148px "Playfair Display", Georgia, serif';
+  ctx.fillStyle = palette.deep;
+  ctx.fillText(data.element, 540, 612);
+
+  ctx.fillStyle = palette.warm;
+  drawRoundedRect(ctx, 330, 656, 420, 12, 999);
+  ctx.fill();
+
+  ctx.font = '800 24px Inter, system-ui, sans-serif';
+  ctx.fillStyle = palette.accent;
+  drawTrackedText(ctx, "FUTURE PARTNER SIGNAL", 540, 760, 3);
+
+  ctx.font = '700 64px "Playfair Display", Georgia, serif';
+  ctx.fillStyle = "#221b18";
+  drawCenteredWrappedText(ctx, title, 540, 842, 700, 78, 2);
+
+  ctx.font = '500 36px Inter, system-ui, sans-serif';
+  ctx.fillStyle = "#5d524c";
+  drawCenteredWrappedText(ctx, description, 540, 996, 690, 52, 3);
+
+  ctx.strokeStyle = "rgba(34, 27, 24, 0.12)";
+  ctx.beginPath();
+  ctx.moveTo(226, 1160);
+  ctx.lineTo(854, 1160);
+  ctx.stroke();
+
+  ctx.font = '800 30px Inter, system-ui, sans-serif';
+  ctx.fillStyle = palette.deep;
+  ctx.fillText("yourloveelement.com", 540, 1232);
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+        return;
+      }
+      reject(new Error("Share image could not be created"));
+    }, "image/png", 0.96);
+  });
+}
+
+async function prepareShareCard(data) {
+  if (!shareCardPanel || !shareCardPreview) {
+    return;
+  }
+
+  currentShareCardData = data;
+  currentShareCardBlob = null;
+  shareCardPanel.hidden = false;
+  setShareButtonsLoading(true);
+  setStatus(shareStatus, "Creating your share image...", "neutral");
+
+  try {
+    const blob = await createShareCardBlob(data);
+    currentShareCardBlob = blob;
+    if (currentShareCardObjectUrl) {
+      URL.revokeObjectURL(currentShareCardObjectUrl);
+    }
+    currentShareCardObjectUrl = URL.createObjectURL(blob);
+    shareCardPreview.src = currentShareCardObjectUrl;
+    clearStatus(shareStatus);
+    setShareButtonsLoading(false);
+    trackMetaCustomEvent("share_card_generated", {
+      element: data.element,
+      archetype: data.title,
+    });
+  } catch {
+    setShareButtonsLoading(false);
+    setStatus(shareStatus, "The share image could not be created in this browser.", "error");
+  }
+}
+
+async function ensureShareCardBlob() {
+  if (currentShareCardBlob) {
+    return currentShareCardBlob;
+  }
+  if (!currentShareCardData) {
+    throw new Error("Reveal your preview before creating a share card.");
+  }
+  currentShareCardBlob = await createShareCardBlob(currentShareCardData);
+  return currentShareCardBlob;
+}
+
+async function downloadShareCard() {
+  try {
+    setShareButtonsLoading(true);
+    const blob = await ensureShareCardBlob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = shareCardFileName();
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setShareButtonsLoading(false);
+    setStatus(shareStatus, "Share image downloaded.", "success");
+    trackMetaCustomEvent("share_card_downloaded", {
+      element: currentShareCardData?.element,
+    });
+  } catch {
+    setShareButtonsLoading(false);
+    setStatus(shareStatus, "The share image could not be downloaded in this browser.", "error");
+  }
+}
+
+async function shareCardImage() {
+  try {
+    setShareButtonsLoading(true);
+    const blob = await ensureShareCardBlob();
+    const file = new File([blob], shareCardFileName(), { type: "image/png" });
+    const sharePayload = {
+      title: "My Love Element",
+      text: "I found my love element on Your Love Element.",
+      files: [file],
+    };
+
+    if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+      await navigator.share(sharePayload);
+      setShareButtonsLoading(false);
+      setStatus(shareStatus, "Share image sent.", "success");
+      trackMetaCustomEvent("share_card_shared", {
+        element: currentShareCardData?.element,
+      });
+      return;
+    }
+
+    setShareButtonsLoading(false);
+    setStatus(shareStatus, "Sharing is not available here, so the image was downloaded instead.", "neutral");
+    await downloadShareCard();
+  } catch (error) {
+    setShareButtonsLoading(false);
+    if (error?.name === "AbortError") {
+      clearStatus(shareStatus);
+      return;
+    }
+    setStatus(shareStatus, "The share sheet could not be opened in this browser.", "error");
+  }
 }
 
 function collectAnswers(form, names) {
@@ -532,6 +855,11 @@ async function revealPreview() {
   meetingText.textContent = `Your strongest meeting signal is ${lowerInitial(setting)}, especially when the pace feels ${lowerInitial(pace)} rather than forced.`;
   releaseText.textContent = `${block} may be the pattern to watch. Your preview suggests you should not confuse intensity with emotional alignment.`;
   adviceText.textContent = `Because you are seeking "${intent}", choose the person who makes ${lowerInitial(secure)} feel possible in ordinary life.`;
+  prepareShareCard({
+    element,
+    title: profile.title,
+    description: elementShareCopy[element] || elementCopy[element],
+  });
 
   document.querySelector("#preview").scrollIntoView({ behavior: "smooth", block: "start" });
   trackMetaCustomEvent("preview_revealed", {
@@ -795,4 +1123,12 @@ initCookieConsent();
 
 if (unlockReportButton) {
   unlockReportButton.addEventListener("click", startCheckout);
+}
+
+if (shareImageButton) {
+  shareImageButton.addEventListener("click", shareCardImage);
+}
+
+if (downloadShareImageButton) {
+  downloadShareImageButton.addEventListener("click", downloadShareCard);
 }
