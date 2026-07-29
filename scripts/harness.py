@@ -185,7 +185,35 @@ def changed_files(staged_only=False):
     return changed
 
 
-def contract_schema_errors(contracts):
+def normalized_github_remote(value):
+    if not isinstance(value, str):
+        return ""
+    normalized = value.strip().rstrip("/")
+    if normalized.endswith(".git"):
+        normalized = normalized[:-4]
+    return normalized
+
+
+def authorized_github_actions_checkout(project_scope, ci=False):
+    expected_remote = normalized_github_remote(project_scope.get("github_remote"))
+    expected_prefix = "https://github.com/"
+    expected_repository = expected_remote[len(expected_prefix):] if expected_remote.startswith(expected_prefix) else ""
+    workspace = os.environ.get("GITHUB_WORKSPACE", "").strip()
+    try:
+        workspace_matches = bool(workspace) and Path(workspace).resolve() == ROOT.resolve()
+    except OSError:
+        workspace_matches = False
+    return (
+        ci
+        and os.environ.get("GITHUB_ACTIONS") == "true"
+        and os.environ.get("GITHUB_SERVER_URL") == "https://github.com"
+        and os.environ.get("GITHUB_REPOSITORY") == expected_repository
+        and workspace_matches
+        and ROOT.name == project_scope.get("repository_name")
+    )
+
+
+def contract_schema_errors(contracts, ci=False):
     errors = []
     for key, expected_type in CONTRACT_TYPES.items():
         if not isinstance(contracts.get(key), expected_type):
@@ -233,7 +261,10 @@ def contract_schema_errors(contracts):
         authorized_root = project_scope.get("authorized_root")
         if not isinstance(authorized_root, str) or not Path(authorized_root).is_absolute():
             errors.append("project_scope.authorized_root must be an absolute path")
-        elif Path(authorized_root).resolve() != ROOT.resolve():
+        elif (
+            Path(authorized_root).resolve() != ROOT.resolve()
+            and not authorized_github_actions_checkout(project_scope, ci=ci)
+        ):
             errors.append("project_scope.authorized_root must match this repository exactly")
         elif project_scope.get("repository_name") != ROOT.name:
             errors.append("project_scope.repository_name must match this repository")
@@ -365,9 +396,9 @@ def hook_schema_errors(payload):
     return errors
 
 
-def check_contract_files(contracts):
+def check_contract_files(contracts, ci=False):
     results = []
-    schema_errors = contract_schema_errors(contracts)
+    schema_errors = contract_schema_errors(contracts, ci=ci)
     if schema_errors:
         return [Result("FAIL", "contracts-schema", "; ".join(schema_errors), True)]
     results.append(Result("PASS", "contracts-schema", "Harness contract schema is complete."))
@@ -377,6 +408,7 @@ def check_contract_files(contracts):
     git_remote = run(["git", "remote", "get-url", "origin"], timeout=10)
     expected_root = Path(project_scope["authorized_root"]).resolve()
     actual_git_root = Path(git_root.stdout.strip()).resolve() if git_root.returncode == 0 and git_root.stdout.strip() else None
+    ci_checkout = authorized_github_actions_checkout(project_scope, ci=ci)
     worker_config = (ROOT / "worker/wrangler.toml").read_text(encoding="utf-8") if (ROOT / "worker/wrangler.toml").is_file() else ""
     expected_worker_literals = (
         'name = "{}"'.format(project_scope["cloudflare_worker_name"]),
@@ -385,10 +417,10 @@ def check_contract_files(contracts):
         project_scope["resend_support_address"],
     )
     scope_mismatch = (
-        ROOT.resolve() != expected_root
-        or actual_git_root != expected_root
+        (ROOT.resolve() != expected_root and not ci_checkout)
+        or actual_git_root != ROOT.resolve()
         or git_remote.returncode != 0
-        or git_remote.stdout.strip() != project_scope["github_remote"]
+        or normalized_github_remote(git_remote.stdout) != normalized_github_remote(project_scope["github_remote"])
         or not all(value in worker_config for value in expected_worker_literals)
     )
     if scope_mismatch:
@@ -994,7 +1026,7 @@ def check_manual(contracts, scope, ci=False, staged_only=False):
 
 def collect_verify(contracts, scope, ci=False, staged_only=False):
     results = []
-    contract_results = check_contract_files(contracts)
+    contract_results = check_contract_files(contracts, ci=ci)
     results.extend(contract_results)
     if any(item.status == "FAIL" for item in contract_results):
         return results
