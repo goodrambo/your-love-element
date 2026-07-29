@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = ROOT / "harness" / "contracts.json"
 ROUTES_PATH = ROOT / "harness" / "routes.json"
 MANUAL_PATH = ROOT / "harness" / "manual-checks.json"
+PROJECT_TIMEZONE = dt.timezone(dt.timedelta(hours=8), name="Asia/Taipei")
 STATUS_ORDER = {"PASS": 0, "SKIPPED": 1, "MANUAL_REQUIRED": 2, "FAIL": 3}
 REQUIRED_ROUTE_KEYS = {
     "docs",
@@ -84,6 +85,10 @@ def relative(path):
 def load_json(path):
     with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
+
+
+def project_today():
+    return dt.datetime.now(PROJECT_TIMEZONE).date()
 
 
 def sha256_file(path):
@@ -598,7 +603,7 @@ def check_memory(contracts):
         except ValueError as error:
             results.append(Result("FAIL", label + "-freshness", str(error), True))
             continue
-        today = dt.date.today()
+        today = project_today()
         max_window = int(contracts.get(window_key, 30))
         if last_date > today or review_after < last_date or (review_after - last_date).days > max_window:
             results.append(Result("FAIL", label + "-freshness", "Dates must be ordered, non-future, and no more than {} days apart.".format(max_window), True))
@@ -982,7 +987,7 @@ def current_manual_status(record, expected_digest, max_age_days, allowed_statuse
         verified_at = dt.date.fromisoformat(str(record.get("verified_at")))
     except (TypeError, ValueError):
         return None
-    age = (dt.date.today() - verified_at).days
+    age = (project_today() - verified_at).days
     return status if 0 <= age <= int(max_age_days) else None
 
 

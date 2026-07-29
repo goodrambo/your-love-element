@@ -15,6 +15,8 @@ The Harness keeps project instructions, current memory, machine contracts, and v
 
 Local preflight still requires the exact absolute `authorized_root`. GitHub Actions may use its hosted checkout path only when `--ci`, `GITHUB_ACTIONS`, `GITHUB_SERVER_URL`, `GITHUB_REPOSITORY`, `GITHUB_WORKSPACE`, the checkout Git root, and the normalized origin remote all identify the allowlisted `goodrambo/your-love-element` repository. A local or differently scoped checkout cannot use this CI exception.
 
+Freshness and manual-evidence dates use the project's `Asia/Taipei` calendar day in both local and CI environments, avoiding false future-date failures while a UTC runner is still on the previous date.
+
 Project-local Codex hooks run only in a trusted repository and must be reviewed once after changes. Use `/hooks` in Codex to review and trust them. `AGENTS.md` and CI remain effective even before hook trust.
 
 After a fresh clone, enable the tracked Git hook once:
