@@ -46,6 +46,22 @@ const apiBaseUrl = window.YLE_API_BASE_URL || "";
 const readingStorageKey = "yle-reading-id";
 const freeAnswersStorageKey = "yle-free-answers";
 const cookieConsentStorageKey = "yle-cookie-consent";
+const analyticsSessionStorageKey = "yle-analytics-session-id";
+const analyticsAttributionStorageKey = "yle-analytics-attribution";
+const analyticsAttributionKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
+const firstPartyEventNames = new Set([
+  "page_view",
+  "view_content",
+  "landing_cta_click",
+  "quiz_start",
+  "preview_revealed",
+  "checkout_created",
+  "paid_signals_submitted",
+  "share_card_generated",
+  "share_card_shared",
+  "share_card_link_shared",
+  "share_card_downloaded",
+]);
 const shareCardWidth = 1080;
 const shareCardHeight = 1350;
 const shareTemplateVersion = "20260512-share-templates";
@@ -177,6 +193,122 @@ function setStorageItem(key, value) {
   }
 }
 
+function createAnalyticsUuid() {
+  if (typeof window.crypto?.randomUUID === "function") {
+    return window.crypto.randomUUID();
+  }
+  if (typeof window.crypto?.getRandomValues !== "function") {
+    return null;
+  }
+  const bytes = new Uint8Array(16);
+  window.crypto.getRandomValues(bytes);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+function getAnalyticsSessionId() {
+  try {
+    const stored = sessionStorage.getItem(analyticsSessionStorageKey);
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(stored || "")) {
+      return stored;
+    }
+    const created = createAnalyticsUuid();
+    if (created) {
+      sessionStorage.setItem(analyticsSessionStorageKey, created);
+    }
+    return created;
+  } catch {
+    return createAnalyticsUuid();
+  }
+}
+
+function sanitizeAnalyticsLabel(value) {
+  const normalized = String(value || "")
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[^A-Za-z0-9._~:+-]/g, "")
+    .slice(0, 120);
+  return normalized || null;
+}
+
+function getFirstPartyAttribution() {
+  const params = new URLSearchParams(window.location.search);
+  const current = Object.fromEntries(
+    analyticsAttributionKeys
+      .map((key) => [key, sanitizeAnalyticsLabel(params.get(key))])
+      .filter(([, value]) => Boolean(value)),
+  );
+
+  try {
+    if (Object.keys(current).length) {
+      sessionStorage.setItem(analyticsAttributionStorageKey, JSON.stringify(current));
+      return current;
+    }
+    const stored = JSON.parse(sessionStorage.getItem(analyticsAttributionStorageKey) || "{}");
+    return Object.fromEntries(
+      analyticsAttributionKeys
+        .map((key) => [key, sanitizeAnalyticsLabel(stored[key])])
+        .filter(([, value]) => Boolean(value)),
+    );
+  } catch {
+    return current;
+  }
+}
+
+function getAnalyticsPage() {
+  if (window.location.pathname === "/" || window.location.pathname === "/index.html") {
+    return "landing";
+  }
+  if (window.location.pathname === "/full-report/" || window.location.pathname === "/full-report/index.html") {
+    return "full_report";
+  }
+  return null;
+}
+
+function trackFirstPartyEvent(eventName) {
+  const page = getAnalyticsPage();
+  if (!apiBaseUrl || !page || !firstPartyEventNames.has(eventName) || typeof window.fetch !== "function") {
+    return;
+  }
+  const sessionId = getAnalyticsSessionId();
+  const eventId = createAnalyticsUuid();
+  if (!sessionId || !eventId) {
+    return;
+  }
+
+  void window.fetch(`${apiBaseUrl}/api/analytics/events`, {
+    method: "POST",
+    mode: "cors",
+    credentials: "omit",
+    keepalive: true,
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      event_id: eventId,
+      session_id: sessionId,
+      event_name: eventName,
+      page,
+      ...getFirstPartyAttribution(),
+    }),
+  }).catch(() => {
+    // Analytics must never block the reading, checkout, sharing, or report flow.
+  });
+}
+
+function initFirstPartyAnalytics() {
+  const page = getAnalyticsPage();
+  if (!page) {
+    return;
+  }
+  trackFirstPartyEvent("page_view");
+  if (page === "landing") {
+    trackFirstPartyEvent("view_content");
+  }
+}
+
 function getAttributionParams() {
   const params = new URLSearchParams(window.location.search);
   return ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"].reduce(
@@ -258,6 +390,7 @@ function trackMetaEvent(name, params = {}) {
 }
 
 function trackMetaCustomEvent(name, params = {}) {
+  trackFirstPartyEvent(name);
   loadMetaPixel();
   if (typeof window.fbq !== "function") {
     return;
@@ -1212,7 +1345,16 @@ function initCookieConsent() {
 
 initQuiz();
 initPaidQuiz();
+initFirstPartyAnalytics();
 initCookieConsent();
+
+document.querySelectorAll("[data-track-cta]").forEach((link) => {
+  link.addEventListener("click", () => {
+    trackMetaCustomEvent("landing_cta_click", {
+      cta: link.dataset.trackCta || "unknown",
+    });
+  });
+});
 
 if (unlockReportButton) {
   unlockReportButton.addEventListener("click", startCheckout);

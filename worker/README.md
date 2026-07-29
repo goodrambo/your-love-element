@@ -11,6 +11,8 @@ Cloudflare Worker backend for the paid report automation flow.
 - `POST /api/readings/:reading_id/paid-signals` stores the 8 paid answers.
 - `POST /api/jobs/process` manually processes one queued report generation job.
 - `POST /api/test-email` sends one protected Resend test email.
+- `POST /api/analytics/events` accepts allowlisted, origin-checked, privacy-minimized first-party funnel stages.
+- `GET /api/admin/growth-metrics` returns aggregate-only closed-day purchase and fulfillment metrics for the autonomous growth loop.
 
 ## Required Worker Secrets
 
@@ -37,7 +39,7 @@ Cloudflare Worker backend for the paid report automation flow.
 
 Plaintext runtime variables are managed in `wrangler.toml` so GitHub deployments do not overwrite Dashboard edits with stale values. Secrets still live only in Cloudflare Worker runtime secrets.
 
-The GitHub Pages frontend sets `window.YLE_API_BASE_URL` to `https://your-love-element-api.goodrambo2013.workers.dev` before loading `script.js` on both `/` and `/full-report/`.
+The GitHub Pages frontend loads `assets/runtime-config.js` before `script.js`. The production domain receives the Worker URL; localhost and non-production hosts receive an empty API base and stay in offline preview mode.
 
 ## Scheduled Report Delivery
 
@@ -109,6 +111,34 @@ GitHub Pages deploys the static site and assets. Worker code changes are validat
 - `POST /api/test-email` requires `Authorization: Bearer <JOB_RUNNER_SECRET>`.
 
 Use `POST /api/test-email` or a full report E2E to verify actual Resend delivery.
+
+## Protected Growth Metrics
+
+Endpoint:
+
+```text
+GET /api/admin/growth-metrics?days=45
+Authorization: Bearer <JOB_RUNNER_SECRET>
+```
+
+Optional `end_date=YYYY-MM-DD` selects the last closed Asia/Taipei day. The range is limited to 1-90 days. The endpoint calls the service-role-only `get_growth_scorecard` database function and returns:
+
+- daily preview, checkout, verified purchaser/order, refund, paid-signal, delivery, and failure counts
+- current consecutive days at 10 or more verified, non-refunded purchasers
+- paid-signal delivery success and delivery-within-15-minutes rates
+- a clearly labeled `$9.99 USD` list-price gross estimate
+
+It never returns customer email, Lemon customer/order IDs, reading IDs, answers, webhook payloads, or report content. Successful responses use `Cache-Control: private, no-store` and do not allow browser CORS. Actual revenue, fees, discounts, taxes, chargebacks, Meta spend, CAC, ROAS, and browser-only funnel events still require the provider data sources.
+
+After the first-party migration, the scorecard also returns landing/full-report session stages and sanitized UTM attribution aggregates. These are diagnostic session counts, not verified people; Lemon/Supabase remains authoritative for purchasers and refunds.
+
+Apply superseding `202607290002_add_growth_scorecard_function.sql` and then `202607300001_add_first_party_funnel_events.sql` before deploying the Worker routes. The checksum-protected `202607290001` attempt was parser-rejected before creating objects and must not be retried. The endpoints are not usable until both corrected migrations and the Worker deployment are complete.
+
+## First-Party Funnel Events
+
+`POST /api/analytics/events` accepts requests only from the two production site origins. It allowlists the page (`landing` or `full_report`), event name, and five sanitized UTM fields, enforces a 4 KiB body limit, validates UUID event/session ids, hashes the session UUID before storage, and deduplicates one stage per session/page. It deliberately rejects frontend `Purchase`; verified purchases still originate only from the signed Lemon webhook.
+
+The table stores no IP, user agent, email, reading/order/customer identifier, answers, full URL/query, referrer, webhook payload, or report content. An insert-trigger maintenance claim deletes rows older than 180 days at most once per day. Analytics ingestion failures never block the reading, checkout, sharing, or report flow.
 
 ## Report Delivery
 

@@ -32,6 +32,58 @@ const PAID_ANSWER_KEYS = [
 const REPORT_PROGRESS_STATUSES = new Set(["paid_answers_submitted", "generating", "report_generated", "delivered", "failed"]);
 const REPORT_LOCKED_STATUSES = new Set(["generating", "report_generated", "delivered", "failed"]);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const GROWTH_TIMEZONE = "Asia/Taipei";
+const GROWTH_TIMEZONE_OFFSET_MS = 8 * 60 * 60 * 1000;
+const GROWTH_DEFAULT_DAYS = 45;
+const GROWTH_MAX_DAYS = 90;
+const GROWTH_STREAK_TARGET_DAYS = 30;
+const GROWTH_DAILY_PURCHASER_TARGET = 10;
+const PRODUCT_PRICE_USD = 9.99;
+const ANALYTICS_MAX_BODY_BYTES = 4096;
+const ANALYTICS_ALLOWED_ORIGINS = new Set(["https://yourloveelement.com", "https://www.yourloveelement.com"]);
+const ANALYTICS_EVENT_NAMES = new Set([
+  "page_view",
+  "view_content",
+  "landing_cta_click",
+  "quiz_start",
+  "preview_revealed",
+  "checkout_created",
+  "paid_signals_submitted",
+  "share_card_generated",
+  "share_card_shared",
+  "share_card_link_shared",
+  "share_card_downloaded",
+]);
+const ANALYTICS_PAGES = new Set(["landing", "full_report"]);
+const ANALYTICS_ATTRIBUTION_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
+const FIRST_PARTY_FUNNEL_FIELDS = [
+  "view_content_sessions",
+  "landing_cta_clicks",
+  "quiz_starts",
+  "previews_revealed",
+  "checkouts_created",
+  "paid_signals_submitted_events",
+  "share_card_generated",
+  "share_card_shared",
+  "share_card_link_shared",
+  "share_card_downloaded",
+];
+const GROWTH_COUNT_FIELDS = [
+  "previewed_readings",
+  "checkout_readings",
+  "verified_purchasers",
+  "verified_orders",
+  "refunded_orders",
+  "paid_signals_submitted",
+  "paid_signal_cohort_delivered",
+  "paid_signal_cohort_delivered_within_15m",
+  "delivered_readings",
+  "failed_readings",
+  "landing_sessions",
+  "full_report_sessions",
+  ...FIRST_PARTY_FUNNEL_FIELDS,
+];
 
 export default {
   async fetch(request, env) {
@@ -72,6 +124,14 @@ export default {
         return json(await sendTestEmail(request, env));
       }
 
+      if (request.method === "POST" && url.pathname === "/api/analytics/events") {
+        return json(await recordFunnelEvent(request, env), 202);
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/admin/growth-metrics") {
+        return privateJson(await getGrowthMetrics(request, env));
+      }
+
       if (request.method === "GET" && url.pathname === "/api/health") {
         return json({ ok: true });
       }
@@ -90,8 +150,10 @@ export default {
 
       return json({ error: "Not found" }, 404);
     } catch (error) {
-      console.error(error);
       const status = error.status || 500;
+      if (status >= 500) {
+        console.error(error);
+      }
       return json({ error: status === 500 ? "Internal server error" : error.message }, status);
     }
   },
@@ -151,6 +213,285 @@ async function checkSupabaseHealth(env) {
       error: error.message,
     };
   }
+}
+
+async function getGrowthMetrics(request, env) {
+  requireBearerSecret(request, env.JOB_RUNNER_SECRET);
+
+  const url = new URL(request.url);
+  const days = parseGrowthDays(url.searchParams.get("days"));
+  const today = taipeiDateString(new Date());
+  const latestClosedDate = addDateDays(today, -1);
+  const requestedEndDate = url.searchParams.get("end_date");
+  const endDate = requestedEndDate ? requireDateString(requestedEndDate, "end_date") : latestClosedDate;
+
+  if (endDate > latestClosedDate) {
+    throw httpError(400, "end_date must be a closed Asia/Taipei calendar day");
+  }
+
+  const startDate = addDateDays(endDate, -(days - 1));
+  const rpcBody = {
+    p_start_date: startDate,
+    p_end_date: endDate,
+  };
+  const [commerceRows, funnelRows] = await Promise.all([
+    supabase(env, "/rest/v1/rpc/get_growth_scorecard", {
+      method: "POST",
+      body: rpcBody,
+    }),
+    supabase(env, "/rest/v1/rpc/get_first_party_funnel_scorecard", {
+      method: "POST",
+      body: rpcBody,
+    }),
+  ]);
+  const merged = mergeGrowthMetricRows(commerceRows, funnelRows);
+
+  return buildGrowthMetrics(merged.days, { startDate, endDate, days }, merged.attribution);
+}
+
+function mergeGrowthMetricRows(commerceRows, funnelRows) {
+  if (!Array.isArray(commerceRows) || !Array.isArray(funnelRows)) {
+    throw httpError(502, "Growth scorecard returned an invalid response");
+  }
+
+  const daily = new Map();
+  for (const row of commerceRows) {
+    const date = requireDateString(row.metric_date, "metric_date");
+    daily.set(date, {
+      ...row,
+      metric_date: date,
+      landing_sessions: 0,
+      full_report_sessions: 0,
+      ...Object.fromEntries(FIRST_PARTY_FUNNEL_FIELDS.map((field) => [field, 0])),
+    });
+  }
+
+  const attribution = [];
+  for (const row of funnelRows) {
+    const date = requireDateString(row.metric_date, "metric_date");
+    const page = requireAnalyticsValue(row.page, ANALYTICS_PAGES, "page", 502);
+    const day = daily.get(date);
+    if (!day) {
+      continue;
+    }
+
+    const pageViews = nonnegativeInteger(row.page_view_sessions, "page_view_sessions");
+    day[page === "landing" ? "landing_sessions" : "full_report_sessions"] += pageViews;
+    for (const field of FIRST_PARTY_FUNNEL_FIELDS) {
+      day[field] += nonnegativeInteger(row[field], field);
+    }
+
+    const attributionLabels = Object.fromEntries(
+      ANALYTICS_ATTRIBUTION_KEYS.map((key) => [key, nullableAnalyticsLabel(row[key])]),
+    );
+    if (Object.values(attributionLabels).some(Boolean)) {
+      attribution.push({
+        date,
+        page,
+        ...attributionLabels,
+        page_view_sessions: pageViews,
+        ...Object.fromEntries(
+          FIRST_PARTY_FUNNEL_FIELDS.map((field) => [field, nonnegativeInteger(row[field], field)]),
+        ),
+      });
+    }
+  }
+
+  return {
+    days: [...daily.values()],
+    attribution: attribution.sort((left, right) => (
+      left.date.localeCompare(right.date)
+      || left.page.localeCompare(right.page)
+      || String(left.utm_campaign || "").localeCompare(String(right.utm_campaign || ""))
+    )),
+  };
+}
+
+function buildGrowthMetrics(rows, { startDate, endDate, days }, attribution = []) {
+  if (!Array.isArray(rows)) {
+    throw httpError(502, "Growth scorecard returned an invalid response");
+  }
+
+  const daily = rows
+    .map((row) => {
+      const normalized = {
+        date: requireDateString(row.metric_date, "metric_date"),
+      };
+      for (const field of GROWTH_COUNT_FIELDS) {
+        normalized[field] = nonnegativeInteger(row[field], field);
+      }
+      normalized.estimated_gross_usd = money(normalized.verified_orders * PRODUCT_PRICE_USD);
+      normalized.paid_signal_delivery_rate = ratio(
+        normalized.paid_signal_cohort_delivered,
+        normalized.paid_signals_submitted,
+      );
+      normalized.delivery_within_15m_rate = ratio(
+        normalized.paid_signal_cohort_delivered_within_15m,
+        normalized.paid_signals_submitted,
+      );
+      normalized.qualifies_for_daily_goal = normalized.verified_purchasers >= GROWTH_DAILY_PURCHASER_TARGET;
+      return normalized;
+    })
+    .sort((left, right) => left.date.localeCompare(right.date));
+
+  const totals = Object.fromEntries(GROWTH_COUNT_FIELDS.map((field) => [field, 0]));
+  for (const day of daily) {
+    for (const field of GROWTH_COUNT_FIELDS) {
+      totals[field] += day[field];
+    }
+  }
+  totals.estimated_gross_usd = money(totals.verified_orders * PRODUCT_PRICE_USD);
+  totals.paid_signal_delivery_rate = ratio(
+    totals.paid_signal_cohort_delivered,
+    totals.paid_signals_submitted,
+  );
+  totals.delivery_within_15m_rate = ratio(
+    totals.paid_signal_cohort_delivered_within_15m,
+    totals.paid_signals_submitted,
+  );
+
+  const streak = calculateGrowthStreak(daily, endDate);
+
+  return {
+    ok: true,
+    generated_at: new Date().toISOString(),
+    source: "supabase_verified_lemon_state_and_first_party_funnel",
+    privacy: "aggregate_counts_only",
+    range: {
+      timezone: GROWTH_TIMEZONE,
+      start_date: startDate,
+      end_date: endDate,
+      closed_days: days,
+    },
+    goal: {
+      daily_verified_purchasers: GROWTH_DAILY_PURCHASER_TARGET,
+      consecutive_days: GROWTH_STREAK_TARGET_DAYS,
+      current_streak: streak.days,
+      streak_start_date: streak.startDate,
+      latest_qualifying_date: streak.latestQualifyingDate,
+      qualifying_days_in_range: daily.filter((day) => day.qualifies_for_daily_goal).length,
+      complete: streak.days >= GROWTH_STREAK_TARGET_DAYS,
+    },
+    totals,
+    days: daily,
+    attribution,
+    limitations: [
+      "Gross revenue is estimated from the fixed USD 9.99 list price; use Lemon Squeezy settlement data for actual revenue, fees, discounts, taxes, and chargebacks.",
+      "First-party session counts exclude obvious duplicate stages but are diagnostic, not verified humans; Meta spend, CAC, and ROAS still require authorized provider data.",
+      "Refunded orders are excluded using the current reading payment_status, so a later refund can revise an earlier day and reset the streak.",
+    ],
+  };
+}
+
+async function recordFunnelEvent(request, env) {
+  const origin = request.headers.get("origin") || "";
+  if (!ANALYTICS_ALLOWED_ORIGINS.has(origin)) {
+    throw httpError(403, "Forbidden");
+  }
+
+  const body = await readLimitedJson(request, ANALYTICS_MAX_BODY_BYTES);
+  const eventId = requireUuid(body.event_id, "event_id");
+  const sessionId = requireUuid(body.session_id, "session_id");
+  const eventName = requireAnalyticsValue(body.event_name, ANALYTICS_EVENT_NAMES, "event_name");
+  const page = requireAnalyticsValue(body.page, ANALYTICS_PAGES, "page");
+  const row = {
+    event_id: eventId,
+    session_hash: await sha256Hex(sessionId),
+    event_name: eventName,
+    page,
+  };
+  for (const key of ANALYTICS_ATTRIBUTION_KEYS) {
+    row[key] = optionalAnalyticsLabel(body[key], key);
+  }
+
+  try {
+    await supabase(env, "/rest/v1/funnel_events?select=id", {
+      method: "POST",
+      body: row,
+      prefer: "return=representation",
+    });
+  } catch (error) {
+    if (String(error.message).includes("duplicate key")) {
+      return { ok: true, duplicate: true };
+    }
+    throw error;
+  }
+
+  return { ok: true };
+}
+
+function calculateGrowthStreak(daily, endDate) {
+  let expectedDate = endDate;
+  let streakDays = 0;
+  let startDate = null;
+  let latestQualifyingDate = null;
+
+  for (let index = daily.length - 1; index >= 0; index -= 1) {
+    const day = daily[index];
+    if (day.date !== expectedDate || !day.qualifies_for_daily_goal) {
+      break;
+    }
+    if (!latestQualifyingDate) {
+      latestQualifyingDate = day.date;
+    }
+    streakDays += 1;
+    startDate = day.date;
+    expectedDate = addDateDays(expectedDate, -1);
+  }
+
+  return { days: streakDays, startDate, latestQualifyingDate };
+}
+
+function parseGrowthDays(value) {
+  if (value === null || value === "") {
+    return GROWTH_DEFAULT_DAYS;
+  }
+  if (!/^\d+$/.test(value)) {
+    throw httpError(400, `days must be an integer from 1 to ${GROWTH_MAX_DAYS}`);
+  }
+  const days = Number(value);
+  if (!Number.isInteger(days) || days < 1 || days > GROWTH_MAX_DAYS) {
+    throw httpError(400, `days must be an integer from 1 to ${GROWTH_MAX_DAYS}`);
+  }
+  return days;
+}
+
+function requireDateString(value, label) {
+  const date = String(value || "");
+  if (!DATE_PATTERN.test(date)) {
+    throw httpError(400, `Invalid ${label}`);
+  }
+  const parsed = new Date(`${date}T00:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) {
+    throw httpError(400, `Invalid ${label}`);
+  }
+  return date;
+}
+
+function taipeiDateString(value) {
+  return new Date(value.getTime() + GROWTH_TIMEZONE_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+function addDateDays(date, delta) {
+  const parsed = new Date(`${requireDateString(date, "date")}T00:00:00.000Z`);
+  parsed.setUTCDate(parsed.getUTCDate() + delta);
+  return parsed.toISOString().slice(0, 10);
+}
+
+function nonnegativeInteger(value, label) {
+  const number = Number(value ?? 0);
+  if (!Number.isSafeInteger(number) || number < 0) {
+    throw httpError(502, `Growth scorecard returned invalid ${label}`);
+  }
+  return number;
+}
+
+function ratio(numerator, denominator) {
+  return denominator > 0 ? Number((numerator / denominator).toFixed(4)) : null;
+}
+
+function money(value) {
+  return Number(value.toFixed(2));
 }
 
 async function checkEmailHealth(env) {
@@ -1416,6 +1757,22 @@ async function readJson(request) {
   }
 }
 
+async function readLimitedJson(request, maxBytes) {
+  const raw = await request.text();
+  if (new TextEncoder().encode(raw).byteLength > maxBytes) {
+    throw httpError(413, "Request body is too large");
+  }
+  try {
+    const value = JSON.parse(raw);
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error("JSON object required");
+    }
+    return value;
+  } catch {
+    throw httpError(400, "Invalid JSON");
+  }
+}
+
 function pickAnswers(source, keys) {
   return keys.reduce((answers, key) => {
     if (source[key] !== undefined && source[key] !== "") {
@@ -1460,6 +1817,36 @@ function optionalEmail(value) {
     throw httpError(400, "Invalid email");
   }
   return email;
+}
+
+function requireAnalyticsValue(value, allowed, label, status = 400) {
+  const normalized = String(value || "").trim();
+  if (!allowed.has(normalized)) {
+    throw httpError(status, `Invalid ${label}`);
+  }
+  return normalized;
+}
+
+function optionalAnalyticsLabel(value, label) {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  const normalized = String(value).trim();
+  if (!/^[A-Za-z0-9._~:+-]{1,120}$/.test(normalized)) {
+    throw httpError(400, `Invalid ${label}`);
+  }
+  return normalized;
+}
+
+function nullableAnalyticsLabel(value) {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  const normalized = String(value);
+  if (!/^[A-Za-z0-9._~:+-]{1,120}$/.test(normalized)) {
+    throw httpError(502, "Growth scorecard returned invalid attribution");
+  }
+  return normalized;
 }
 
 function orderCurrency(attrs = {}) {
@@ -1524,6 +1911,16 @@ function json(payload, status = 200) {
   return new Response(JSON.stringify(payload), {
     status,
     headers: JSON_HEADERS,
+  });
+}
+
+function privateJson(payload, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "private, no-store",
+    },
   });
 }
 
