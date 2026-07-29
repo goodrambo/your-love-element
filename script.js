@@ -534,7 +534,7 @@ function drawShareCardDynamicCopy(ctx, data, palette) {
   ctx.save();
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
-  ctx.font = '700 62px "Playfair Display", Georgia, serif';
+  ctx.font = '700 62px "Fraunces", Georgia, serif';
   const titleLines = wrapCanvasText(ctx, title, 840, 2);
   const titleY = titleLines.length > 1 ? 706 : 734;
   const dividerY = titleY + (titleLines.length - 1) * titleLineHeight + 66;
@@ -546,7 +546,7 @@ function drawShareCardDynamicCopy(ctx, data, palette) {
   drawCenteredWrappedText(ctx, title, 540, titleY, 840, titleLineHeight, 2);
   drawTinyDivider(ctx, palette, dividerY, "heart");
 
-  ctx.font = '500 40px Inter, system-ui, sans-serif';
+  ctx.font = '500 40px Manrope, system-ui, sans-serif';
   ctx.fillStyle = palette.deep;
   drawCenteredWrappedText(ctx, description, 540, descriptionY, 640, 52, 3);
 
@@ -895,6 +895,8 @@ async function saveFreeAnswers() {
 
 async function startCheckout(event) {
   if (!apiBaseUrl) {
+    event.preventDefault();
+    setStatus(readingSaveStatus, "Local preview mode is active. Checkout is disabled so this test cannot write to production.", "neutral");
     return;
   }
 
@@ -952,6 +954,32 @@ function updateStep() {
   quizMood.textContent = moods[currentStep];
   backButton.disabled = currentStep === 0;
   nextButton.textContent = currentStep === steps.length - 1 ? "Reveal preview" : "Continue";
+}
+
+function trackQuizStart(trigger = "continue") {
+  if (quizStartTracked) {
+    return;
+  }
+
+  trackMetaCustomEvent("quiz_start", { trigger });
+  quizStartTracked = true;
+}
+
+function advanceFreeQuiz(trigger = "continue") {
+  const current = steps[currentStep];
+  if (!validateStep(current, quizValidation, document.querySelector("#reading"))) {
+    return;
+  }
+
+  trackQuizStart(trigger);
+
+  if (currentStep < steps.length - 1) {
+    currentStep += 1;
+    updateStep();
+    return;
+  }
+
+  revealPreview();
 }
 
 function selectedValue(name) {
@@ -1028,24 +1056,11 @@ function initQuiz() {
     return;
   }
 
+  let autoAdvanceTimer = null;
+
   nextButton.addEventListener("click", () => {
-    const current = steps[currentStep];
-    if (!validateStep(current, quizValidation, document.querySelector("#reading"))) {
-      return;
-    }
-
-    if (!quizStartTracked) {
-      trackMetaCustomEvent("quiz_start");
-      quizStartTracked = true;
-    }
-
-    if (currentStep < steps.length - 1) {
-      currentStep += 1;
-      updateStep();
-      return;
-    }
-
-    revealPreview();
+    window.clearTimeout(autoAdvanceTimer);
+    advanceFreeQuiz("continue");
   });
 
   backButton.addEventListener("click", () => {
@@ -1057,7 +1072,7 @@ function initQuiz() {
   });
 
   const form = document.querySelector("#reading");
-  form?.addEventListener("change", () => {
+  form?.addEventListener("change", (event) => {
     syncBirthDayLimit(form);
     previewReadyForCheckout = false;
     currentReadingId = null;
@@ -1066,6 +1081,25 @@ function initQuiz() {
       unlockReportButton.textContent = "Reveal free preview first";
     }
     validateStep(steps[currentStep], quizValidation, form);
+
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement) || target.type !== "radio") {
+      return;
+    }
+
+    const targetStep = target.closest(".quiz-step");
+    if (!targetStep || !targetStep.classList.contains("is-active")) {
+      return;
+    }
+
+    trackQuizStart("answer_tap");
+    window.clearTimeout(autoAdvanceTimer);
+    autoAdvanceTimer = window.setTimeout(() => {
+      if (targetStep !== steps[currentStep] || !target.checked) {
+        return;
+      }
+      advanceFreeQuiz("answer_tap");
+    }, 220);
   });
 
   syncBirthDayLimit(form);

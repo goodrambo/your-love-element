@@ -1,18 +1,20 @@
 # Meta Tracking Setup
 
-Last updated: 2026-05-12
+Last updated: 2026-07-12
 
 ## What Is Already Configured In The Site
 
 The website now has default Meta Pixel support for ad measurement.
 
-- Pixel code loads by default for ad measurement.
+- Pixel code loads by default on the production domain for ad measurement.
+- Localhost and non-production preview hosts disable Pixel through `assets/runtime-config.js` so QA does not pollute production events.
 - The cookie notice is informational and does not gate tracking.
 - Pixel ID is centralized in `assets/tracking-config.js`.
 - The base pixel loads in the page `<head>` through `assets/meta-pixel-base.js`.
 - The site sends:
   - `PageView`
   - `ViewContent` on the homepage
+  - custom `landing_cta_click`
   - custom `quiz_start`
   - custom `preview_revealed`
   - standard `InitiateCheckout`
@@ -27,18 +29,26 @@ The website now has default Meta Pixel support for ad measurement.
 
 Do not send `Purchase` from the frontend. Payment happens in Lemon Squeezy, so reliable purchase tracking comes from the Lemon Squeezy webhook through Meta Conversions API.
 
+Event definition note as of 2026-06-05:
+
+- `landing_cta_click` is diagnostic only and fires when the homepage hero CTA is clicked.
+- `quiz_start` fires when the visitor first selects a free-reading answer. Earlier builds fired it later, after the first answer plus `Continue`, so pre/post 2026-06-05 `quiz_start` counts should not be compared as the same definition.
+- The active Purchase strategy is unchanged because `Purchase` remains server-side CAPI from the verified Lemon Squeezy webhook only.
+
 Current confirmed Pixel/Dataset ID:
 
 ```text
 4282306195342317
 ```
 
-Confirmed production state:
+Confirmed production configuration as of 2026-07-12:
 
 - Browser Pixel events are active.
 - Server-side CAPI `Purchase` is active.
 - `META_CAPI_ACCESS_TOKEN` is configured in Cloudflare Worker secrets.
 - `/api/health/meta` returns `ok: true`.
+
+This health endpoint confirms configuration, not event delivery in Events Manager.
 
 ## Step 1: Create The Meta Pixel / Dataset
 
@@ -91,12 +101,14 @@ The pages already load this config file before `script.js`:
 4. Open the site from Meta's test flow.
 5. Confirm `PageView` appears. You do not need to click the cookie notice first.
 6. Confirm `ViewContent` appears on the homepage.
-7. Start the free reading and answer the first question.
-8. Confirm `quiz_start` appears.
-9. Finish the free reading.
-10. Confirm `preview_revealed` appears.
-11. Enter a delivery email and click checkout.
-12. Confirm `InitiateCheckout` and `checkout_created` appear.
+7. Click the homepage hero CTA.
+8. Confirm `landing_cta_click` appears if testing that diagnostic event.
+9. Start the free reading and select the first answer.
+10. Confirm `quiz_start` appears.
+11. Finish the free reading.
+12. Confirm `preview_revealed` appears.
+13. Enter a delivery email and click checkout.
+14. Confirm `InitiateCheckout` and `checkout_created` appear.
 
 For the paid form:
 
@@ -119,6 +131,8 @@ Recommended early optimization:
 - After checkout starts happen reliably: optimize for `InitiateCheckout` or `checkout_created`.
 - Server-side `Purchase` is now connected through Lemon Squeezy webhook and can be used once enough purchase data exists.
 
+Keep `landing_cta_click` as a diagnostic event unless there is an intentional reason to optimize for first-viewport CTA clicks.
+
 ## Step 6: Keep Organic Links Tagged
 
 Use UTM links in captions so website traffic can be separated by platform and post.
@@ -140,3 +154,4 @@ This does not replace Meta Pixel. UTM links explain where the click came from; P
 - Do not remove `/api/health/meta`; it is the safe way to confirm runtime Meta config without exposing secrets.
 - Do not reintroduce consent buttons unless the tracking behavior is updated to truly respect them.
 - Treat Pixel Helper auto-detected `SubscribedButtonClick` as noise unless intentionally promoted to a campaign metric.
+- Do not compare `quiz_start` before and after 2026-06-05 as the same metric definition.

@@ -1,0 +1,1512 @@
+# Your Love Element Project Handoff — Historical Archive
+
+> Archived on 2026-07-12. This file preserves chronology through 2026-06-22 and is not a current source of truth. Paths may now point into `artifacts/archive/2026-07-12/`. Use `docs/PROJECT_STATE.md` and `docs/BACKLOG.md` for present state.
+
+Last updated: 2026-06-22
+
+## 2026-06-22 Social Records And File Organization
+
+Social content records and older working files were organized so future content sessions can find the right source quickly.
+
+Current structure:
+
+- Social asset index: `assets/social/README.md`.
+- Current upload package: `assets/social/meta-20260622-reels-pack/`.
+- Previous production package: `assets/social/meta-20260614-daily-pack/`.
+- Earlier standalone Reels library: `assets/social/reels/README.md`.
+- Social planning notes: `assets/social/notes/`.
+- Archived social drafts: `assets/social/archive/`.
+- Meta ads records index: `docs/meta-ads/README.md`.
+
+Files moved into social notes:
+
+- `NEXT_REELS_PROMOTION_SESSION_PROMPT.md` -> `assets/social/notes/NEXT_REELS_PROMOTION_SESSION_PROMPT.md`.
+- `REELS_CONTENT_PACK_ZH.md` -> `assets/social/notes/REELS_CONTENT_PACK_ZH.md`.
+- `SOCIAL_CONTENT_PACK_LIFE_TOUCHING_ZH.md` -> `assets/social/notes/SOCIAL_CONTENT_PACK_LIFE_TOUCHING_ZH.md`.
+
+Files moved into archive:
+
+- `assets/social/reels/phase-2-new-style/` -> `assets/social/archive/phase2-drafts/phase-2-new-style/`.
+- `assets/social/reels/phase-2-new-style-fixed/` -> `assets/social/archive/phase2-drafts/phase-2-new-style-fixed/`.
+- `assets/social/reels/phase-2-new-style-final/` -> `assets/social/archive/phase2-drafts/phase-2-new-style-final/`.
+
+Do not upload archived phase 2 drafts unless they are explicitly reviewed again. Use `assets/social/reels/phase-2-new-style-final-checked/` if phase 2 assets are needed.
+
+Meta ads records moved into `docs/meta-ads/`:
+
+- `docs/meta-ads/META_CPA_AD_LAUNCH_KIT.md`.
+- `docs/meta-ads/META_CREATIVE_SET_20260515.md`.
+- `docs/meta-ads/META_LOW_RISK_RELAUNCH_KIT.md`.
+- `docs/meta-ads/META_PURCHASE_AD_SETUP_20260515.md`.
+
+`META_TRACKING_SETUP.md` remains at the repo root because it is an active tracked setup reference.
+
+## 2026-06-21 Social Content Handoff: 2026-06-22 Reels-Only Pack Completed
+
+The latest ready-to-upload all-English Reels-only content pack is under `assets/social/meta-20260622-reels-pack/`.
+
+Completed pack details:
+
+- Schedule covered: `2026-06-22` through `2026-06-28`.
+- Daily cadence: two Reels per day at `12:30` and `20:30`, Asia/Taipei time.
+- Reels: 14 MP4 files in `assets/social/meta-20260622-reels-pack/reels/`.
+- Reel filename convention: `YYYYMMDD-01-topic.mp4` for the first Reel of the date and `YYYYMMDD-02-topic.mp4` for the second Reel of the date, for example `20260622-01-signal-before-story.mp4`.
+- Main documentation: `assets/social/meta-20260622-reels-pack/POSTING_COPY_AND_SCHEDULE.md`.
+- Meta Business Suite schedule: `assets/social/meta-20260622-reels-pack/META_BUSINESS_SUITE_SCHEDULE.csv`.
+- Upload checklist: `assets/social/meta-20260622-reels-pack/UPLOAD_CHECKLIST.csv`.
+- Zip package: `assets/social/meta-20260622-reels-pack/your-love-element-meta-20260622-reels-pack.zip`.
+- QA sheets: `assets/social/meta-20260622-reels-pack/qa/reels-cover-contact-sheet.jpg` and `assets/social/meta-20260622-reels-pack/qa/reels-frame-contact-sheet.jpg`.
+- Renderer: `assets/social/meta-20260622-reels-pack/render_reels_pack.py`.
+- Social asset index: `assets/social/README.md`.
+
+Final verified specs:
+
+- Each Reel is `1080 x 1920`, H.264 MP4, 24fps, `18.0s`, with a silent AAC audio track.
+- The videos do not show public-facing dates, weekdays, `Day` labels, internal post numbers, or scene counters.
+- The date/part number appears only in filenames and scheduling documents, not inside the rendered video frames.
+- Source/docs/copy scan showed no Chinese characters and no high-risk claims such as hard outcome promises, fixed performance rates, or deterministic partner claims.
+- A first QA pass found a few internal-looking micro labels such as hook labels; the videos were re-rendered with public-facing labels only.
+
+Caption / UTM decision:
+
+- Use one shared caption for Facebook and Instagram.
+- Use one shared UTM link per Reel with `utm_source=meta`, not platform-specific `facebook` / `instagram` links.
+- `META_BUSINESS_SUITE_SCHEDULE.csv` now has 14 rows, one per Reel, with platform set to `Instagram Reels + Facebook Reels`.
+- `UPLOAD_CHECKLIST.csv` now has one `shared_url` column.
+
+Reusable content formula for future packs:
+
+- Keep the copy framework: 14 Reels, two per day, each `18.0s`, four readable beats, strong first-frame hook, one soft CTA on the last beat.
+- Keep filenames schedule-safe: `YYYYMMDD-01-topic.mp4` / `YYYYMMDD-02-topic.mp4`, and make all docs/CSV/zip references use the same generated filename.
+- Keep the weekly mix: emotional pattern hooks, Five Element curiosity hooks, saveable prompts, trust-building product explanation, and preview-first CTA.
+- Keep captions English, reflective, non-deterministic, and focused on profile visits, link clicks, quiz starts, and preview completions.
+- Keep the product promise: free 10-question preview first; optional full report only if useful; personal insight and entertainment.
+- Future packs can reuse this caption/beat structure directly, but should vary the video style. Do not simply repeat the same blurred-photo-panel look.
+
+Suggested next visual variations:
+
+- Text-message / chat-inspired Reels with soft phone UI and no private-attribute targeting.
+- Objects-on-desk cinematic Reels with different camera crops, paper textures, and moving light.
+- Minimal editorial typography over full-bleed atmospheric footage or generated stills.
+- Five Elements visual set with distinct Wood / Fire / Earth / Metal / Water palettes.
+- More no-face, low-AI-feel motion using hands, paper, candles, water, mirrors, or abstract natural textures.
+
+## 2026-06-21 Social Content Handoff: 2026-06-14 Pack And Next Reels Request
+
+The latest ready-to-upload all-English content pack is under `assets/social/meta-20260614-daily-pack/`.
+
+Completed pack details:
+
+- Schedule covered: `2026-06-14` through `2026-06-20`.
+- Daily cadence: one Reel at `12:30` and one 5-image carousel at `20:30`, Asia/Taipei time.
+- Reels: 7 MP4 files in `assets/social/meta-20260614-daily-pack/reels/`.
+- Carousels: 35 PNG files in `assets/social/meta-20260614-daily-pack/carousels/`.
+- Main documentation: `assets/social/meta-20260614-daily-pack/POSTING_COPY_AND_SCHEDULE.md`.
+- Upload checklist: `assets/social/meta-20260614-daily-pack/UPLOAD_CHECKLIST.csv`.
+- Zip package: `assets/social/meta-20260614-daily-pack/your-love-element-meta-20260614-daily-pack.zip`.
+- QA sheets: `assets/social/meta-20260614-daily-pack/qa/`.
+
+Important creative constraints from the user:
+
+- All public-facing social assets and captions should be in English.
+- Do not show internal scheduling labels in user-facing creatives. Avoid dates, weekdays, `Day 1`, `Day 2`, or similar internal markers on Reels or images.
+- Reels should not show bottom-right scene counters such as `1/4`.
+- Keep the pacing readable. The latest Reels were adjusted to `18.0s` each with slower fades.
+- Keep Meta policy risk low: no guaranteed reunion, fixed success rate, deterministic soulmate prediction, or hard claims about the viewer's private relationship status.
+
+Latest verified specs:
+
+- Reels: `1080 x 1920`, H.264 MP4, silent AAC track, `18.0s` each.
+- Carousel images: `1080 x 1080`.
+- Text scan for source/docs/copy showed `0` Chinese characters after the all-English rewrite.
+- The final 2026-06-14 pack intentionally removed user-facing date / weekday / Day labels from Reels and carousel images.
+
+Next requested content session:
+
+- Create the next week of content for `2026-06-22` through `2026-06-28`.
+- New cadence requested by the user: two Reels per day, total `14` Reels.
+- Continue all-English output.
+- Continue no user-facing internal schedule labels.
+- Use the 2026-06-14 pack as the baseline style, but the next pack should be Reels-only unless the user asks for carousel posts again.
+
+## 2026-06-05 Meta Ads One-Week No-Purchase Readout
+
+The user reported that the recent Meta ads had been running for about one week with no purchases.
+
+Observed Meta Ads Manager window from the shared screenshot: `2026-05-14` to `2026-05-20`.
+
+Active campaigns:
+
+- `YLE_Meta_USEN_LR-Purchase_20260515`
+  - Spend: `NT$969`
+  - Results: `0` website purchases
+  - Impressions: `722`
+  - Reach: `588`
+  - Approx CPM: `NT$1,342`
+  - Interpretation: very limited delivery and expensive inventory; zero purchases is a warning but not enough sample to declare the offer invalid.
+- `YLE_Meta_USEN_LR-DeliveryCheck_Traffic_20260514`
+  - Spend: `NT$1,342`
+  - Results: `133` landing page views
+  - Cost per LPV: `NT$10`
+  - Impressions: `6,155`
+  - Reach: `5,984`
+  - Approx CPM: `NT$218`
+  - Interpretation: delivery and landing-page traffic worked, but LPV optimization is not purchase-intent optimization.
+
+Current diagnosis:
+
+- The Traffic / LPV campaign likely bought curiosity and account-delivery validation rather than purchase-ready users.
+- The Purchase campaign did not receive enough meaningful conversion signal; do not scale it from zero purchases.
+- `133` landing page views with zero purchases is weak but not conclusive for a cold $9.99 digital report. If the account reaches `500` to `1,000` quality LPVs with no purchases, prioritize offer, trust, checkout, and audience-message fit.
+- The highest-probability funnel leak is before checkout: first-screen clarity, free quiz start friction, report value proof, and trust around email delivery / payment.
+- End-to-end checkout and server-side `Purchase` tracking should still be verified if delivery continues without purchases.
+
+Action already taken in response:
+
+- A landing funnel conversion pass was implemented on 2026-06-05 to make the free preview clearer, reduce mobile friction, shorten cookie copy, and auto-advance after answer selection.
+- Diagnostic tracking now includes `landing_cta_click`.
+- `quiz_start` now fires earlier, on the first selected answer, so post-2026-06-05 readings should not be compared directly to older `quiz_start` counts.
+
+Recommended next readout:
+
+- Reduce or pause Traffic once delivery health is confirmed.
+- Use Purchase as the main campaign objective, with controlled creative tests instead of more Traffic spend.
+- Watch: `Landing page views`, `ViewContent`, `landing_cta_click`, `quiz_start`, `preview_revealed`, `InitiateCheckout`, `checkout_created`, `Purchase`.
+- If users reach preview but not checkout, strengthen report proof, sample content, price framing, and trust cues.
+- If users reach checkout but do not buy, inspect price resistance, payment friction, currency expectations, and Lemon Squeezy checkout confidence.
+
+## 2026-06-05 Reels Asset Pack And Promotion Handoff
+
+The user asked to move beyond scripts and provide actual Reels video files for the current Facebook/Instagram pages. A ready-to-upload Reels pack was created under `assets/social/reels/`.
+
+Generated Reels assets:
+
+- `assets/social/reels/reel-01-calm-is-information.mp4`
+- `assets/social/reels/reel-02-spark-and-peace.mp4`
+- `assets/social/reels/reel-03-five-elements-in-love.mp4`
+- `assets/social/reels/reel-04-things-i-stopped-calling-love.mp4`
+- `assets/social/reels/reel-05-private-love-reading.mp4`
+- `assets/social/reels/reel-06-no-face-love-reset.mp4`
+- `assets/social/reels/reel-07-no-face-body-knows.mp4`
+- `assets/social/reels/reel-08-no-face-safe-love-prompt.mp4`
+
+Supporting files:
+
+- `assets/social/reels/your-love-element-reels-pack.zip`: zip archive containing all 8 MP4s.
+- `assets/social/reels/POSTING_CAPTIONS.md`: upload captions, first-comment note for the prompt Reel, and recommended first 4.
+- `assets/social/reels/reels-contact-sheet.jpg`: visual preview/contact sheet for the 8 Reels.
+- `assets/social/reels/render_reels.py`: repeatable local renderer using the existing fresh-post images, PIL, and ffmpeg.
+- `assets/social/notes/REELS_CONTENT_PACK_ZH.md`: broader Reels strategy, hooks, source rationale, and future creative directions.
+- `assets/social/notes/SOCIAL_CONTENT_PACK_LIFE_TOUCHING_ZH.md`: 14-day life-touching post/caption pack for FB/IG.
+
+Video specs verified:
+
+- Format: MP4, H.264, yuv420p, AAC silent audio track.
+- Size: `1080 x 1920`, vertical 9:16.
+- Lengths:
+  - reel 01: 16.0s
+  - reel 02: 15.0s
+  - reel 03: 19.0s
+  - reel 04: 16.5s
+  - reel 05: 18.0s
+  - reel 06: 16.0s
+  - reel 07: 15.0s
+  - reel 08: 12.0s
+
+Creative direction:
+
+- The user specifically wanted less obvious AI feel and actual usable video files, not just scripts.
+- Reels 06-08 were added as lower-AI-feel/no-face variants because the first 5 used more of the existing illustrated portrait assets.
+- The current best first publishing order is:
+  1. `reel-07-no-face-body-knows.mp4`
+  2. `reel-06-no-face-love-reset.mp4`
+  3. `reel-04-things-i-stopped-calling-love.mp4`
+  4. `reel-05-private-love-reading.mp4`
+- Use platform-native music/audio when uploading. The rendered files intentionally include silent audio so they are upload-compatible but easy to pair with Instagram/Facebook audio.
+- Keep captions reflective and non-deterministic. Avoid guarantees, direct claims about relationship status, and "you will meet..." style predictions.
+
+Recommended next promotion step:
+
+1. Prepare UTM links for each Reel:
+   - Instagram: `https://yourloveelement.com/?utm_source=instagram&utm_medium=organic_reels&utm_campaign=reels_phase_1&utm_content=reel_07_no_face_body_knows`
+   - Facebook: `https://yourloveelement.com/?utm_source=facebook&utm_medium=organic_reels&utm_campaign=reels_phase_1&utm_content=reel_07_no_face_body_knows`
+2. Schedule/publish the first 4 Reels through Meta Business Suite, ideally at `20:30` Asia/Taipei, with the captions from `assets/social/reels/POSTING_CAPTIONS.md`.
+3. After 24-48 hours per Reel, record:
+   - reach
+   - 3-second views
+   - average watch time / retention if available
+   - saves
+   - shares
+   - comments
+   - profile visits
+   - link clicks
+   - free quiz starts / preview completions if UTM analytics are available
+4. Use early data to decide whether the next batch should emphasize:
+   - no-face emotional insight
+   - relationship pattern release
+   - Five Elements brand education
+   - direct free-preview CTA
+
+Next-session launch prompt is saved in `assets/social/notes/NEXT_REELS_PROMOTION_SESSION_PROMPT.md`.
+
+## 2026-06-05 Reels Phase 2 Final-Checked Assets And Scheduled Status
+
+The user clarified that the earlier 8 Reels were not new enough and asked for a different style. A new 7-video phase 2 Reel batch was created, then corrected after the user noticed text drift / improper text fade during transitions.
+
+Final usable phase 2 Reels folder:
+
+- `assets/social/reels/phase-2-new-style-final-checked/`
+
+Final usable MP4s:
+
+- `assets/social/reels/phase-2-new-style-final-checked/reel-09-slow-body-signal.mp4`
+- `assets/social/reels/phase-2-new-style-final-checked/reel-10-quiet-love-reset.mp4`
+- `assets/social/reels/phase-2-new-style-final-checked/reel-11-clarity-over-guessing.mp4`
+- `assets/social/reels/phase-2-new-style-final-checked/reel-12-stay-yourself-love.mp4`
+- `assets/social/reels/phase-2-new-style-final-checked/reel-13-private-preview-reading.mp4`
+- `assets/social/reels/phase-2-new-style-final-checked/reel-14-safe-love-prompt.mp4`
+- `assets/social/reels/phase-2-new-style-final-checked/reel-15-five-elements-soft-map.mp4`
+
+Final support files:
+
+- `assets/social/reels/your-love-element-reels-phase-2-final-checked.zip`
+- `assets/social/reels/phase-2-new-style-final-checked/POSTING_CAPTIONS.md`
+- `assets/social/reels/phase-2-new-style-final-checked/PHASE_2_FINAL_CHECKED_UPLOAD_NOTES.md`
+- `assets/social/reels/phase-2-new-style-final-checked/phase-2-contact-sheet.jpg`
+- `assets/social/reels/phase-2-new-style-final-checked/phase-2-final-checked-video-qa-sheet.jpg`
+- `assets/social/reels/render_reels_phase2.py`
+- `assets/social/reels/make_phase2_fixed_qa.py`
+
+Important correction history:
+
+- Do not use the earlier phase 2 folders for publishing:
+  - `assets/social/archive/phase2-drafts/phase-2-new-style/`
+  - `assets/social/archive/phase2-drafts/phase-2-new-style-fixed/`
+  - `assets/social/archive/phase2-drafts/phase-2-new-style-final/`
+- Use only `phase-2-new-style-final-checked/`.
+- The final fix changed text/logo drawing to use a transparent overlay before compositing. This made fade-in/fade-out work correctly and removed the apparent text drift / stuck-text artifact during transitions.
+- QA was performed from actual MP4 files via `phase-2-final-checked-video-qa-sheet.jpg`.
+- Specs verified: `1080 x 1920`, `24fps`, H.264 MP4 with AAC silent audio.
+
+User status update:
+
+- The user said the videos have already been scheduled.
+- Next tracking focus remains: profile visits, link clicks, quiz starts, preview completions, and which Reel angle performs best.
+
+Recommended phase 2 first-test order from the caption file:
+
+1. `reel-09-slow-body-signal.mp4`
+2. `reel-10-quiet-love-reset.mp4`
+3. `reel-11-clarity-over-guessing.mp4`
+4. `reel-13-private-preview-reading.mp4`
+
+Next creative request:
+
+- The user wants a different non-video social style: `5` images, each image paired with a short, attractive mini story. Start with a few style/example directions for the user to choose before producing final images.
+
+Story image series style previews created:
+
+- Written options and sample story copy: `assets/social/story-image-series/STYLE_EXAMPLES.md`
+- Preview render script: `assets/social/story-image-series/render_style_previews.py`
+- Source AI moodboard used as visual base: `assets/social/story-image-series/style-previews/imagegen-style-moodboard.png`
+- All-style overview: `assets/social/story-image-series/style-previews/all-styles-contact-sheet.jpg`
+- Option A / private letter style: `assets/social/story-image-series/style-previews/unsent-letter-contact-sheet.jpg`
+- Option B / cinematic room style: `assets/social/story-image-series/style-previews/five-rooms-contact-sheet.jpg`
+- Option C / symbolic object style: `assets/social/story-image-series/style-previews/objects-remember-contact-sheet.jpg`
+- Option D / message prompt style: `assets/social/story-image-series/style-previews/soft-text-message-contact-sheet.jpg`
+- Preview card size: `1080 x 1350` PNGs, suitable as IG carousel mockups. Text was rendered locally after image generation for readability and easier revision.
+
+## 2026-06-05 Landing Funnel Trial-Start Conversion Pass
+
+Context:
+
+- Meta ads can now deliver normally, but early traffic mostly visited the page without starting the free reading or buying.
+- The likely leak was the first-viewport / first-question step, not the paid checkout or Purchase event.
+
+Files changed:
+
+- `index.html`
+- `styles.css`
+- `script.js`
+
+UX changes:
+
+- Homepage hero now frames the offer as a free 60-second love element preview.
+- Hero trust chips now emphasize:
+  - private by design
+  - about 60 seconds
+  - no email to start
+  - optional `$9.99` report
+- The quiz panel now tells visitors that tapping an answer moves forward.
+- On radio-answer quiz steps, selecting an answer auto-advances after a short delay.
+- Mobile layout was tightened so the hero text, trust chips, quiz panel, and cookie notice fit in a `390 x 844` viewport without right-edge clipping.
+- Cookie notice copy was shortened so it does not dominate the first-question area on mobile.
+
+Tracking impact:
+
+- Pixel/Dataset ID was not changed.
+- `PageView` and `ViewContent` were not changed.
+- `InitiateCheckout` and `checkout_created` were not changed.
+- Server-side `Purchase` was not changed and still comes only from the verified Lemon Squeezy `order_created` webhook through CAPI.
+- No frontend `Purchase` was added.
+- `quiz_start` keeps the same event name but now fires on the first selected answer, with a `trigger` parameter such as `answer_tap` or `continue`.
+- New custom diagnostic event: `landing_cta_click`, fired by the hero CTA links.
+- `landing_cta_click` is for funnel diagnosis only unless it is intentionally promoted later in Meta Events Manager.
+
+Reporting caveat:
+
+- `quiz_start` counts after 2026-06-05 are not directly comparable with earlier `quiz_start` counts because the event now fires earlier in the interaction.
+- Purchase optimization campaigns should not need to be reset for this change. If the active ad set is optimized for `Purchase`, the conversion strategy remains tied to the same server-side CAPI `Purchase`.
+
+Recommended readout columns after deployment:
+
+- Landing page views
+- `ViewContent`
+- `landing_cta_click`
+- `quiz_start`
+- `preview_revealed`
+- `InitiateCheckout`
+- `checkout_created`
+- `Purchase`
+
+Verification run:
+
+- `node --check script.js`
+- Headless Chrome mobile screenshot at `390 x 844`
+- Chrome DevTools interaction check: clicking the first answer advanced the free quiz from question 1 to question 2.
+
+## 2026-05-12 Paid Flow State Hardening
+
+The paid report flow has been hardened against duplicate submissions, duplicate webhooks, and status regression after report delivery.
+
+Current guardrails:
+
+- `worker/src/index.js` now prevents checkout creation for readings that already have a verified Lemon Squeezy order, report generation in progress, delivered report, or failed terminal state.
+- Lemon Squeezy webhook handling now treats already-processed `webhook_events.provider + external_event_id` rows as duplicates and returns without reprocessing.
+- Webhook handling preserves advanced reading statuses. A late or duplicate `order_created` must not move `paid_answers_submitted`, `generating`, `report_generated`, `delivered`, or `failed` backward to `paid`.
+- `POST /api/readings/:reading_id/paid-signals` no longer mutates readings that are `generating`, `report_generated`, `delivered`, or `failed`.
+- The report queue now claims a queued job with a conditional `status=queued` patch before work starts, reducing the chance of two Worker invocations processing the same job.
+- If an email side effect has already resulted in a `delivered` reading, retry cleanup marks the job `succeeded` instead of reverting the reading to its older pre-delivery status.
+- `/full-report/` now locks the 8-signal form until payment verification succeeds.
+- `/full-report/` also locks and shows a final state when paid answers are already submitted, the report is already delivered, or the reading is failed.
+
+Preserve these rules when editing checkout, webhook, paid-signal, or report job code. The highest-risk regression is moving a delivered reading back to `paid`, `paid_answers_submitted`, or `checkout_created`, because that can enqueue another report job and potentially trigger another report email.
+
+## 2026-05-12 Share Card Templates And Native Share Behavior
+
+Free preview share card work is implemented, deployed, and iterated through multiple visual QA passes.
+
+Latest share-card commits pushed to `origin/main`:
+
+- `7d18f78 Add free preview share card`
+- `9cff279 Improve free share card artwork`
+- `0a9c898 Add element-specific share templates`
+- `9d224a9 Tighten share card text spacing`
+- `5b5d677 Balance share card copy layout`
+- `efbbd4f Share card image with link text`
+
+Current share-card architecture:
+
+- Each Love Element has its own fixed high-quality template image:
+  - `assets/share-templates/water.png`
+  - `assets/share-templates/fire.png`
+  - `assets/share-templates/earth.png`
+  - `assets/share-templates/metal.png`
+  - `assets/share-templates/wood.png`
+- Templates contain the premium watercolor/paper art, brand header, fixed element name, five-element seal, bottom brush banner, and `yourloveelement.com`.
+- Canvas now only overlays dynamic result copy:
+  - archetype title, for example `The Bright Companion`
+  - short share description, for example `Drawn to aliveness, brave expression, and honest spark.`
+- Keep this architecture. Do not go back to drawing the full watercolor artwork in Canvas; that caused the low-quality share-card issue.
+- If future visual changes are needed, adjust either:
+  - the fixed template assets for art/background issues
+  - `drawShareCardDynamicCopy()` in `script.js` for dynamic text spacing
+
+Current visual decisions:
+
+- The user liked the original AI-generated preview style: premium parchment, watercolor element art, elegant serif type, gold accents, bottom brush URL.
+- The final implementation uses element-specific bitmap templates plus deterministic Canvas text overlay to avoid AI text errors and inconsistent art.
+- QR code was intentionally not included. Rationale: primary sharing is mobile-to-mobile, so a QR code wastes card space and can make the image feel ad-like. The homepage URL is shown instead.
+- Fire template has visually busy dots near the lower-left copy area. `drawShareCopyVeil()` adds a very subtle paper-colored radial wash behind the dynamic copy to preserve readability without making it look like a white card.
+- Latest spacing uses fixed vertical rhythm in `drawShareCardDynamicCopy()` so title, divider, and description stay visually centered.
+
+Native share behavior:
+
+- `shareCardImage()` now sends image shares as:
+  - `files: [your-love-element-<element>.png]`
+  - `title`
+  - `text`
+- It intentionally does **not** include a separate `url` field in the image share payload.
+- The homepage link is embedded inside `text`, e.g.:
+  ```text
+  My Love Element is Fire.
+  Take the free reading and discover yours:
+  https://yourloveelement.com/
+  ```
+- Reason: some share targets prioritize the `url` field and drop the image, leaving only the homepage link. Sending `files + text` is more likely to preserve image sharing.
+- Fallback behavior:
+  - if `navigator.canShare(imageSharePayload)` supports files, share image + text
+  - else if `navigator.share` exists, share text/link only and show a neutral status
+  - else download the image
+- Important limitation: after the browser share sheet hands off the payload, each social app decides whether it preserves caption text, link text, and/or attached image. The site can send image + text + link, but cannot force every app to keep all fields.
+
+Share QA notes:
+
+- Local QA used `python3 -m http.server 8000` plus headless Chrome DevTools on port `9222`.
+- Temporary QA scripts under `/private/tmp`:
+  - `/private/tmp/yle_share_qa.py`
+  - `/private/tmp/yle_share_payload_qa.py`
+- `yle_share_qa.py` drives the free quiz, reveals the preview, verifies share card panel visibility, image load, and `1080x1350` output on desktop/mobile.
+- `yle_share_payload_qa.py` stubs `navigator.canShare` and `navigator.share` to verify actual payload shape.
+- Last verified payload included:
+  - `title: "My Love Element is Fire"`
+  - `text` containing `https://yourloveelement.com/`
+  - no `url` field
+  - one PNG file named `your-love-element-fire.png`
+  - file type `image/png`
+- Last verified production build after `efbbd4f`:
+  - GitHub Pages latest build status `built`
+  - live homepage loaded `script.js?v=20260512-share-image-text`
+
+Current share-card UI:
+
+- Share card panel appears after the free preview is revealed.
+- Buttons:
+  - `Share image`
+  - `Download`
+- Panel copy says: `A polished result card with your element, archetype, and homepage link.`
+
+## 2026-05-12 Meta Tracking And Purchase CAPI Confirmed
+
+Meta tracking is now live and verified for both browser events and server-side purchase events.
+
+Meta dataset / Pixel:
+
+- Dataset name: `Your Love Element`
+- Pixel/Dataset ID: `4282306195342317`
+- Static config file: `assets/tracking-config.js`
+- Base Pixel loader: `assets/meta-pixel-base.js`
+- Main funnel events: `script.js`
+- Worker CAPI purchase sender: `worker/src/index.js`
+
+Important frontend tracking decisions:
+
+- Meta Pixel loads by default for ad measurement.
+- The cookie notice is informational and does not gate tracking.
+- The cookie notice now uses a single `Got it` action; do not reintroduce `Essential only` / `Allow all` unless tracking behavior is redesigned to match.
+- Frontend-visible cookie copy should stay generic and should not mention Meta by name.
+- The base Pixel loads in the page `<head>` through `assets/meta-pixel-base.js`; this was added because Meta Events Manager was not reliably detecting PageView when Pixel initialization only happened later from `script.js`.
+- Do not add the Meta `<noscript>` image tracker unless the privacy/cookie behavior is intentionally revisited.
+- Privacy, Terms, and Refund pages were updated on 2026-05-12 to reflect current default measurement behavior and verified-payment purchase measurement.
+
+Homepage / paid-loop UX updates on 2026-05-12:
+
+- Homepage now includes a paid report sample/email preview section between the free preview and FAQ.
+- `/full-report/` now shows a payment verification status message before the 8 deeper signals.
+- Worker exposes `GET /api/readings/:reading_id/status`, returning only limited payment/delivery state for the post-checkout page.
+- Paid signal submission now tells the user whether report generation is queued or whether payment is not yet verified for that reading.
+
+Relationship scoring model added on 2026-05-12:
+
+- `worker/src/index.js` now computes a deterministic scoring profile before calling the report-generation model.
+- The scoring profile uses all available free + paid answers to derive:
+  - primary/supportive Love Element blend
+  - attachment rhythm
+  - relationship pace
+  - chemistry vs stability lens
+  - boundary clarity
+  - growth focus
+  - desired partner climate
+- Raw numeric scores stay internal in `report_json.scoring_model`.
+- The customer sees a narrative `Your Relationship Signal Profile` report section, not a raw score table.
+- The prompt now uses the scoring profile as the interpretation backbone and requires `relationship_signal_profile` before the partner portrait.
+
+Confirmed latest paid report email flow on 2026-05-12:
+
+- A newly received report email showed the latest format correctly:
+  - subject/body title included the computed element blend, for example `Wood with Water Support`
+  - email contained `Your Relationship Signal Profile`
+  - signal-profile copy surfaced user-facing scoring dimensions such as element blend, attachment rhythm, pace, boundary clarity, and growth focus
+  - partner portrait, element profile, compatibility map, pattern release, timing window, and 30-day guidance followed the signal profile
+- This confirms the deployed Worker is using the scoring model for new report generation.
+
+Guardrails for future edits:
+
+- Do not remove `relationship_signal_profile` from `REPORT_SECTION_LABELS`, the report prompt, or the normalized report sections.
+- Do not expose raw numeric scoring tables in customer-facing email. Keep raw scores internal in `report_json.scoring_model`.
+- Do not let the model invent a different visible scoring format that conflicts with `signal_profile.public_profile`.
+- Preserve the order: emotional summary, note before reading, `Your Relationship Signal Profile`, then the main report sections.
+- If report generation prompt or email rendering changes, run a fresh paid-report E2E and verify the delivered email still includes `Your Relationship Signal Profile`.
+- Existing delivered reports will not retroactively gain scoring content; only newly generated reports after the deployed Worker change include it.
+
+Browser Pixel events verified with Meta Pixel Helper:
+
+- `PageView`
+- `ViewContent`
+- custom `quiz_start`
+- custom `preview_revealed`
+- standard `InitiateCheckout`
+- custom `checkout_created`
+
+Events Manager verification:
+
+- After delay, Events Manager showed the browser events as active for May 11, 2026.
+- `Purchase` showed as active with `使用位置: 轉換 API` and event count `1`, confirming server-side CAPI receipt.
+- If Events Manager appears empty, first check the date filter. It may default to a previous date range and hide today's events.
+
+Server-side Purchase tracking:
+
+- `Purchase` must be sent only from the verified Lemon Squeezy `order_created` webhook.
+- Do not send frontend `Purchase` from checkout click; that would count checkout openers who did not pay.
+- Worker sends Meta CAPI `Purchase` when:
+  - Lemon webhook signature verifies.
+  - event is `order_created`.
+  - `META_CAPI_ACCESS_TOKEN` is present.
+- Worker hashes customer email as `user_data.em`.
+- Worker hashes `reading_id` as `user_data.external_id`.
+- Worker sends:
+  - `event_name: Purchase`
+  - `action_source: website`
+  - `event_source_url: https://yourloveelement.com/full-report/?reading_id=...`
+  - `event_id: lemon_squeezy_order_created:{webhook_id/order_id}`
+  - `custom_data.currency`
+  - `custom_data.value`
+  - `custom_data.order_id`
+  - product metadata for the full report
+- Meta CAPI failures are logged but do not fail the Lemon webhook. Preserve this behavior so payment confirmation and report delivery are not blocked by Meta outages.
+
+Cloudflare Worker Meta runtime:
+
+- `META_CAPI_ACCESS_TOKEN` is configured as a Worker secret.
+- `META_PIXEL_ID = "4282306195342317"` is in `worker/wrangler.toml`.
+- `META_GRAPH_API_VERSION = "v25.0"` is in `worker/wrangler.toml`.
+- `/api/health/meta` confirms Meta runtime config without exposing secrets.
+- Confirmed `/api/health/meta` returned:
+  - `ok: true`
+  - `meta_capi_access_token: true`
+  - `meta_pixel_id: true`
+  - `meta_graph_api_version: true`
+  - `meta_test_event_code: false`
+- `META_TEST_EVENT_CODE` is optional and should only be used temporarily while testing server-side events in Meta Test Events. Remove it after testing so production purchases are not marked as test traffic.
+
+Paid-loop state after Meta setup:
+
+- Browser funnel tracking is confirmed.
+- Server-side `Purchase` is confirmed in Events Manager via CAPI.
+- The remaining paid-loop QA should focus on business flow, not tracking setup:
+  - Lemon payment success
+  - return to `/full-report/?reading_id=...`
+  - 8 deeper signals submitted
+  - `paid_signals_submitted` browser event if observed during the form flow
+  - report email delivery
+  - no duplicate report email
+
+Advertising-readiness note:
+
+- Early ad optimization can use `ViewContent`, `preview_revealed`, `InitiateCheckout`, `checkout_created`, and now server-side `Purchase`.
+- `SubscribedButtonClick` events shown by Pixel Helper are Meta auto-detected events and should not be treated as core funnel metrics.
+- Prefer UTM-tagged links for organic posts and ads so event parameters preserve source/campaign context.
+
+## 2026-05-11 Social Publishing Package And Automation Planning
+
+Facebook Page and Instagram account are now connected by the user.
+
+Social publishing workflow documentation was added:
+
+- `SOCIAL_PUBLISHING_WORKFLOW.md`
+
+Current publishing package:
+
+- Use `assets/social/fresh-posts/` for the first 9 organic Facebook/Instagram posts.
+- Use `assets/social/fresh-posts/POSTING_SCHEDULE.md` for the day-by-day schedule, captions, and 5 hashtags per post.
+- Use `assets/social/your-love-element-fresh-posts.zip` if a single upload/archive package is easier.
+
+Important creative direction:
+
+- Final post images should be text-free, high-quality visual assets.
+- Caption and hashtags carry the copy, link, and CTA.
+- The first two post image directions were rejected because they felt like text-heavy templates or simple crops of existing assets.
+- Those previous publishing image packages were removed:
+  - `assets/social/posts/`
+  - `assets/social/photo-posts/`
+  - previous post zip packages
+  - previous social-generation scripts
+- Keep FB/IG profile and cover assets under `assets/social/`.
+
+Recommended immediate publishing flow:
+
+1. Manually schedule the 9 posts in Meta Business Suite at `20:30` Taiwan time.
+2. Publish to both Facebook and Instagram.
+3. Use the caption blocks from `assets/social/fresh-posts/POSTING_SCHEDULE.md`.
+4. Prefer UTM links before paid promotion starts.
+5. Track which images/captions get profile visits, link clicks, saves, and follows.
+
+Future automation evaluation:
+
+- Near term: Meta Business Suite scheduling is the safest route.
+- Later: evaluate a custom Meta Graph API publisher only after manual posting validates the content direction.
+- A custom publisher will likely need a Meta Developer app, Page/Instagram publishing permissions, long-lived Page access token handling, public image URLs, secure Worker secrets, and logging.
+- See `SOCIAL_PUBLISHING_WORKFLOW.md` for automation architecture notes and official Meta doc links.
+
+## 2026-05-10 Session Closeout: Paid Loop, Email, And Spacing
+
+Latest commits pushed to `origin/main`:
+
+- `4ec48ba Add scheduled report job processing`
+- `ee3f4d2 Add delivery email before checkout`
+- `be95063 Adjust mobile preview intro spacing`
+- `7435dc1 Adjust paid signal saved spacing`
+- `Make report email delivery idempotent` (current session closeout commit)
+
+Duplicate report email investigation:
+
+- User observed `admin@kaonow.com` received two full report emails, about 15 minutes apart.
+- Most likely cause: the cron/job flow retried after the email send side effect had already happened but before `readings`/`report_generation_jobs` were reliably marked delivered/succeeded.
+- Worker was updated to make report email delivery idempotent:
+  - if a reading is already `delivered` with `email_message_id`, any leftover queued/running job is marked `succeeded` without sending again
+  - if a report was already generated, retries reuse the stored `report_json`, `report_text`, and `report_html`
+  - Resend report email requests now send `Idempotency-Key: full-report/{reading.id}` so Resend suppresses duplicate sends for the same reading during retry windows
+- Resend idempotency keys are supported for `POST /emails` and prevent duplicate sends for the same idempotency key within their retention window.
+- `worker/README.md` now has a dedicated `Duplicate Email Prevention` section. Preserve those guardrails whenever editing report queue or email delivery code.
+
+Production checks completed after these commits:
+
+- GitHub Pages build completed successfully for `7435dc1`.
+- Live homepage now loads `styles.css?v=20260510-spacing`.
+- Live `/full-report/` now loads `../styles.css?v=20260510-paid-spacing`.
+- Production Worker health checks after the cron fix returned:
+  - `/api/health`: `{"ok":true}`
+  - `/api/health/supabase`: `ok: true`
+  - `/api/health/email`: `ok: true`, configuration-only delivery check
+- User confirmed a real purchase using `admin@kaonow.com` received the generated full report successfully.
+
+Important live behavior now:
+
+- Homepage preview intro spacing is adjusted on mobile via `#preview .section-intro`.
+- `/full-report/` paid saved status now has breathing room via `.paid-quiz-panel .api-status { margin: 18px 0; }`.
+- The homepage full-report CTA asks for `Delivery email` before checkout and sends it to `POST /api/create-checkout`.
+- Worker passes that email to Lemon Squeezy as `checkout_data.email` and stores it as `readings.customer_email`.
+- Report delivery uses `readings.customer_email`, with Lemon Squeezy webhook still able to update it from checkout data.
+- Cloudflare Worker cron runs every 5 minutes and processes up to 3 queued report jobs.
+
+Lemon Squeezy email clarification:
+
+- Customer receipt email and merchant sale notification are separate Lemon Squeezy email flows.
+- `Your Love Element (via Lemon Squeezy)` receipt is the customer receipt.
+- `Lemon Squeezy - You made a sale!` is the merchant sale notification.
+- If `[redacted personal account address]` receives `You made a sale!`, that is expected if the Lemon Squeezy account/store notification email is still a personal address.
+- If the merchant notification should not go to personal Gmail, update Lemon Squeezy store/account notification settings or disable sale notifications there.
+- This repo controls Worker checkout creation and Resend full-report delivery, not Lemon Squeezy's merchant notification recipient.
+
+Current git/workspace note:
+
+- Local `main` is pushed to `origin/main` at `7435dc1`.
+- `demo/` remains untracked and pre-existing. It was not changed or staged.
+
+Recommended next-session priorities:
+
+1. Verify Lemon Squeezy account/store notification settings:
+   - customer receipt reply/contact should point to `support@yourloveelement.com`
+   - merchant sale notifications should go to the desired admin mailbox, not a personal Gmail if that is undesirable
+2. Run one more clean live paid-loop test after the cron fix and delivery email field:
+   - complete free preview
+   - enter delivery email
+   - pay through Lemon checkout
+   - submit 8 deeper signals
+   - confirm full report delivery to the entered email
+   - confirm merchant notification routing is acceptable
+3. If delivery still feels delayed, consider adding a clearer paid-complete sentence such as "Reports usually arrive within a few minutes."
+4. Consider adding a support/retry admin tool only if more real purchases expose stuck jobs.
+
+## 2026-05-10 Delivery Email Capture And Lemon Receipt Note
+
+Email delivery clarification after the first real purchase:
+
+- The production site now asks for `Delivery email` in the homepage full-report CTA before sending the customer to Lemon Squeezy.
+- Frontend sends that email to `POST /api/create-checkout`.
+- Worker already supports `checkout_data.email`; the field now pre-fills the Lemon checkout and stores `customer_email` on the matching `readings` row.
+- Lemon Squeezy `order_created` webhook can still overwrite/update `customer_email` with the email actually used at checkout.
+- Report delivery continues to use `readings.customer_email`.
+
+Important Lemon Squeezy admin note:
+
+- The receipt email shown as `Your Love Element (via Lemon Squeezy)` is sent by Lemon Squeezy, not by the Worker/Resend report email flow.
+- If Apple Mail/Gmail shows replies going to `[redacted personal account address]`, the Lemon Squeezy store/account receipt reply/contact email is still using a personal address.
+- Update Lemon Squeezy store/account/customer support or receipt email settings so merchant replies go to `support@yourloveelement.com`.
+- This repo controls the dynamic checkout URL, receipt button URL/text, and full report delivery email, but not Lemon Squeezy's merchant receipt sender identity shown by the mail client.
+
+## 2026-05-10 Paid Report Delivery Cron Fix
+
+Issue observed after the first real production purchase: payment could complete, but the full report might not arrive because queued `report_generation_jobs` were not automatically processed.
+
+Fix prepared:
+
+- Added a Cloudflare Worker `scheduled` handler that calls the report queue processor.
+- Added `[triggers] crons = ["*/5 * * * *"]` to `worker/wrangler.toml`.
+- Each cron run processes up to 3 queued report generation jobs.
+- The protected `POST /api/jobs/process` endpoint remains available for manual recovery/debugging and now uses the same queue processor.
+
+Operational notes:
+
+- A full report is only generated after both conditions are true:
+  - Lemon Squeezy `order_created` webhook has marked the reading as paid.
+  - The customer has submitted the 8 deeper signals on `/full-report/?reading_id=...`.
+- After this Worker deploy is live, already queued jobs should be picked up by the next cron run.
+- If a paid customer still does not receive email after the cron fix, inspect the matching `readings` and `report_generation_jobs` rows for:
+  - missing `customer_email`
+  - missing `paid_answers_json`
+  - failed job `last_error`
+  - Resend delivery error
+
+## 2026-05-10 Preview QA Fixes
+
+Small post-launch UX fixes were prepared after mobile/desktop review:
+
+- Increased spacing between the sample preview heading and intro copy on mobile.
+- Birth day validation now respects the selected month:
+  - February allows up to 29.
+  - April, June, September, and November allow up to 30.
+  - 31-day months still allow up to 31.
+- The full-report checkout CTA no longer trusts a stale browser-stored `yle-reading-id` after refresh. The current page session must complete and reveal the free preview before checkout can begin.
+- The initial paid CTA is visually gated as `Reveal free preview first` and switches to `Unlock full report - $9.99` only after the preview is saved.
+- The desktop preview area was simplified from uneven stacked cards into:
+  - partner portrait card
+  - mini analysis card
+  - a single full-width paid report CTA
+- Static pages now cache-bust CSS/JS with `?v=20260510-fixes`.
+
+## 2026-05-10 UX, Checkout Trust, and SEO/GEO Updates
+
+Two post-launch polish commits were completed and pushed to `origin/main`:
+
+- `4a5acd2 Improve checkout trust flow`
+- `561dc32 Add SEO trust content`
+
+Important state after these commits:
+
+- The free 10-question reading now requires an answer on each radio step.
+- The birthday step no longer defaults to `January 14`; month/day must be provided.
+- The paid `/full-report/` 8-question flow now requires an answer on each paid signal step.
+- The initial homepage preview is explicitly a sample/placeholder state, not a personalized default result.
+- After the free reading is completed, the preview section switches to `Your free preview report` and uses only the user's real answers.
+- The paid CTA now shows `$9.99`, delivery expectations, entertainment/non-professional-advice language, and duplicate-charge/failed-delivery support language before checkout.
+- Static pages now cache-bust CSS/JS with `?v=20260510-content`.
+- Worker checkout creation now sends `checkout_options.locale = "en"` so Lemon Squeezy checkout stays in English instead of following browser locale.
+- `/full-report/` now has `<meta name="robots" content="noindex,follow" />` because it is a post-checkout form, not a public SEO landing page.
+- Homepage SEO metadata was expanded for the actual search intent:
+  - title: `Five Element Love Reading & Relationship Report | Your Love Element`
+  - description mentions the 10-question private reading, free preview, and optional `$9.99` full report by email.
+- Homepage JSON-LD now includes `Organization`, `WebSite`, `Product/Offer`, and `FAQPage`.
+- Homepage now has a visible FAQ section before the footer covering:
+  - whether the free preview is personalized
+  - what the full report includes
+  - `$9.99` price
+  - email delivery after payment and deeper answers
+  - non-professional-advice disclaimer
+  - failed delivery / duplicate charge support
+- Added:
+  - `robots.txt`
+  - `sitemap.xml`
+- Contact, Privacy, Terms, and Refund pages were updated to remove stale "early access", "payment approval", and "paid products become available" language. They now reflect that paid reports are active and delivered by email.
+- Privacy/Terms/Refund updated date: `May 10, 2026`.
+
+Verification already run after `4a5acd2`:
+
+- GitHub Pages build completed successfully.
+- Live homepage blocked advancing the free quiz with no answer and showed `Choose one answer to continue.`
+- Live `/full-report/` blocked advancing the paid quiz with no answer and showed `Choose one answer to continue.`
+- Production Worker health returned `{"ok":true}`.
+- A production test checkout was created with reading id `10867666-6dd5-4178-87ea-1aef87836a08`.
+- Lemon Squeezy checkout opened in English and displayed `$9.99`.
+- No payment was submitted.
+
+Verification already run after `561dc32`:
+
+- GitHub Pages build completed successfully.
+- Live homepage showed the new SEO title, expanded metadata, JSON-LD, and visible FAQ content.
+- `https://yourloveelement.com/robots.txt` is live.
+- `https://yourloveelement.com/sitemap.xml` is live.
+- Live contact page shows the new `Report delivery` section and no longer uses early-access/payment-approval language.
+
+Current git/workspace note:
+
+- `main` is in sync with `origin/main` after `561dc32`.
+- `demo/` remains untracked and pre-existing. It was not changed or staged in these updates.
+
+Recommended next-session priorities:
+
+1. Run a real low-value production purchase or Lemon Squeezy test purchase, if available, to verify the full paid loop:
+   - checkout payment
+   - `order_created` webhook
+   - return to `/full-report/?reading_id=...`
+   - paid 8-signal submission
+   - report generation job
+   - email delivery
+2. Review the actual delivered paid report from the post-payment path, not only Worker test jobs.
+3. Consider collecting purchaser email before checkout only if needed for recovery UX. Current flow relies on Lemon Squeezy customer email plus `reading_id`.
+4. Consider adding a small "report delivery timing" sentence to the paid-complete state if support requests show users expect instant delivery.
+5. Consider image performance optimization later. `assets/hero-soulmate-report.png` is about 2.2 MB and appears above the fold.
+6. Do not add more languages yet unless traffic/source data supports it. Short-term language strategy is English site + English Lemon checkout.
+
+## 2026-05-10 Confirmed Lemon Squeezy Launch Setup
+
+Lemon Squeezy approval has passed and the production checkout flow is now active.
+
+Confirmed production setup:
+
+- Lemon Squeezy store: `Your Love Element`
+- Lemon Squeezy Store ID: `365266`
+- Product: `Your Love Element: Full Relationship Report`
+- Price: `$9.99`
+- Product type: digital product / personalized report
+- Tax category: Digital Goods or Services
+- Homepage CTA: `Unlock full report`
+- Production Worker origin: `https://your-love-element-api.goodrambo2013.workers.dev`
+- Production site origin: `https://yourloveelement.com`
+- Production frontend commit that enabled checkout: `6ad9464 Enable Lemon Squeezy checkout frontend`
+
+Cloudflare Worker runtime variables/secrets now include:
+
+- `LEMON_SQUEEZY_API_KEY` as Secret
+- `LEMON_SQUEEZY_STORE_ID` as Secret, value `365266`
+- `LEMON_SQUEEZY_VARIANT_ID` as Secret
+- `LEMON_SQUEEZY_WEBHOOK_SECRET` as Secret
+
+Lemon Squeezy webhook setup:
+
+- Callback URL: `https://your-love-element-api.goodrambo2013.workers.dev/api/webhooks/lemon-squeezy`
+- Signing secret: same value as Cloudflare Worker secret `LEMON_SQUEEZY_WEBHOOK_SECRET`
+- Enabled events:
+  - `order_created`
+  - `order_refunded`
+- Do not enable subscription or license-key events for the current product. The current product is a one-time digital report purchase, not a subscription or license product.
+
+Lemon Squeezy product configuration notes:
+
+- `Media`: use `assets/hero-soulmate-report.png` or another polished product image.
+- `Files`: leave empty. This product is a personalized generated report, not a fixed download file.
+- `Links`: leave empty unless intentionally adding a fallback. The production checkout link is created dynamically by the Worker.
+- `Variants`: keep the single `$9.99` variant unless intentionally launching a new price/package.
+- `Confirmation modal` should send customers back to finish the deeper report signals:
+  - Title: `Your full report is ready to refine`
+  - Message: `Thank you for your order. To complete your personalized relationship report, please answer the 8 deeper signals on the next page. Your full report will be delivered by email after your answers are received.`
+  - Button text: `Complete your report`
+  - Button link: `https://yourloveelement.com/full-report/`
+- `Email receipt` should also point customers back to the deeper signals:
+  - Thank you note: `Thank you for ordering your full relationship report. To complete your personalized report, please answer the 8 deeper relationship signals using the button below. After your answers are received, your full report will be generated and delivered to your email.`
+  - Button text: `Complete your report`
+  - Button link: `https://yourloveelement.com/full-report/`
+
+Confirmed technical flow:
+
+1. User completes the free 10-question reading on `/`.
+2. `script.js` calls `POST /api/readings` and stores the returned `reading_id` in browser storage.
+3. User clicks `Unlock full report`.
+4. Frontend calls `POST /api/create-checkout` with the `reading_id`.
+5. Worker creates a Lemon Squeezy checkout using `LEMON_SQUEEZY_STORE_ID` and `LEMON_SQUEEZY_VARIANT_ID`.
+6. Worker attaches `checkout_data.custom.reading_id`.
+7. Worker sets the checkout redirect and receipt links to `https://yourloveelement.com/full-report/?reading_id=...`.
+8. Lemon Squeezy checkout opens.
+9. After payment, Lemon Squeezy sends `order_created` to `/api/webhooks/lemon-squeezy`.
+10. Worker verifies the `X-Signature` with `LEMON_SQUEEZY_WEBHOOK_SECRET`.
+11. Worker reads `meta.custom_data.reading_id`, customer email, order id, product id, variant id, and payment status.
+12. Worker updates the Supabase `readings` row to `paid`.
+13. Customer returns to `/full-report/?reading_id=...`.
+14. Customer submits the 8 deeper paid signals.
+15. Worker stores paid answers and the database trigger queues report generation once both payment and paid answers are present.
+
+Confirmed production checks run on 2026-05-10:
+
+- `GET /api/health` returned `{"ok":true}`.
+- `GET /api/health/supabase` returned `ok: true`.
+- `GET /api/health/email` returned `ok: true`.
+- `POST /api/readings` successfully created test reading `2d89c736-8b4d-4811-bb03-ab3715095bf5`.
+- `POST /api/create-checkout` successfully returned a Lemon Squeezy checkout URL for that reading.
+- Live `https://yourloveelement.com/` contains `Unlock full report` and `window.YLE_API_BASE_URL`.
+- Live `https://yourloveelement.com/full-report/` contains `window.YLE_API_BASE_URL`.
+
+Do-not-change guardrails:
+
+- Do not replace the homepage CTA with a static Lemon Squeezy checkout link. The Worker-created checkout is required because it attaches `reading_id` to `checkout_data.custom`.
+- Do not remove `window.YLE_API_BASE_URL` from `index.html` or `full-report/index.html`; without it the static site falls back to local-only storage and checkout automation stops.
+- Do not rename `reading_id` in Lemon Squeezy custom data unless `worker/src/index.js`, webhook handling, and frontend redirect handling are updated together.
+- Do not upload a fixed product file in Lemon Squeezy unless the business model changes. The current delivery model is personalized generation after payment plus deeper answers.
+- Do not change webhook events away from `order_created` and `order_refunded` without updating `handleLemonSqueezyWebhook`.
+- Do not move the paid 8-question form before checkout. The confirmed product flow is free preview first, payment second, deeper signals third, email delivery last.
+
+## 2026-05-06 Production E2E Check
+
+- Confirmed GitHub `main` is now at latest commit `1cd9e26a6bddc0bcbeed99faffd20aaf9cbf0015`.
+- Confirmed GitHub Pages is built from `main` root and the latest Pages deployment succeeded on 2026-05-06 13:05 UTC.
+- Confirmed production site and element banner assets are live:
+  - `https://yourloveelement.com/`
+  - `https://yourloveelement.com/assets/elements/fire-banner.jpg`
+  - `https://yourloveelement.com/assets/elements/water-banner.jpg`
+- Ran a new production E2E report test using `fire` as the free-answer element:
+  - reading id: `78e460b1-12b5-4e86-9dc5-d7450d078b78`
+  - queued job id: `04e9f641-9fe8-4293-803e-06db1cd748b9`
+  - final reading status: `delivered`
+  - final job status: `succeeded`
+  - email message id: `2b91dffe-b507-4946-b993-240281e2dc6e`
+- Verified generated production report data:
+  - `emotional_summary` is present.
+  - `thirty_day_guidance` is a string with Day 1, Day 3, Day 7, Day 14, Day 21, and Day 30 checkpoints.
+  - `report_html` does not contain `[object Object]`.
+  - `report_text` does not contain `[object Object]`.
+- Important note: `report_html` stored in Supabase is the standalone report HTML and does not include the email banner. The banner is applied only in the delivery email template through `elementBannerUrl(siteUrl, element)`. For the tested reading, the production input element was `fire`, so the email template path resolves to `https://yourloveelement.com/assets/elements/fire-banner.jpg`.
+- Historical note: Lemon Squeezy checkout initially returned a generic `Internal server error` before the production Lemon Worker secrets were configured. This was resolved on 2026-05-10; `/api/create-checkout` now returns a Lemon Squeezy checkout URL in production.
+- Local Worker email revision after reviewing the delivered email:
+  - Banner image now renders at its natural 16:9 ratio instead of using `object-fit: cover`, so the top image should no longer be cropped.
+  - `30-Day Guidance` prompt now asks each checkpoint for a specific goal, concrete practice, and observable progress signal, with 35-60 words per node.
+- The email revision was committed and pushed:
+  - commit: `1cd9e26 Improve report email banner and guidance`
+  - GitHub Pages build for `1cd9e26` completed successfully on 2026-05-06 14:41 UTC.
+- Ran a fresh production E2E after `1cd9e26`:
+  - reading id: `b43373f3-9576-4a3a-bf33-ea3d27821c45`
+  - queued job id: `b486b97a-b967-4e70-ac8a-2f9d52d87ef4`
+  - final reading status: `delivered`
+  - final job status: `succeeded`
+  - email message id: `a8f553f2-280e-4032-95cb-517797b035fc`
+  - tested element: `water`
+  - `thirty_day_guidance` now uses the new practical format: `Goal`, `Practice`, and `Notice` in each Day checkpoint.
+  - `report_html` and `report_text` still do not contain `[object Object]`.
+  - Because the new 30-Day prompt format appeared in production output, the updated Worker code path is confirmed live.
+- Worker email health check updated and deployed:
+  - commit: `36e1864 Fix email health check for sending key`
+  - `/api/health/email` is now configuration-only, not a Resend `/domains` API check.
+  - Reason: current Resend key is a Sending access key. It can send email successfully, but may return 401 for account/domain reads.
+  - Production verification now returns `ok: true`, `delivery_check: configuration_only`, `from_email_domain: yourloveelement.com`, and `support_email_domain: yourloveelement.com`.
+  - Actual delivery should be verified with protected `POST /api/test-email` or a full report E2E.
+
+## Confirmed Deployment Workflow
+
+- This project has an existing Cloudflare/GitHub deploy integration for the Worker.
+- For changes under `worker/src/index.js` or `worker/wrangler.toml`, the confirmed workflow is:
+  1. Run `node --check worker/src/index.js`.
+  2. Commit the relevant files.
+  3. Push to `origin main`.
+  4. Let the existing Cloudflare GitHub deploy run the Worker deploy, equivalent to `npx wrangler deploy --config worker/wrangler.toml` on Cloudflare's side.
+  5. Verify `https://your-love-element-api.goodrambo2013.workers.dev/api/health`.
+- Do not assume local `wrangler` or `npx` is available in Codex. In this workspace it was not available.
+- Do not treat GitHub Pages deployment alone as proof that Worker code changed. GitHub Pages confirms static site/assets only; Worker behavior should be verified through Worker endpoints or a fresh E2E test.
+- Plaintext Worker vars belong in `worker/wrangler.toml`; otherwise Cloudflare/GitHub deploy may overwrite Dashboard-only plaintext edits.
+- Worker secrets remain only in Cloudflare Dashboard/runtime secrets and should not be committed:
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `RESEND_API_KEY`
+  - `OPENAI_API_KEY`
+  - `JOB_RUNNER_SECRET`
+  - `LEMON_SQUEEZY_API_KEY`
+  - `LEMON_SQUEEZY_STORE_ID`
+  - `LEMON_SQUEEZY_VARIANT_ID`
+  - `LEMON_SQUEEZY_WEBHOOK_SECRET`
+
+## 2026-05-05 Automation Progress
+
+- Supabase MCP server `supabase-your-love-element` is available in Codex.
+- Confirmed target Supabase project ref: `nmwhaiimnuywnjlvobde`.
+- Applied Supabase migrations to the target project only:
+  - `create_paid_report_schema`
+  - `harden_paid_report_functions`
+  - `revoke_public_rls_auto_enable`
+- Created product tables:
+  - `readings`
+  - `webhook_events`
+  - `report_generation_jobs`
+- Created status enums:
+  - `reading_status`
+  - `report_job_status`
+- RLS is enabled on all product tables. Only `service_role` has direct table policies.
+- Supabase security advisor currently reports no lints.
+- Added Cloudflare Worker backend scaffold in `worker/`:
+  - `POST /api/readings`
+  - `POST /api/create-checkout`
+  - `POST /api/webhooks/lemon-squeezy`
+  - `POST /api/readings/:reading_id/paid-signals`
+  - `POST /api/jobs/process`
+- Added progressive frontend wiring in `script.js`.
+  - If `window.YLE_API_BASE_URL` is unset, the static site keeps working and stores answers locally as a fallback.
+  - Once the Worker is deployed, set `window.YLE_API_BASE_URL` to the Worker origin so the frontend writes to the backend.
+
+## 2026-05-06 Email And Delivery Setup
+
+- Cloudflare Email Routing is enabled for `yourloveelement.com`.
+- Active inbound forwarding addresses:
+  - `support@yourloveelement.com`
+  - `reports@yourloveelement.com`
+- Catch-all routing is disabled.
+- DNS currently includes Cloudflare Email Routing MX records:
+  - `route1.mx.cloudflare.net`
+  - `route2.mx.cloudflare.net`
+  - `route3.mx.cloudflare.net`
+- Cloudflare Email Routing TXT records are present for SPF and DKIM.
+- Recommended transactional email identity:
+  - From: `Your Love Element <reports@yourloveelement.com>`
+  - Reply-To / support: `support@yourloveelement.com`
+- Resend should be configured in the existing Resend account, not a separate account.
+- Use a dedicated Resend API key for this product and store it only in Cloudflare Worker runtime secrets as `RESEND_API_KEY`.
+- Cloudflare Worker runtime variables/secrets should include:
+  - `RESEND_API_KEY` as a secret
+  - `FROM_EMAIL=Your Love Element <reports@yourloveelement.com>`
+  - `SUPPORT_EMAIL=support@yourloveelement.com`
+- Do not store Resend or Supabase secrets in Cloudflare build-process variables unless a build step explicitly needs them.
+- Plaintext Worker variables are managed in `worker/wrangler.toml`. Editing plaintext runtime variables only in the Cloudflare Dashboard may be overwritten by the next GitHub deployment.
+- Current `worker/wrangler.toml` plaintext variables should include:
+  - `SITE_URL=https://yourloveelement.com`
+  - `SUPABASE_URL=https://nmwhaiimnuywnjlvobde.supabase.co`
+  - `SUPPORT_EMAIL=support@yourloveelement.com`
+  - `FROM_EMAIL=Your Love Element <reports@yourloveelement.com>`
+  - `OPENAI_MODEL=gpt-5.5`
+- Report delivery email has been upgraded from raw report HTML to a branded transactional email:
+  - opening reassurance and personalization
+  - element-specific report banner image from `/assets/elements/{element}-banner.jpg`
+  - styled report sections
+  - `30-Day Guidance` rendered as timed checkpoints: Day 1, Day 3, Day 7, Day 14, Day 21, Day 30
+  - clear support/reply path
+- Element banner assets:
+  - `assets/elements/wood-banner.jpg`
+  - `assets/elements/fire-banner.jpg`
+  - `assets/elements/earth-banner.jpg`
+  - `assets/elements/metal-banner.jpg`
+  - `assets/elements/water-banner.jpg`
+- PDF attachment is not implemented yet. Resend supports attachments and inline images, but reliable PDF generation needs a dedicated renderer or service before enabling it in production.
+
+## Current Live Site
+
+- Production domain: https://yourloveelement.com/
+- GitHub repo: https://github.com/goodrambo/your-love-element
+- GitHub Pages source: `main` branch, root directory
+- Custom domain file: `CNAME`
+- HTTPS is enforced through GitHub Pages
+- DNS is managed in Cloudflare with GitHub Pages A/AAAA records and `www` CNAME
+
+## Current Product Direction
+
+Your Love Element is a mobile-first H5-style relationship reading product.
+
+The core funnel:
+
+1. User completes a free 10-question reading.
+2. Site shows a free preview report.
+3. Paid full report is positioned at `$9.99`.
+4. After Lemon Squeezy checkout, user returns to `/full-report/?reading_id=...`.
+5. User completes 8 deeper relationship signals.
+6. Future implementation generates/delivers the full report.
+
+## Confirmed Paid Product Flow
+
+The recommended product flow is:
+
+1. User completes the free 10-question reading on `/`.
+2. Site reveals a free preview report and explains what the full report adds.
+3. User clicks `Unlock full report` and pays `$9.99` through Lemon Squeezy.
+4. Lemon Squeezy sends the user a confirmation email with the post-purchase link.
+5. User returns to `https://yourloveelement.com/full-report/?reading_id=...`.
+6. User completes the 8 deeper paid signals.
+7. Site collects:
+   - Lemon Squeezy order identifier or checkout identifier
+   - purchaser email
+   - free 10-question answers, if available from browser storage
+   - paid 8-question answers
+   - submission timestamp
+8. Backend or form service verifies that the order exists and is paid.
+9. Report is generated from the combined 18 signals.
+10. User receives the full report by email.
+
+Recommended MVP delivery:
+
+- Do not show the full paid report instantly on the static `/full-report/` page.
+- After the paid 8-question form is submitted, show a confirmation state:
+  - `Your answers were received. Your full report will be delivered to your email.`
+- Deliver the first version manually or semi-manually by email within a clear window, such as `within 24 hours`.
+- Attach or link to a polished report in one of these formats:
+  - PDF attachment
+  - private hosted HTML report link
+  - email body with the full report content
+
+Recommended long-term delivery:
+
+- Replace manual generation with an automated backend flow.
+- Use Lemon Squeezy webhooks to store paid orders.
+- Use a report-generation service to create the report immediately after paid-signal submission.
+- Send the report automatically through transactional email.
+- Optionally show an on-page `Your report is ready` view after generation.
+
+Important product decision:
+
+- Email should be the primary delivery channel because it creates a durable receipt, reduces risk if the user closes the browser, and works well with Lemon Squeezy's checkout email flow.
+- The on-page confirmation should be treated as a backup/status experience, not the only place where the paid result appears.
+- The paid report should only be generated after both conditions are true:
+  - payment is verified
+  - the 8 deeper signals are submitted
+
+## Full Automation Architecture
+
+The current GitHub Pages site is static, so it cannot securely store answers, verify payments, call AI generation, or send email by itself. Full automation requires a small backend plus a database.
+
+Recommended stack:
+
+- Frontend: current GitHub Pages static site
+- Backend/API: Cloudflare Workers
+- Database: Supabase Postgres
+- Payment: Lemon Squeezy checkout + webhooks
+- Report generation: OpenAI API or another LLM API
+- Transactional email: Resend, Postmark, SendGrid, or similar
+
+Current infrastructure context:
+
+- Supabase account already exists and is used for other projects.
+- Cloudflare account already exists, but Cloudflare Workers has not been used yet.
+- Recommended next backend choice is Cloudflare Workers because the domain/DNS is already in Cloudflare and the API surface for this product can stay small.
+- A new Supabase project has been created for this product.
+- Project ref: `nmwhaiimnuywnjlvobde`
+- Codex MCP config has been added globally:
+  - name: `supabase-your-love-element`
+  - URL: `https://mcp.supabase.com/mcp?project_ref=nmwhaiimnuywnjlvobde`
+- Current session could not see the newly added MCP server without restarting/reloading Codex, so the next session should verify that the Supabase MCP tools are available before making database changes.
+- Do not use or modify other Supabase projects.
+
+Recommended automated flow:
+
+1. Free quiz is completed on `/`.
+2. Frontend sends the 10 free answers to backend:
+   - endpoint: `POST /api/readings`
+   - backend creates a `reading_id`
+   - database stores `reading_id`, free answers, and `status = previewed`
+3. User clicks `Unlock full report`.
+4. Frontend calls backend:
+   - endpoint: `POST /api/create-checkout`
+   - payload includes `reading_id`
+5. Backend creates a Lemon Squeezy checkout link with:
+   - `checkout_data.custom.reading_id`
+   - optional `checkout_data.email` if collected before checkout
+   - redirect URL: `/full-report/?reading_id=...`
+6. User completes Lemon Squeezy payment.
+7. Lemon Squeezy sends `order_created` webhook to backend.
+8. Backend verifies webhook signature, reads `meta.custom_data.reading_id`, purchaser email, order id, and payment status.
+9. Backend updates the reading:
+   - `status = paid`
+   - `order_id = ...`
+   - `customer_email = ...`
+10. User lands on `/full-report/?reading_id=...`.
+11. User completes the 8 paid signals.
+12. Frontend sends paid answers to backend:
+   - endpoint: `POST /api/readings/:reading_id/paid-signals`
+13. Backend checks that:
+   - the reading exists
+   - payment is verified
+   - paid answers are present
+14. Backend generates the report from the combined 18 answers.
+15. Backend saves generated report content and `status = report_generated`.
+16. Backend sends the report to the purchaser email through transactional email.
+17. Backend updates `status = delivered` and stores the email provider message id.
+
+Recommended state machine:
+
+- `previewed` - free answers saved
+- `checkout_created` - Lemon Squeezy checkout link created
+- `paid` - Lemon Squeezy webhook confirms payment
+- `paid_answers_submitted` - 8 deeper signals submitted
+- `generating` - report generation is running
+- `report_generated` - report saved
+- `delivered` - email sent
+- `failed` - generation or delivery failed and needs retry
+
+Important implementation detail:
+
+- The backend should trigger report generation whenever both required inputs are available:
+  - verified payment
+  - submitted paid answers
+- This makes the flow resilient if the webhook arrives before the user submits paid answers, or if the user submits paid answers before the webhook is processed.
+
+Recommended database tables:
+
+- `readings`
+  - `id`
+  - `free_answers_json`
+  - `paid_answers_json`
+  - `customer_email`
+  - `lemon_squeezy_order_id`
+  - `status`
+  - `report_html`
+  - `report_text`
+  - `email_message_id`
+  - `created_at`
+  - `updated_at`
+- `webhook_events`
+  - `id`
+  - `provider`
+  - `event_name`
+  - `external_event_id`
+  - `payload_json`
+  - `processed_at`
+
+Answer collection decision:
+
+- Do not rely only on browser localStorage for paid product delivery.
+- Browser storage is useful as a fallback for preserving answers during the same session, but the authoritative copy must live in the backend database.
+- The `reading_id` is the bridge between:
+  - free quiz answers
+  - Lemon Squeezy payment
+  - paid 8-question answers
+  - generated report
+  - email delivery
+
+## Pages and Assets
+
+Main pages:
+
+- `/` - homepage and free 10-question reading
+- `/contact/` - contact/support page
+- `/privacy/` - privacy policy
+- `/terms/` - terms of service
+- `/refund/` - refund policy
+- `/full-report/` - prepared post-checkout 8-question paid signal flow
+
+Important files:
+
+- `index.html` - homepage/free reading
+- `script.js` - free quiz, paid quiz, cookie consent
+- `styles.css` - all site styles
+- `full-report/index.html` - paid 8-question flow
+- `lemon-squeezy-product-copy.md` - Lemon Squeezy product copy
+- `paid-report-sample.md` - paid report sample draft
+- `assets/logo-mark.svg` - site logo
+- `assets/lemon-squeezy-store-icon.png` - Lemon Squeezy store icon
+- `assets/social-preview.png` - Open Graph/social preview image
+
+## Confirmed Decisions
+
+- Free reading stays at 10 questions.
+- Paid full report adds 8 extra questions.
+- Paid 8 questions happen after checkout, not before checkout.
+- Price is `$9.99`.
+- CTA is live as `Unlock full report` and should continue to use the Worker-created checkout flow.
+- `/full-report/` is intentionally not in the main nav yet.
+- Clean URLs are preferred:
+  - `/privacy/`, not `/privacy.html`
+  - `/contact/`, not `/contact.html`
+  - logo links should go to `/`, not `index.html`
+- Footer should be centered and professional:
+  - customer support email: `support@yourloveelement.com`
+  - copyright: `© 2026 Your Love Element. All rights reserved.`
+- Cookie notice is informational and currently uses a single `Got it` action. Meta Pixel loads by default for ad measurement.
+
+## Free 10 Questions
+
+Current free reading signals:
+
+1. Current love-life state
+2. What the user wants to understand
+3. Magnetic partner quality
+4. Relationship element style
+5. Likely meaningful meeting field
+6. Pull-away pattern
+7. Secure relationship feeling
+8. Compliment/mirror signal
+9. Trusted romantic pace
+10. Birthday month/day
+
+The free preview currently outputs:
+
+- Future partner portrait
+- Element profile
+- Mini analysis:
+  - recognition sign
+  - meeting signal
+  - pattern to release
+  - next step
+
+## Paid 8 Questions
+
+Current `/full-report/` paid signal flow:
+
+1. When you start liking someone, what happens inside you first?
+2. In past relationships, which pattern has shown up most?
+3. What kind of reassurance matters most to you?
+4. How do you usually handle conflict?
+5. Which partner energy would feel most healing now?
+6. What are you no longer willing to accept?
+7. What would make you trust love faster?
+8. What kind of 30-day guidance would help you most?
+
+These are intended to refine:
+
+- attachment pattern
+- past pattern
+- reassurance need
+- conflict style
+- partner energy
+- boundaries
+- trust signal
+- 30-day guidance
+
+## Current Report Logic
+
+The current free preview is a front-end rules-based composition, not AI generation.
+
+Important behavior:
+
+- `quality` selects the main archetype:
+  - `Emotional steadiness` -> `The Grounded Visionary`
+  - `Creative ambition` -> `The Magnetic Builder`
+  - `Warm intelligence` -> `The Gentle Strategist`
+  - `Playful confidence` -> `The Bright Companion`
+- `element` selects element copy.
+- `status`, `intent`, `setting`, `block`, `secure`, and `pace` are inserted into the partner portrait and mini analysis text.
+
+Known limitation:
+
+- It does not generate a unique report for every possible answer permutation.
+- Next recommended upgrade is a scoring model:
+  - archetype score
+  - element score
+  - attachment score
+  - pace/readiness score
+  - boundary score
+  - compatibility style score
+
+## Lemon Squeezy Setup
+
+Payment approval has passed and production checkout is active.
+
+Prepared product:
+
+- Product name: `Your Love Element: Full Relationship Report`
+- Price: `$9.99`
+- Product type: digital product / personalized report
+- Store icon: `assets/lemon-squeezy-store-icon.png`
+- Product copy: `lemon-squeezy-product-copy.md`
+- Fallback post-purchase redirect: `https://yourloveelement.com/full-report/`
+- Runtime post-purchase redirect created by Worker: `https://yourloveelement.com/full-report/?reading_id=...`
+
+Completed production setup:
+
+1. Product created in Lemon Squeezy.
+2. Copy from `lemon-squeezy-product-copy.md` used for the product.
+3. Product media configured.
+4. Confirmation modal points to `/full-report/` as fallback.
+5. Email receipt points to `/full-report/` as fallback.
+6. Worker secrets configured in Cloudflare.
+7. Lemon webhook configured for `order_created` and `order_refunded`.
+8. Homepage CTA changed from `Join early access` to `Unlock full report`.
+9. Frontend pages set `window.YLE_API_BASE_URL` before loading `script.js`.
+10. Production `/api/create-checkout` verified to return a Lemon Squeezy checkout URL.
+
+## Design/Layout Decisions
+
+- Site should feel premium, intimate, and mobile-first.
+- Avoid making it look like a generic landing page.
+- Homepage hero is the main app experience, not a marketing-only hero.
+- Preview report layout has been iterated several times.
+- Current preferred structure:
+  - centered preview heading
+  - left column: long partner portrait + compressed free preview summary
+  - right column: mini analysis + refinement explanation + paid CTA
+- `Your free preview includes` should stay compact, not a large empty card.
+- Future partner portrait should be longer than the first MVP version, but the free preview should not give away the full paid report depth.
+
+## Commercial/Legal Pages
+
+Added:
+
+- Contact
+- Privacy Policy
+- Terms of Service
+- Refund Policy
+
+Important caveat:
+
+- These are practical first drafts, not legal advice.
+- Update them once final delivery, refund, data handling, and payment processes are finalized.
+
+## Cookie Consent
+
+Current behavior:
+
+- Shows a cookie consent popup.
+- Uses a single `Got it` action.
+- Stores choice in localStorage key: `yle-cookie-consent`
+- Includes a localStorage safety fallback for browsers/private modes where storage may fail.
+- The notice is informational and does not gate Meta Pixel or other measurement.
+
+Important future task:
+
+- If consent choices are reintroduced, tracking behavior and policy copy must be redesigned to match the choices shown.
+
+## DNS / GitHub Pages Notes
+
+Cloudflare DNS should include:
+
+- `@` A records:
+  - `185.199.108.153`
+  - `185.199.109.153`
+  - `185.199.110.153`
+  - `185.199.111.153`
+- Optional but currently recommended `@` AAAA records:
+  - `2606:50c0:8000::153`
+  - `2606:50c0:8001::153`
+  - `2606:50c0:8002::153`
+  - `2606:50c0:8003::153`
+- `www` CNAME:
+  - `goodrambo.github.io`
+
+All Cloudflare records should stay DNS only / gray cloud for GitHub Pages.
+
+## Gotchas / Things We Already Hit
+
+- GitHub CLI token was invalid at first; re-auth was required with `gh auth login`.
+- Local `.git` writes sometimes required escalated permissions.
+- GitHub Pages custom domain showed DNS success before HTTPS checkbox was ready.
+- HTTPS was eventually enabled successfully through GitHub API.
+- GitHub Pages builds often showed `building` for a while even after files were pushed; latest build endpoint eventually showed `built`.
+- Static clean URLs require folder-based pages:
+  - `privacy/index.html`
+  - `terms/index.html`
+  - `refund/index.html`
+  - `contact/index.html`
+- Pages inside subfolders need relative asset paths like `../assets/logo-mark.svg`, `../styles.css`, and `../script.js`.
+- Quick Look converted `social-preview.svg` to a square image, so `social-preview.png` was generated separately at proper `1200x630`.
+- The free preview logic currently depends on DOM IDs in `index.html`; changing IDs requires updating `script.js`.
+- `script.js` is shared by homepage, legal pages, and `/full-report/`, so feature initializers need to guard against missing DOM nodes.
+
+## Immediate Next Tasks
+
+Recommended next session order:
+
+1. Build a scoring model for free + paid answers.
+2. Decide final full report structure and output format:
+   - browser page
+   - PDF
+   - email delivery
+   - hybrid
+3. Run a real low-value production purchase or Lemon Squeezy test purchase, if available, to verify `order_created` webhook end to end.
+4. Confirm the paid report email is delivered after both payment and 8 deeper signals are present.
+5. Add stricter order verification before allowing `/full-report/` to submit/generate if needed.
+6. Update Terms/Refund/Privacy based on actual delivery timing and refund behavior.
+7. Test social previews with live URL after major copy/image changes.
+
+## Useful Commands
+
+Check JS:
+
+```bash
+node --check script.js
+```
+
+Run local static server:
+
+```bash
+python3 -m http.server 8765
+```
+
+Check GitHub Pages build:
+
+```bash
+gh api repos/goodrambo/your-love-element/pages/builds/latest
+```
+
+Check Pages config:
+
+```bash
+gh api repos/goodrambo/your-love-element/pages
+```
