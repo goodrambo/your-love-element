@@ -30,7 +30,8 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 - [x] Functionally review the unpublished landing redesign at desktop and `390 x 844` mobile sizes; no horizontal overflow or console warnings/errors on 2026-07-30.
 - [x] Smoke-test all 10 free questions, Earth preview/share-card generation, localhost offline mode, first-party collection isolation, and local paid-page blocking on 2026-07-30.
 - [ ] Complete the user's visual/brand review of the unpublished redesign and verify share/download behavior if those actions are in release scope.
-- [ ] Review the local diff, choose commit scope, and publish only with explicit authorization.
+- [x] Review the full verified source scope, commit it as `b9eff29`, push `codex/verified-site-seo-release`, and open draft PR [#1](https://github.com/goodrambo/your-love-element/pull/1) without changing `main` or production.
+- [ ] Review draft PR #1 and merge/publish only with explicit authorization.
 - [ ] After an authorized frontend release, validate the two new URLs in production, resubmit the sitemap in Search Console, inspect their indexing state, and begin the 30/60/90-day organic baseline in `docs/SEO_GEO_AEO_PLAN.md`.
 - [x] After the measurement deployment, verify exact Pages commit/assets, four Worker health endpoints, browser console, cache revision, auth/origin/event rejection, and allowlisted analytics ingestion.
 
@@ -52,7 +53,8 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 
 ## Maintenance
 
-- [ ] Commit and push the reviewed Harness files so fresh clones and the remote `harness` workflow receive them; this requires explicit authorization.
+- [x] Commit and push the reviewed Harness files on draft PR #1.
+- [ ] Merge draft PR #1 after review so the default branch, fresh clones, and remote `harness` workflow receive the Harness.
 - [ ] After the final hook files are committed, review and trust their exact hash with `/hooks`; repeat whenever a hook changes.
 - [ ] After the active Codex capture lifecycle is finished, audit `.git` special refs and propose a safe, separately approved cleanup; do not prune automatically.
 - [ ] Enable the GitHub `harness` workflow as a required branch-protection check if repository policy should block direct merges.
