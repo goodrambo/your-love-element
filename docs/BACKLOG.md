@@ -15,7 +15,7 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 - [x] Enforce exact `your-love-element` isolation in the repository contract, Harness, runbook, and sole `yle` heartbeat; allowlist only this filesystem/Git root, Supabase project, GitHub repository, Cloudflare Worker/zone, and Resend domain/addresses while denying every sibling asset in the same accounts.
 - [ ] Complete the organic-plan data/authority gate in `docs/runbooks/GROWTH_CONTROL_LOOP.md` by 2026-08-02: Search Console and the measurement-only GitHub/site deployment path are connected; Search Console is still processing data and a project-scoped Resend delivery aggregate remains unavailable. Lemon Squeezy and Meta access are deliberately deferred; paid media remains unauthorized at `$0`.
 - [x] Verify signed-in Supabase, Cloudflare, and Resend dashboard sessions; confirm the target Supabase project; configure and validate the project-scoped read-only Supabase MCP with schema and aggregate-only queries on 2026-07-30.
-- [ ] Complete the current baseline. First-party landing/full-report events began successfully on 2026-07-30; the seven closed Taipei days through 2026-07-29 had 0 previews, checkouts, verified purchasers/orders, refunds, and deliveries. Search Console is verified but still processing and listed zero submitted sitemaps on 2026-07-30; settled revenue, spend, CAC, and a project-scoped Resend delivery aggregate remain unavailable.
+- [ ] Complete the current baseline. First-party landing/full-report events began successfully on 2026-07-30; the seven closed Taipei days through 2026-07-29 had 0 previews, checkouts, verified purchasers/orders, refunds, and deliveries. Search Console is verified and accepted a seven-URL sitemap on 2026-07-30, but query data is still processing and both new content URLs are discovered but not yet indexed; settled revenue, spend, CAC, and a project-scoped Resend delivery aggregate remain unavailable.
 - [x] Implement and locally test the protected aggregate growth scorecard/RPC; it exposes counts only and no customer identifiers or private report data.
 - [x] Implement and locally test privacy-minimized first-party funnel/UTM aggregates; browser `purchase` is rejected and no contact, reading, answer, URL, referrer, IP, or user-agent data is stored.
 - [x] Implement and test the deterministic aggregate decision evaluator for rolling windows, milestone gaps, constraint selection, authority gating, and experiment promotion/stopping.
@@ -26,13 +26,13 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 
 - [x] Implement the initial SEO/GEO/AEO foundation: answer-first homepage content, Five Elements pillar guide, methodology/AI disclosure page, internal cluster links, schema, sitemap updates, and automated regression coverage.
 - [x] Browser-smoke the homepage and both search content pages at desktop and `390 x 844`; confirm no horizontal overflow or console warnings/errors, complete the 10-question Earth preview, and keep the local full-report page payment-locked.
-- [ ] Review the Five Elements guide and methodology copy for brand voice and cultural framing before publication.
+- [x] Review the Five Elements guide and methodology copy for brand voice and cultural framing before publication; the user approved both on 2026-07-30.
 - [x] Functionally review the unpublished landing redesign at desktop and `390 x 844` mobile sizes; no horizontal overflow or console warnings/errors on 2026-07-30.
 - [x] Smoke-test all 10 free questions, Earth preview/share-card generation, localhost offline mode, first-party collection isolation, and local paid-page blocking on 2026-07-30.
-- [ ] Complete the user's visual/brand review of the unpublished redesign. Share-card generation and the download success state were browser-verified on 2026-07-30 at `1080 x 1350` without console warnings/errors.
+- [x] Complete the user's visual/brand review of the redesign. The user approved it on 2026-07-30; share-card generation and the download success state were browser-verified at `1080 x 1350` without console warnings/errors.
 - [x] Review the full verified source scope, commit it as `b9eff29`, push `codex/verified-site-seo-release`, and open draft PR [#1](https://github.com/goodrambo/your-love-element/pull/1) without changing `main` or production.
-- [ ] Review draft PR #1 and merge/publish only with explicit authorization.
-- [ ] After an authorized frontend release, validate the two new URLs in production, resubmit the sitemap in Search Console, inspect their indexing state, and begin the 30/60/90-day organic baseline in `docs/SEO_GEO_AEO_PLAN.md`.
+- [x] Review PR #1 and merge/publish with explicit authorization. Release merge `0de5835` reached `main`; the Harness and Pages workflows both passed on 2026-07-30.
+- [x] After the authorized frontend release, validate the two new URLs in production, submit the sitemap in Search Console, inspect their indexing state, and begin the 30/60/90-day organic baseline in `docs/SEO_GEO_AEO_PLAN.md`. The sitemap succeeded with seven discovered URLs; both new pages are discovered but not yet indexed.
 - [x] After the measurement deployment, verify exact Pages commit/assets, four Worker health endpoints, browser console, cache revision, auth/origin/event rejection, and allowlisted analytics ingestion.
 
 ## Authorized measurement release
@@ -54,7 +54,7 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 ## Maintenance
 
 - [x] Commit and push the reviewed Harness files on draft PR #1.
-- [ ] Merge draft PR #1 after review so the default branch, fresh clones, and remote `harness` workflow receive the Harness.
+- [x] Merge PR #1 after review so the default branch, fresh clones, and remote `harness` workflow receive the Harness.
 - [ ] After the final hook files are committed, review and trust their exact hash with `/hooks`; repeat whenever a hook changes.
 - [ ] After the active Codex capture lifecycle is finished, audit `.git` special refs and propose a safe, separately approved cleanup; do not prune automatically.
 - [ ] Enable the GitHub `harness` workflow as a required branch-protection check if repository policy should block direct merges.

@@ -3,25 +3,28 @@ kind: current
 status: active
 last_verified: 2026-07-30
 review_after: 2026-08-05
-evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub commit 6005da3; read-only production HTTP/browser probes; project-scoped Supabase aggregate queries
+evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub release merge 0de5835 and successful Actions/Pages runs; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
 ---
 
 # Project State
 
-This is the only current-state snapshot. It describes what is verified now, distinguishes production from the dirty local worktree, and marks unknowns explicitly.
+This is the only current-state snapshot. It describes what is verified now and marks unknowns explicitly.
 
 ## Executive snapshot
 
 - Product: English Five Element-inspired relationship reading; free 10-question preview, optional `$9.99 USD` full report.
 - Production topology: GitHub Pages -> Cloudflare Worker -> Supabase / Lemon Squeezy / OpenAI / Resend, plus Meta Pixel and CAPI.
 - Production site: `https://yourloveelement.com` returned HTTP 200 on 2026-07-30.
-- Public GitHub `main` and the deployed measurement release are commit `6005da3d68076b51aa7d1e028e378c9996234040` (`Deploy privacy-safe growth measurement`). GitHub Pages served its runtime revision and CTA attributes on 2026-07-30.
-- Local branch: `codex/verified-site-seo-release`, pushed to draft PR [#1](https://github.com/goodrambo/your-love-element/pull/1) with release commit `b9eff29`. It contains the verified design, Harness, documentation, strategy, and search-visibility changes; `main` and production remain at `6005da3` until a separately reviewed merge/deployment.
+- Public GitHub `main` and GitHub Pages contain release merge `0de5835f53edf463a3de5a78d79dabbb38e4c70a` (`Publish verified site redesign and search foundation (#1)`). The user approved the homepage visual system, brand, guide, methodology copy, and this one-time release on 2026-07-30; this did not broaden the standing authority contract for future releases.
+- Local branch: clean `main`, fast-forwarded to the release merge before this state update.
 
 ## Verified production state
 
 Read-only checks on 2026-07-30 confirmed:
 
+- GitHub `harness` run `30502992951` and Pages build/deployment run `30502992303` completed successfully for release merge `0de5835`.
+- Production serves the new homepage title and cache revision, the Five Elements guide, and the methodology/limitations page. The two content pages have their intended canonical URLs; the guide exposes `Article` and `FAQPage` structured data; all three pages had no horizontal overflow or browser console warnings/errors in the release verification.
+- Production `robots.txt` references `https://yourloveelement.com/sitemap.xml`; the sitemap includes both new content URLs.
 - Worker `/api/health`: `ok: true`.
 - Supabase health: configuration present, REST reachable, sample query succeeded.
 - Email health: Resend key and sender/support domains configured. This is configuration-only and does not prove current delivery.
@@ -48,9 +51,9 @@ Fresh production proof is still required for actual email delivery, payment/webh
 - Codex growth-control heartbeat uses phased cadence: hourly during the observability/release bootstrap, every four hours after seven complete aggregate days are available, and daily at 08:30 Asia/Taipei after the first qualifying 10-purchaser day starts the streak. It is limited to read-only monitoring and safe local work until the growth runbook's authority gate is ready.
 - Project and external-account isolation are machine-checked before work. The allowlist is the exact filesystem/Git root, automation `yle`, Supabase ref `nmwhaiimnuywnjlvobde`, GitHub remote `goodrambo/your-love-element`, Cloudflare Worker `your-love-element-api` plus zone `yourloveelement.com`, and Resend domain/addresses under `yourloveelement.com`. Other repositories, sibling projects, automations, Supabase projects, Cloudflare assets, Resend domains/messages, and account-level bulk operations are denied.
 
-## Unpublished draft branch
+## Published brand and search release
 
-Draft PR [#1](https://github.com/goodrambo/your-love-element/pull/1) contains a June landing conversion and visual redesign pass:
+PR [#1](https://github.com/goodrambo/your-love-element/pull/1) was approved, changed from draft to ready for review, and merged to `main` on 2026-07-30. The published release contains:
 
 - New Fraunces/Manrope visual system and revised layout.
 - Clearer 60-second free-preview positioning.
@@ -58,11 +61,11 @@ Draft PR [#1](https://github.com/goodrambo/your-love-element/pull/1) contains a 
 - Diagnostic `landing_cta_click` event.
 - Updated logo and Lemon Squeezy icon assets.
 - Expanded documentation and the Harness introduced on 2026-07-12.
-- An initial SEO/GEO/AEO content cluster adds a comprehensive Five Elements love and compatibility guide, a transparent methodology/limitations page, answer-first homepage definitions, stronger internal linking, expanded schema, updated sitemap dates, and automated search-discovery regression checks. This work is pushed to the draft branch but remains unpublished from `main`.
+- An initial SEO/GEO/AEO content cluster with a comprehensive Five Elements love and compatibility guide, a transparent methodology/limitations page, answer-first homepage definitions, stronger internal linking, expanded schema, updated sitemap dates, and automated search-discovery regression checks.
 - A dependency-free aggregate growth decision evaluator converts scorecard/provider inputs into rolling 3/7/14-day metrics, milestone variance, one primary constraint, one pre-registered action, and experiment continue/promote/stop status. It rejects customer-level or secret-shaped input keys and remains local until aggregate production data is available.
 - A machine-validated standing-authority contract records the user's 2026-07-30 authorization for only the two measurement migrations, measurement-only Git push, Worker deployment, and frontend deployment. Organic/social publishing, customer messaging, paid-flow E2E, and paid media remain denied, with paid caps fixed at `$0`. The decision CLI intersects claimed live access with this policy so input data cannot authorize its own external action.
 
-These changes passed Harness checks and a fresh local browser smoke on 2026-07-30 at desktop and `390 x 844` mobile sizes. The test covered the homepage plus both new editorial pages, completed all 10 questions, generated the Earth preview and `1080 x 1350` share card, confirmed the download success state, found no horizontal overflow or console warnings/errors, and verified `/full-report/` stays payment-locked. The local runtime API base was blank and the local server received no API request. They have not been proven by a fresh production deployment or paid-flow E2E.
+These changes passed Harness checks and a fresh local browser smoke on 2026-07-30 at desktop and `390 x 844` mobile sizes. The test covered the homepage plus both new editorial pages, completed all 10 questions, generated the Earth preview and `1080 x 1350` share card, confirmed the download success state, found no horizontal overflow or console warnings/errors, and verified `/full-report/` stays payment-locked. The local runtime API base was blank and the local server received no API request. The subsequently deployed public pages passed the production checks listed above. Paid-flow E2E remains unproved and was not part of this release verification.
 
 ## Operational history, not current claims
 
@@ -73,17 +76,17 @@ These changes passed Harness checks and a fresh local browser smoke on 2026-07-3
 
 ## Current risks and unknowns
 
-- The local redesign has fresh functional desktop/mobile QA, but still needs user visual/brand review before publication.
-- The new search content and structured data have local automated/browser proof but still need editorial/brand review, an authorized deployment, production rich-result validation, sitemap resubmission, and Search Console query data before organic impact can be assessed.
+- The published redesign and search content have user visual/brand/editorial approval plus local and production browser proof. Organic impact still cannot be assessed until Search Console accumulates query and indexing data.
+- Search Console accepted `https://yourloveelement.com/sitemap.xml` on 2026-07-30, read it successfully, and discovered seven URLs. The new guide and methodology URLs are both `Discovered - currently not indexed` with no crawl time yet; this is pending crawler/indexing evidence, not a release failure and not a claim of organic visibility.
 - Local offline-preview isolation is browser-confirmed for the homepage and `/full-report/`; future frontend changes invalidate the recorded digest and require another smoke test.
 - The deployed aggregate scorecard plus first-party funnel collector have a narrow digest waiver after 6/6 auth/privacy/aggregation tests passed; the separate decision evaluator passes 11/11 access, reliability, fulfillment, conversion, economics, traffic, experiment, privacy/window, and standing-authority tests. Production gates confirmed Pages assets, four Worker health endpoints, auth rejection, event rejection, successful allowlisted browser ingestion, both production pages, and no browser warnings/errors. The paid-flow E2E remains `SKIPPED`, not deployment proof.
 - Email health does not prove a new email can be delivered.
 - The complete conversion funnel, settled revenue, ad state, and social publishing completion remain unknown. The first-party landing/full-report baseline began successfully on 2026-07-30. A privacy-safe direct Supabase aggregate for the seven closed Taipei days 2026-07-23 through 2026-07-29 found 0 previews, checkouts, verified purchasers/orders, refunds, and deliveries, so the current 10-purchaser streak is 0 days.
-- The in-app Browser is signed in to Supabase, Cloudflare, Resend, and Google Search Console; the `sc-domain:yourloveelement.com` property was verified through its exact DNS TXT record. Its Performance report was reachable again on 2026-07-30, reported an update five hours earlier, and still said data was processing and to return in about one day, so no search baseline exists yet. The Sitemap report listed zero submitted sitemaps; submission remains deferred until the reviewed search pages are published. Lemon Squeezy access is deliberately deferred because each login requires 2FA, and Meta is deliberately excluded from the current organic-first plan. The project-scoped `read_only=true` Supabase MCP is live for aggregate reads without customer rows; the scorecard RPC correctly rejects the MCP role because only `service_role` may execute it. Git HTTPS credentials successfully push only to `goodrambo/your-love-element`; the separate GitHub CLI token remains invalid but is no longer a deployment blocker. No local Wrangler CLI is installed. The standing-authority contract permits only measurement migrations/push/deploy while organic publishing, messages, paid E2E, and paid media remain denied at `$0`.
-- The new Harness, hooks, and CI workflow are available on draft PR #1 but not yet on the default branch. Fresh-clone and merge enforcement begin only after an authorized merge, branch-protection setup, and one-time `/hooks` review/trust for the final hook hash.
+- The in-app Browser is signed in to Supabase, Cloudflare, Resend, and Google Search Console; the `sc-domain:yourloveelement.com` property was verified through its exact DNS TXT record. Its Performance report was reachable again on 2026-07-30 but was still processing, so no search baseline exists yet. The sitemap now reports success and seven discovered URLs. Lemon Squeezy access is deliberately deferred because each login requires 2FA, and Meta is deliberately excluded from the current organic-first plan. The project-scoped `read_only=true` Supabase MCP is live for aggregate reads without customer rows; the scorecard RPC correctly rejects the MCP role because only `service_role` may execute it. Git HTTPS credentials successfully push only to `goodrambo/your-love-element`; the separate GitHub CLI token remains invalid but is no longer a deployment blocker. No local Wrangler CLI is installed. The standing-authority contract still permits only measurement migrations/push/deploy; the explicit PR #1 publication approval was one-time, while messages, paid E2E, and paid media remain denied at `$0`.
+- The Harness, hooks, and CI workflow are now on the default branch. The release run passed; branch-protection setup and one-time `/hooks` review/trust for the final hook hash remain optional maintenance work.
 - The 1.4 GB artifact archive is Git-ignored and local-only. Its `265/265` blobs were verified against the pre-cleanup capture, but it is not a fresh-clone backup.
 - `.git` is about 2.7 GB because Codex turn-diff refs and loose objects retain media history. Do not remove those refs or run destructive pruning during active work.
 
 ## Next decision point
 
-Let the hourly `yle` heartbeat collect the first seven complete Taipei measurement days, retry Search Console after its processing delay, and identify a project-scoped Resend aggregate surface without opening account-wide message/domain lists. Do not run a paid-flow E2E, send customer mail, publish organic content, use Meta, or access Lemon Squeezy without separate authorization.
+Let the hourly `yle` heartbeat collect the first seven complete Taipei measurement days, recheck Search Console after its processing/indexing delay, and identify a project-scoped Resend aggregate surface without opening account-wide message/domain lists. Do not run a paid-flow E2E, send customer mail, make another organic release, use Meta, or access Lemon Squeezy without separate authorization.
