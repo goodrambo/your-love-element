@@ -1,0 +1,45 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PYTHONDONTWRITEBYTECODE=1 python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/harness_gate.py\" session-start",
+            "commandWindows": "powershell.exe -NoProfile -NonInteractive -Command \"$env:PYTHONDONTWRITEBYTECODE='1'; & py -3 (Join-Path (git rev-parse --show-toplevel) '.codex/hooks/harness_gate.py') session-start\"",
+            "timeout": 60,
+            "statusMessage": "Checking Your Love Element Harness"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PYTHONDONTWRITEBYTECODE=1 python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/harness_gate.py\" subagent-start",
+            "commandWindows": "powershell.exe -NoProfile -NonInteractive -Command \"$env:PYTHONDONTWRITEBYTECODE='1'; & py -3 (Join-Path (git rev-parse --show-toplevel) '.codex/hooks/harness_gate.py') subagent-start\"",
+            "timeout": 30,
+            "statusMessage": "Routing project guidance"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PYTHONDONTWRITEBYTECODE=1 python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/harness_gate.py\" stop",
+            "commandWindows": "powershell.exe -NoProfile -NonInteractive -Command \"$env:PYTHONDONTWRITEBYTECODE='1'; & py -3 (Join-Path (git rev-parse --show-toplevel) '.codex/hooks/harness_gate.py') stop\"",
+            "timeout": 120,
+            "statusMessage": "Verifying Your Love Element Harness"
+          }
+        ]
+      }
+    ]
+  }
+}

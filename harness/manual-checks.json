@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "frontend_smoke": {
+    "status": "pass",
+    "verified_at": "2026-07-30",
+    "source_digest": "a275624ee4f7a3c29ccd5aa38da8134d9e6ac3f132afd947f851aefe7c0e81b2",
+    "evidence": "In-app Browser offline smoke on desktop 1280x720 and mobile 390x844: the homepage, /five-elements-love-compatibility/, and /how-it-works/ rendered their unique H1 and answer sections with no horizontal overflow or console warnings/errors; both editorial headers and main columns stayed within the mobile viewport. All 10 free questions produced the personalized Earth preview, visible share card, and enabled full-report CTA. /full-report/ stayed payment-locked in local preview. The runtime API base evaluated blank, and the local server log contained only local page/asset GETs with no local API request. Cache revision 20260730-first-party-1 remained present. The digest pins current runtime source/assets and invalidates this evidence on later changes."
+  },
+  "paid_flow_e2e": {
+    "status": "waived",
+    "verified_at": "2026-07-30",
+    "source_digest": "2e4446b25fc36285df9fba5714954e262358058354ba84e1f5d37a837f0e5adf",
+    "evidence": "Narrow digest-scoped measurement-release waiver only: the additive protected growth scorecard remains aggregate-only, and the first-party collector stores only allowlisted stage/page/UTM fields after hashing a random session UUID. It rejects frontend purchase events and untrusted origins, ignores submitted contact/reading fields, and is failure-isolated from checkout. Bundled Node syntax passed; the dedicated Worker integration suite passed 6/6 for authorization-before-query, aggregate/privacy shape, streak behavior, range validation, session hashing/field minimization, and rejection before storage; the growth evaluator passed 11/11. The parser-invalid checksum-protected 202607290001 attempt created no object; superseding 202607290002 and 202607300001 were applied to project nmwhaiimnuywnjlvobde, with both aggregate functions present, service-role-only execute, anon/authenticated denied, RLS enabled, and zero funnel event rows at verification. Existing checkout, signed webhook, paid-signal, queue, report, and email paths were not changed. The user explicitly excluded Lemon Squeezy test transactions, customer messages, and paid-flow E2E, so no production payment/email E2E was run and no deployment safety beyond this measurement-only scope is claimed. Any paid-digest change invalidates this waiver."
+  }
+}

@@ -17,6 +17,8 @@ Apply migrations only to the Your Love Element Supabase project. Do not run thes
 6. `migrations/202607290002_add_growth_scorecard_function.sql` supersedes the rejected file without rewriting it.
 7. `migrations/202607300001_add_first_party_funnel_events.sql`
 
+Existing migrations are checksum-protected by `harness/contracts.json`. Never edit an applied migration; add a new timestamped file and update both inventories.
+
 ## Access Model
 
 The GitHub Pages frontend should call the Cloudflare Workers API, not Supabase directly.

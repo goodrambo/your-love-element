@@ -16,7 +16,6 @@ Cloudflare Worker backend for the paid report automation flow.
 
 ## Required Worker Secrets
 
-- `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `LEMON_SQUEEZY_API_KEY`
 - `LEMON_SQUEEZY_STORE_ID`
@@ -27,11 +26,12 @@ Cloudflare Worker backend for the paid report automation flow.
 - `JOB_RUNNER_SECRET`
 - `META_CAPI_ACCESS_TOKEN` (required only for server-side Meta `Purchase` events)
 
-## Optional Variables
+## Runtime Variables
 
+- `SUPABASE_URL` is the non-secret project REST origin configured in `wrangler.toml`
 - `SITE_URL` defaults to `https://yourloveelement.com`
 - `SUPPORT_EMAIL` defaults to `support@yourloveelement.com`
-- `FROM_EMAIL` should be `Your Love Element <reports@yourloveelement.com>` once Resend is verified
+- `FROM_EMAIL` is configured as `Your Love Element <reports@yourloveelement.com>`
 - `OPENAI_MODEL` is currently configured as `gpt-5.5`
 - `META_PIXEL_ID` is configured as `4282306195342317`
 - `META_GRAPH_API_VERSION` defaults to `v25.0`
@@ -167,6 +167,20 @@ Current user-facing dimensions:
 
 Raw numeric scores are internal. The customer sees a narrative `Your Relationship Signal Profile` section instead of a quiz-score table.
 
+Confirmed production behavior:
+
+- New paid report emails include a computed element blend in the title, such as `Wood with Water Support`.
+- New paid report emails include `Your Relationship Signal Profile` before the main partner portrait.
+- The signal profile is the customer-facing expression of the deterministic scoring model.
+- Raw score details remain internal in `report_json.scoring_model`.
+
+Guardrails:
+
+- Keep `relationship_signal_profile` in `REPORT_SECTION_LABELS` and in the required report prompt section list.
+- Keep generated report text synchronized with normalized sections by assigning `report.text = stringifySections(report.sections)`.
+- Do not show raw numeric score tables in email unless the product direction intentionally changes.
+- If changing scoring weights, labels, prompt wording, section normalization, or email section rendering, verify a fresh delivered report email before considering the flow safe.
+
 ## Duplicate Email Prevention
 
 Full report delivery must remain idempotent. A real purchase showed that cron retries can send duplicate emails if the Resend side effect succeeds but the later database updates do not complete cleanly.
@@ -176,6 +190,9 @@ Current guardrails:
 - `sendReportEmail` sends `Idempotency-Key: full-report/{reading.id}` to Resend.
 - If a queued job loads a reading already marked `delivered` with `email_message_id`, the Worker marks the job `succeeded` and does not send again.
 - If a report was already generated, retries reuse stored `report_json`, `report_text`, and `report_html` instead of generating a new report.
+- Checkout creation, Lemon Squeezy webhooks, and paid-signal submission must not move `generating`, `report_generated`, `delivered`, or `failed` readings backward to an earlier status.
+- Already-processed Lemon Squeezy webhook IDs return as duplicates and should not patch the reading or send another Meta `Purchase`.
+- The queue processor conditionally claims `queued` jobs before generation so two Worker invocations do not process the same job at the same time.
 - Do not remove these checks when changing `processNextQueuedReportJob`, cron behavior, or the Resend payload.
 
 If duplicate full report emails reappear, inspect:

@@ -1,0 +1,259 @@
+{
+  "schema_version": 1,
+  "harness_version": "1.0.0",
+  "cache_revision": "20260730-first-party-1",
+  "state_max_review_days": 30,
+  "backlog_max_review_days": 30,
+  "manual_check_max_age_days": {
+    "frontend_smoke": 30,
+    "paid_flow_e2e": 90
+  },
+  "production": {
+    "site_url": "https://yourloveelement.com",
+    "worker_url": "https://your-love-element-api.goodrambo2013.workers.dev",
+    "support_email": "support@yourloveelement.com",
+    "meta_pixel_id": "4282306195342317"
+  },
+  "project_scope": {
+    "authorized_root": "/Users/suchinglun/Documents/Codex/product-lab/your-love-element",
+    "repository_name": "your-love-element",
+    "automation_id": "yle",
+    "supabase_project_ref": "nmwhaiimnuywnjlvobde",
+    "github_remote": "https://github.com/goodrambo/your-love-element.git",
+    "cloudflare_worker_name": "your-love-element-api",
+    "cloudflare_worker_origin": "https://your-love-element-api.goodrambo2013.workers.dev",
+    "cloudflare_zone": "yourloveelement.com",
+    "resend_domain": "yourloveelement.com",
+    "resend_from_address": "reports@yourloveelement.com",
+    "resend_support_address": "support@yourloveelement.com",
+    "deny_other_projects": true
+  },
+  "standing_authority": {
+    "schema_version": 1,
+    "grants": {
+      "apply_production_migrations": { "authorized": true, "evidence": "explicit_user_authorization:2026-07-30 apply only the two measurement migrations to Supabase project nmwhaiimnuywnjlvobde" },
+      "git_push": { "authorized": true, "evidence": "explicit_user_authorization:2026-07-30 push only measurement-related changes to goodrambo/your-love-element" },
+      "deploy_worker": { "authorized": true, "evidence": "explicit_user_authorization:2026-07-30 deploy only measurement infrastructure to Cloudflare Worker your-love-element-api" },
+      "deploy_frontend": { "authorized": true, "evidence": "explicit_user_authorization:2026-07-30 deploy only measurement-related frontend changes for yourloveelement.com" },
+      "publish_organic": { "authorized": false, "evidence": null },
+      "run_paid_flow_e2e": { "authorized": false, "evidence": null },
+      "send_customer_messages": { "authorized": false, "evidence": null }
+    },
+    "paid_media": {
+      "authorized": false,
+      "currency": "USD",
+      "daily_cap": 0,
+      "lifetime_cap": 0,
+      "max_increase_percent_per_24h": 20,
+      "evidence": null
+    }
+  },
+  "required_files": [
+    "AGENTS.md",
+    "README.md",
+    "PROJECT_HANDOFF.md",
+    "docs/PROJECT_STATE.md",
+    "docs/BACKLOG.md",
+    "docs/decisions/README.md",
+    "docs/runbooks/README.md",
+    "harness/README.md",
+    "harness/contracts.json",
+    "harness/routes.json",
+    "harness/manual-checks.json",
+    "scripts/harness.py",
+    "assets/runtime-config.js",
+    ".codex/config.toml",
+    ".codex/hooks.json",
+    ".codex/hooks/harness_gate.py",
+    ".githooks/pre-commit",
+    ".github/workflows/harness.yml"
+  ],
+  "active_memory": [
+    { "path": "AGENTS.md", "max_lines": 120 },
+    { "path": "docs/PROJECT_STATE.md", "max_lines": 180 },
+    { "path": "docs/BACKLOG.md", "max_lines": 100 },
+    { "path": "PROJECT_HANDOFF.md", "max_lines": 30 }
+  ],
+  "html_files": [
+    "index.html",
+    "five-elements-love-compatibility/index.html",
+    "how-it-works/index.html",
+    "full-report/index.html",
+    "privacy/index.html",
+    "terms/index.html",
+    "refund/index.html",
+    "contact/index.html"
+  ],
+  "javascript_files": [
+    "script.js",
+    "assets/runtime-config.js",
+    "assets/tracking-config.js",
+    "assets/meta-pixel-base.js",
+    "worker/src/index.js",
+    "scripts/growth-control.mjs"
+  ],
+  "javascript_tests": [
+    "worker/test/growth-metrics.test.mjs",
+    "scripts/test/growth-control.test.mjs",
+    "scripts/test/seo.test.mjs"
+  ],
+  "frontend_manual_digest_files": [
+    "index.html",
+    "five-elements-love-compatibility/index.html",
+    "how-it-works/index.html",
+    "full-report/index.html",
+    "privacy/index.html",
+    "terms/index.html",
+    "refund/index.html",
+    "contact/index.html",
+    "styles.css",
+    "script.js",
+    "assets/runtime-config.js",
+    "assets/tracking-config.js",
+    "assets/meta-pixel-base.js",
+    "assets/logo-mark.svg",
+    "assets/hero-soulmate-report.png",
+    "assets/lemon-squeezy-store-icon.png",
+    "assets/lemon-squeezy-store-icon.svg",
+    "assets/social-preview.png",
+    "assets/social-preview.svg",
+    "assets/elements/earth-banner.jpg",
+    "assets/elements/fire-banner.jpg",
+    "assets/elements/metal-banner.jpg",
+    "assets/elements/water-banner.jpg",
+    "assets/elements/wood-banner.jpg",
+    "assets/share-templates/earth.png",
+    "assets/share-templates/fire.png",
+    "assets/share-templates/metal.png",
+    "assets/share-templates/water.png",
+    "assets/share-templates/wood.png"
+  ],
+  "paid_flow_manual_digest_files": [
+    "worker/src/index.js",
+    "worker/wrangler.toml",
+    "script.js",
+    "full-report/index.html",
+    "supabase/migrations/202605050001_create_paid_report_schema.sql",
+    "supabase/migrations/202605050002_harden_paid_report_functions.sql",
+    "supabase/migrations/202605050003_revoke_public_rls_auto_enable.sql",
+    "supabase/migrations/202605060001_grant_service_role_paid_report_tables.sql",
+    "supabase/migrations/202607290001_add_growth_scorecard_function.sql",
+    "supabase/migrations/202607290002_add_growth_scorecard_function.sql",
+    "supabase/migrations/202607300001_add_first_party_funnel_events.sql"
+  ],
+  "forbidden_active_paths": [
+    "assets/social",
+    "assets/meta-low-risk",
+    "demo"
+  ],
+  "ignored_roots": [
+    ".git",
+    ".harness",
+    "artifacts"
+  ],
+  "max_active_binary_bytes": 15728640,
+  "protected_migrations": {
+    "supabase/migrations/202605050001_create_paid_report_schema.sql": "542c98c86f28f06a83ac0fc6468c7dc422861fd42bf86fffa2e788733b3b3acf",
+    "supabase/migrations/202605050002_harden_paid_report_functions.sql": "a07e885f39a864ede7da2b92643c09985a5953e94e293d22912e6230402c5059",
+    "supabase/migrations/202605050003_revoke_public_rls_auto_enable.sql": "10cd96d68adee3ad9070e9924d6b3c321f827a5c4a24652b304bb516bd1b22aa",
+    "supabase/migrations/202605060001_grant_service_role_paid_report_tables.sql": "4479cc6c812c9ffb38b3872e252a4533bab06cd2d76c4e3d03a3fd3541180a40",
+    "supabase/migrations/202607290001_add_growth_scorecard_function.sql": "b64ef17e41279631943ca10fcc5d11ace0c156a47113e992f3665c6a604b0a73",
+    "supabase/migrations/202607290002_add_growth_scorecard_function.sql": "63a39933a64c1c22077b88cbed6468915f07487de7002effce76e07335ea3f34",
+    "supabase/migrations/202607300001_add_first_party_funnel_events.sql": "69ba9d385919f9263b537504bc762abcba31c70cf6f10203e639f115402d213e"
+  },
+  "required_literals": [
+    {
+      "id": "worker-signature-verification",
+      "path": "worker/src/index.js",
+      "value": "if (!timingSafeEqual(signature, expected))"
+    },
+    {
+      "id": "worker-dynamic-reading-id",
+      "path": "worker/src/index.js",
+      "value": "reading_id: readingId"
+    },
+    {
+      "id": "worker-locked-statuses",
+      "path": "worker/src/index.js",
+      "value": "new Set([\"generating\", \"report_generated\", \"delivered\", \"failed\"])"
+    },
+    {
+      "id": "resend-idempotency",
+      "path": "worker/src/index.js",
+      "value": "\"idempotency-key\": `full-report/${reading.id}`"
+    },
+    {
+      "id": "meta-purchase-webhook-only",
+      "path": "worker/src/index.js",
+      "value": "if (eventName === \"order_created\")"
+    },
+    {
+      "id": "local-offline-mode",
+      "path": "assets/runtime-config.js",
+      "value": "window.YLE_RUNTIME_MODE = isLocal ? \"local-preview\" : \"production\""
+    },
+    {
+      "id": "production-host-allowlist",
+      "path": "assets/runtime-config.js",
+      "value": "new Set([\"yourloveelement.com\", \"www.yourloveelement.com\"])"
+    },
+    {
+      "id": "tracking-production-only",
+      "path": "assets/tracking-config.js",
+      "value": "window.YLE_RUNTIME_MODE === \"production\""
+    },
+    {
+      "id": "codex-session-hook",
+      "path": ".codex/hooks.json",
+      "value": "\"SessionStart\""
+    },
+    {
+      "id": "codex-stop-hook",
+      "path": ".codex/hooks.json",
+      "value": "\"Stop\""
+    },
+    {
+      "id": "git-precommit-gate",
+      "path": ".githooks/pre-commit",
+      "value": "scripts/harness.py verify --scope auto --staged"
+    },
+    {
+      "id": "github-ci-gate",
+      "path": ".github/workflows/harness.yml",
+      "value": "python3 scripts/harness.py verify --scope all --ci"
+    }
+  ],
+  "forbidden_patterns": [
+    {
+      "id": "frontend-purchase-event",
+      "path": "script.js",
+      "pattern": "[\\\"']Purchase[\\\"']"
+    },
+    {
+      "id": "frontend-first-party-purchase-event",
+      "path": "script.js",
+      "pattern": "[\\\"']purchase[\\\"']"
+    },
+    {
+      "id": "inline-production-api-index",
+      "path": "index.html",
+      "pattern": "goodrambo2013\\.workers\\.dev"
+    },
+    {
+      "id": "inline-production-api-paid-page",
+      "path": "full-report/index.html",
+      "pattern": "goodrambo2013\\.workers\\.dev"
+    }
+  ],
+  "secret_names_forbidden_in_wrangler": [
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "LEMON_SQUEEZY_API_KEY",
+    "LEMON_SQUEEZY_STORE_ID",
+    "LEMON_SQUEEZY_VARIANT_ID",
+    "LEMON_SQUEEZY_WEBHOOK_SECRET",
+    "OPENAI_API_KEY",
+    "RESEND_API_KEY",
+    "JOB_RUNNER_SECRET",
+    "META_CAPI_ACCESS_TOKEN"
+  ]
+}

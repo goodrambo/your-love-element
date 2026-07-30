@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+export PYTHONDONTWRITEBYTECODE=1
+
+if command -v python3 >/dev/null 2>&1; then
+  PYTHON=python3
+elif command -v python >/dev/null 2>&1; then
+  PYTHON=python
+elif command -v py >/dev/null 2>&1; then
+  PYTHON="py -3"
+else
+  echo "Harness requires Python 3." >&2
+  exit 1
+fi
+
+$PYTHON scripts/harness.py verify --scope auto --staged

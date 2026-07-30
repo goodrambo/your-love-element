@@ -1,0 +1,113 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import test from "node:test";
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const contracts = JSON.parse(readFileSync(resolve(root, "harness/contracts.json"), "utf8"));
+const origin = contracts.production.site_url;
+
+function read(relativePath) {
+  return readFileSync(resolve(root, relativePath), "utf8");
+}
+
+function firstMatch(html, expression, label) {
+  const match = html.match(expression);
+  assert.ok(match, `Missing ${label}`);
+  return match[1].trim();
+}
+
+function jsonLdBlocks(html) {
+  return [...html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)].map((match) => JSON.parse(match[1]));
+}
+
+function graphTypes(html) {
+  return new Set(
+    jsonLdBlocks(html)
+      .flatMap((payload) => payload["@graph"] || [payload])
+      .flatMap((item) => Array.isArray(item["@type"]) ? item["@type"] : [item["@type"]])
+      .filter(Boolean),
+  );
+}
+
+test("indexable pages have unique search metadata and sitemap entries", () => {
+  const sitemap = read("sitemap.xml");
+  const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
+  const titles = new Set();
+  const descriptions = new Set();
+
+  for (const relativePath of contracts.html_files) {
+    const html = read(relativePath);
+    const title = firstMatch(html, /<title>([^<]+)<\/title>/i, `${relativePath} title`);
+    const description = firstMatch(html, /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i, `${relativePath} description`);
+    const canonical = firstMatch(html, /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i, `${relativePath} canonical`);
+    const h1Count = (html.match(/<h1\b/gi) || []).length;
+    const noindex = /<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html);
+
+    assert.equal(h1Count, 1, `${relativePath} must have exactly one h1`);
+    assert.ok(canonical.startsWith(`${origin}/`), `${relativePath} canonical must use the production origin`);
+    assert.ok(!titles.has(title), `${relativePath} title must be unique`);
+    assert.ok(!descriptions.has(description), `${relativePath} description must be unique`);
+    titles.add(title);
+    descriptions.add(description);
+
+    if (noindex) {
+      assert.ok(!sitemapUrls.has(canonical), `${relativePath} is noindex and must stay out of the sitemap`);
+    } else {
+      assert.ok(sitemapUrls.has(canonical), `${relativePath} is indexable and must be in the sitemap`);
+    }
+  }
+});
+
+test("sitemap dates and robots discovery instructions are valid", () => {
+  const sitemap = read("sitemap.xml");
+  const robots = read("robots.txt");
+  const urls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+  const lastModified = [...sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((match) => match[1]);
+
+  assert.equal(new Set(urls).size, urls.length, "Sitemap URLs must be unique");
+  assert.ok(urls.every((url) => url.startsWith(`${origin}/`)), "Sitemap URLs must use the production origin");
+  assert.ok(lastModified.every((date) => /^\d{4}-\d{2}-\d{2}$/.test(date)), "Sitemap lastmod values must use YYYY-MM-DD");
+  assert.match(robots, /User-agent:\s*\*/i);
+  assert.match(robots, /Allow:\s*\//i);
+  assert.match(robots, new RegExp(`Sitemap:\\s*${origin.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\/sitemap\\.xml`, "i"));
+});
+
+test("homepage exposes the entity, product, answer, and content-cluster signals", () => {
+  const html = read("index.html");
+  const types = graphTypes(html);
+
+  for (const type of ["Organization", "WebSite", "WebPage", "Product", "FAQPage"]) {
+    assert.ok(types.has(type), `Homepage JSON-LD must include ${type}`);
+  }
+  assert.match(html, /<h2[^>]*>What are the five love elements\?<\/h2>/i);
+  assert.match(html, /href=["']\/five-elements-love-compatibility\/["']/i);
+  assert.match(html, /href=["']\/how-it-works\/["']/i);
+  assert.match(html, /\$9\.99/);
+});
+
+test("editorial pages are answer-first, transparent, and structured", () => {
+  for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
+    const html = read(relativePath);
+    const types = graphTypes(html);
+
+    for (const type of ["WebPage", "Article", "BreadcrumbList", "FAQPage"]) {
+      assert.ok(types.has(type), `${relativePath} JSON-LD must include ${type}`);
+    }
+    assert.match(html, /<strong>Short answer:<\/strong>/i);
+    assert.match(html, /Published and reviewed by Your Love Element/i);
+    assert.match(html, /content=["']index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1["']/i);
+    assert.ok(jsonLdBlocks(html).every((payload) => JSON.stringify(payload).length > 100), `${relativePath} JSON-LD must not be empty`);
+  }
+});
+
+test("methodology states the AI and traditional-chart boundaries", () => {
+  const html = read("how-it-works/index.html");
+  const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+
+  assert.match(text, /The free preview does not use generative AI/i);
+  assert.match(text, /The paid full report does use AI after payment is verified/i);
+  assert.match(text, /does not collect birth year, birth time, birthplace/i);
+  assert.match(text, /cannot verify a soulmate/i);
+});

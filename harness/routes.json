@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "routes": {
+    "docs": [
+      "docs/AGENTS.md",
+      "docs/PROJECT_STATE.md",
+      "docs/README.md"
+    ],
+    "frontend": [
+      "docs/03-frontend-implementation.md",
+      "docs/12-pitfalls-and-guardrails.md",
+      "docs/runbooks/DEVELOPMENT.md"
+    ],
+    "tracking": [
+      "META_TRACKING_SETUP.md",
+      "docs/08-tracking-and-analytics.md",
+      "docs/decisions/0003-server-only-meta-purchase.md"
+    ],
+    "worker": [
+      "worker/AGENTS.md",
+      "worker/README.md",
+      "docs/04-backend-worker-implementation.md",
+      "docs/decisions/0004-idempotent-report-delivery.md"
+    ],
+    "database": [
+      "supabase/AGENTS.md",
+      "supabase/README.md",
+      "docs/05-supabase-database.md"
+    ],
+    "paid_flow": [
+      "docs/06-commerce-and-fulfillment.md",
+      "docs/07-ai-report-generation.md",
+      "docs/runbooks/PAID_FLOW_E2E.md",
+      "docs/decisions/0002-worker-boundary-and-dynamic-checkout.md",
+      "docs/decisions/0004-idempotent-report-delivery.md"
+    ],
+    "deployment": [
+      "docs/runbooks/DEPLOYMENT.md",
+      "docs/11-deployment-and-operations.md",
+      "docs/14-third-party-platforms.md"
+    ],
+    "social": [
+      "docs/runbooks/SOCIAL_PUBLISHING.md",
+      "docs/09-visual-assets-and-social.md",
+      "docs/decisions/0005-artifact-separation.md"
+    ],
+    "search_visibility": [
+      "docs/SEO_GEO_AEO_PLAN.md",
+      "docs/03-frontend-implementation.md",
+      "docs/12-pitfalls-and-guardrails.md",
+      "docs/runbooks/DEPLOYMENT.md"
+    ]
+  }
+}

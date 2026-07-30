@@ -1,2 +1,16 @@
+# Operating-system and language caches
 .DS_Store
+__pycache__/
+*.py[cod]
 
+# Harness run state is local evidence, never project memory.
+.harness/
+
+# Generated media and dated exports stay outside the active source tree.
+# Keep the policy file itself under version control.
+artifacts/*
+!artifacts/README.md
+
+# Local server and diagnostic output
+*.log
+.codex-log/
