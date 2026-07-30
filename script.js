@@ -106,6 +106,13 @@ const moods = [
   "Your birth signal",
 ];
 
+const intentGoalCopy = {
+  "Who I naturally attract": "understand who you naturally attract",
+  "Why old patterns repeat": "see why old patterns repeat",
+  "When love may feel easier": "recognize when love may feel easier",
+  "What kind of partner truly fits me": "recognize what kind of partner truly fits you",
+};
+
 const elementCopy = {
   Wood: "Growth-oriented love, patient timing, and a partner who helps your life expand.",
   Fire: "Magnetic chemistry, brave expression, and a relationship that asks for aliveness.",
@@ -753,6 +760,20 @@ function validateBirthdate(form) {
   return Boolean(month && Number.isInteger(day) && day >= 1 && day <= maxDay);
 }
 
+function birthdateValidationMessage(form) {
+  const month = form?.elements?.month?.value || "";
+  const rawDay = String(form?.elements?.day?.value || "").trim();
+  if (!month) {
+    return "Choose your birth month.";
+  }
+  if (!rawDay) {
+    return "Enter your birth day.";
+  }
+
+  const maxDay = monthDayLimits[month] || 31;
+  return `Enter a day from 1 to ${maxDay} for ${month}.`;
+}
+
 function syncBirthDayLimit(form) {
   const month = form?.elements?.month?.value || "";
   const dayField = form?.elements?.day;
@@ -787,7 +808,7 @@ function validateStep(step, target, form) {
   if (step.querySelector(".date-grid")) {
     const isValid = validateBirthdate(form);
     if (!isValid) {
-      showValidation(target, step, "Choose a valid day for the selected birth month.");
+      showValidation(target, step, birthdateValidationMessage(form));
       return false;
     }
     clearStepValidation(target, step);
@@ -882,7 +903,7 @@ async function saveFreeAnswers() {
   setStorageItem(freeAnswersStorageKey, JSON.stringify(answers));
 
   if (!apiBaseUrl) {
-    setStatus(readingSaveStatus, "Preview saved in this browser. Checkout automation will activate after payment setup.", "neutral");
+    setStatus(readingSaveStatus, "Preview saved in this browser. Local preview mode keeps checkout safely disabled.", "neutral");
     return null;
   }
 
@@ -989,8 +1010,9 @@ function selectedValue(name) {
 function buildPortraitText({ status, intent, quality, setting, element, block, secure, pace }) {
   const profile = qualityProfiles[quality];
   const elementLine = elementCopy[element];
+  const intentGoal = intentGoalCopy[intent] || lowerInitial(intent);
 
-  return `Because you selected "${status}", your future partner portrait begins with someone ${profile.partner}. ${profile.pull} You are not simply looking for a spark; you are looking for a person whose rhythm helps you explore "${intent}" without making love feel like a test.\n\nYour ${element} profile adds an important layer: ${elementLine} This suggests that the person who fits you best will not only match your chemistry, but also support the kind of emotional climate where ${lowerInitial(secure)} can become ordinary. The meeting signal points toward ${lowerInitial(setting)}, especially when the pace feels ${lowerInitial(pace)} rather than forced.\n\nThe pattern to watch is ${lowerInitial(block)}. If that old signal appears, pause before deciding whether it is intuition or protection. Your preview suggests your next meaningful connection should feel clear enough to soften your guard, but grounded enough that you do not have to chase certainty.`;
+  return `Your answers point to someone ${profile.partner}. ${profile.pull}\n\nYour ${element} pattern emphasizes ${lowerInitial(elementLine)} Together with ${lowerInitial(secure)} and a ${lowerInitial(pace)} pace, that suggests a bond that feels reliable without becoming flat.\n\nLook for this connection ${lowerInitial(setting)}. The pattern to watch is ${lowerInitial(block)}; when it appears, notice whether you are reading the present or protecting yourself from the past. You want to ${intentGoal}, and the clearest signal will be consistency you do not have to chase.`;
 }
 
 async function revealPreview() {
@@ -1024,7 +1046,7 @@ async function revealPreview() {
   recognitionText.textContent = profile.recognition;
   meetingText.textContent = `Your strongest meeting signal is ${lowerInitial(setting)}, especially when the pace feels ${lowerInitial(pace)} rather than forced.`;
   releaseText.textContent = `${block} may be the pattern to watch. Your preview suggests you should not confuse intensity with emotional alignment.`;
-  adviceText.textContent = `Because you are seeking "${intent}", choose the person who makes ${lowerInitial(secure)} feel possible in ordinary life.`;
+  adviceText.textContent = `As you ${intentGoalCopy[intent] || lowerInitial(intent)}, choose the person who makes ${lowerInitial(secure)} feel possible in ordinary life.`;
   prepareShareCard({
     element,
     title: profile.title,
@@ -1080,7 +1102,12 @@ function initQuiz() {
       unlockReportButton.setAttribute("aria-disabled", "true");
       unlockReportButton.textContent = "Reveal free preview first";
     }
-    validateStep(steps[currentStep], quizValidation, form);
+    const activeStep = steps[currentStep];
+    if (activeStep?.querySelector(".date-grid")) {
+      clearStepValidation(quizValidation, activeStep);
+    } else {
+      validateStep(activeStep, quizValidation, form);
+    }
 
     const target = event.target;
     if (!(target instanceof HTMLInputElement) || target.type !== "radio") {
