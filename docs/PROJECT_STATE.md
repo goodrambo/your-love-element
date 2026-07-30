@@ -3,7 +3,7 @@ kind: current
 status: active
 last_verified: 2026-07-30
 review_after: 2026-08-05
-evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub release merge 0de5835 and successful Actions/Pages runs; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
+evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub release merge 0de5835 plus state commit 558a7e1 and successful Actions/Pages runs; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
 ---
 
 # Project State
@@ -15,14 +15,14 @@ This is the only current-state snapshot. It describes what is verified now and m
 - Product: English Five Element-inspired relationship reading; free 10-question preview, optional `$9.99 USD` full report.
 - Production topology: GitHub Pages -> Cloudflare Worker -> Supabase / Lemon Squeezy / OpenAI / Resend, plus Meta Pixel and CAPI.
 - Production site: `https://yourloveelement.com` returned HTTP 200 on 2026-07-30.
-- Public GitHub `main` and GitHub Pages contain release merge `0de5835f53edf463a3de5a78d79dabbb38e4c70a` (`Publish verified site redesign and search foundation (#1)`). The user approved the homepage visual system, brand, guide, methodology copy, and this one-time release on 2026-07-30; this did not broaden the standing authority contract for future releases.
-- Local branch: clean `main`, fast-forwarded to the release merge before this state update.
+- Public GitHub `main` includes release merge `0de5835f53edf463a3de5a78d79dabbb38e4c70a` (`Publish verified site redesign and search foundation (#1)`) and documentation-only follow-up `558a7e100fa08b0c974344a6aceea9ea9b5b306b` (`Record verified production release`). The user approved the homepage visual system, brand, guide, methodology copy, and this one-time release on 2026-07-30; this did not broaden the standing authority contract for future releases.
+- Local branch: clean `main` synchronized with `origin/main` at preflight before this documentation-only closeout update.
 
 ## Verified production state
 
 Read-only checks on 2026-07-30 confirmed:
 
-- GitHub `harness` run `30502992951` and Pages build/deployment run `30502992303` completed successfully for release merge `0de5835`.
+- GitHub `harness` run `30502992951` and Pages build/deployment run `30502992303` completed successfully for release merge `0de5835`. The documentation-only follow-up `558a7e1` also passed Harness run `30503346309` and Pages run `30503345639`.
 - Production serves the new homepage title and cache revision, the Five Elements guide, and the methodology/limitations page. The two content pages have their intended canonical URLs; the guide exposes `Article` and `FAQPage` structured data; all three pages had no horizontal overflow or browser console warnings/errors in the release verification.
 - Production `robots.txt` references `https://yourloveelement.com/sitemap.xml`; the sitemap includes both new content URLs.
 - Worker `/api/health`: `ok: true`.
@@ -32,7 +32,7 @@ Read-only checks on 2026-07-30 confirmed:
 - The protected growth scorecard route is deployed: an unauthenticated request returns HTTP 401. Its positive bearer-secret path passed the dedicated integration test but was not called in production because the secret was not exposed to this session.
 - The analytics route is deployed: an untrusted origin returns HTTP 403 and frontend `Purchase` returns HTTP 400 before storage. Production browser loads created exactly one `landing/page_view`, one `landing/view_content`, and one `full_report/page_view` event across the verification session; a project-scoped aggregate query confirmed them without returning hashes or identifiers.
 - Supabase production has service-role-only `get_growth_scorecard`, `funnel_events`, `funnel_event_maintenance`, and `get_first_party_funnel_scorecard` after the corrected migrations were applied on 2026-07-30. RLS is enabled and `anon`/`authenticated` execute is denied.
-- Public GitHub repository and production Pages are reachable. The GitHub connector confirmed the exact remote commit and files; GitHub reported no commit status checks for this direct `main` push.
+- Public GitHub repository and production Pages are reachable; commit `558a7e1` is the latest fully verified Pages deployment recorded here, with both associated workflows successful. Later documentation-only closeout commits do not alter the verified runtime release behavior.
 
 Fresh production proof is still required for actual email delivery, payment/webhook behavior, report content, and Meta event receipt after any related deployment.
 
