@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "harness_version": "1.0.0",
-  "cache_revision": "20260730-first-party-1",
+  "cache_revision": "20260730-ux-audit-1",
   "state_max_review_days": 30,
   "backlog_max_review_days": 30,
   "manual_check_max_age_days": {
@@ -32,9 +32,9 @@
     "schema_version": 1,
     "grants": {
       "apply_production_migrations": { "authorized": true, "evidence": "explicit_user_authorization:2026-07-30 apply only the two measurement migrations to Supabase project nmwhaiimnuywnjlvobde" },
-      "git_push": { "authorized": true, "evidence": "explicit_user_authorization:2026-07-30 push only measurement-related changes to goodrambo/your-love-element" },
+      "git_push": { "authorized": true, "evidence": "explicit_user_authorization:2026-07-30 autonomously commit and push verified low-risk measurement, conversion, and SEO changes only to goodrambo/your-love-element" },
       "deploy_worker": { "authorized": true, "evidence": "explicit_user_authorization:2026-07-30 deploy only measurement infrastructure to Cloudflare Worker your-love-element-api" },
-      "deploy_frontend": { "authorized": true, "evidence": "explicit_user_authorization:2026-07-30 deploy only measurement-related frontend changes for yourloveelement.com" },
+      "deploy_frontend": { "authorized": true, "evidence": "explicit_user_authorization:2026-07-30 autonomously deploy verified low-risk measurement, conversion, and SEO changes only for yourloveelement.com" },
       "publish_organic": { "authorized": false, "evidence": null },
       "run_paid_flow_e2e": { "authorized": false, "evidence": null },
       "send_customer_messages": { "authorized": false, "evidence": null }

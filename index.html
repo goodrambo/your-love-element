@@ -25,13 +25,13 @@
     <meta name="theme-color" content="#221b18" />
     <link rel="icon" href="assets/logo-mark.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="assets/lemon-squeezy-store-icon.png" />
-    <script src="assets/runtime-config.js?v=20260730-first-party-1"></script>
-    <script src="assets/tracking-config.js?v=20260730-first-party-1"></script>
-    <script src="assets/meta-pixel-base.js?v=20260730-first-party-1"></script>
+    <script src="assets/runtime-config.js?v=20260730-ux-audit-1"></script>
+    <script src="assets/tracking-config.js?v=20260730-ux-audit-1"></script>
+    <script src="assets/meta-pixel-base.js?v=20260730-ux-audit-1"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=20260730-first-party-1" />
+    <link rel="stylesheet" href="styles.css?v=20260730-ux-audit-1" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -324,6 +324,7 @@
           <p class="eyebrow" id="previewEyebrow">Sample preview report</p>
           <h2 id="previewTitle">Your first love signal appears after the 10 questions.</h2>
           <p class="section-intro" id="previewIntro">This sample shows the shape of the preview. Complete the reading above to replace it with your own element profile, partner archetype, meeting signal, and next step.</p>
+          <a class="primary-action preview-offer-link" href="#unlockReport" data-track-cta="preview_offer">See the full $9.99 report</a>
         </div>
 
         <div class="result-layout">
@@ -368,6 +369,25 @@
             </div>
           </article>
 
+          <article class="unlock-box" id="unlockReport">
+            <div>
+              <p class="card-kicker">Full report - $9.99</p>
+              <h3>Go deeper only after the free preview feels useful.</h3>
+              <ul class="offer-list" aria-label="Full report purchase details">
+                <li>Includes 8 follow-up signals for attachment, conflict, reassurance, boundaries, trust, and 30-day guidance.</li>
+                <li>Most reports arrive by email within a few minutes after payment is confirmed and you complete your deeper answers.</li>
+                <li>One-time $9.99 USD purchase with secure checkout by Lemon Squeezy.</li>
+              </ul>
+            </div>
+            <label class="checkout-email">
+              <span>Delivery email</span>
+              <input id="checkoutEmail" type="email" inputmode="email" autocomplete="email" spellcheck="false" placeholder="you@example.com" aria-describedby="checkoutEmailHelp" required />
+              <small id="checkoutEmailHelp">Used for checkout and report delivery. Never required for the free preview.</small>
+            </label>
+            <a class="price-button" id="unlockReportButton" href="/full-report/" aria-disabled="true">Reveal free preview first</a>
+            <p class="api-status" id="readingSaveStatus" hidden></p>
+          </article>
+
           <article class="share-card" id="shareCardPanel" hidden>
             <div class="share-card-copy">
               <p class="card-kicker">Share card</p>
@@ -382,25 +402,6 @@
             <div class="share-preview-frame">
               <img id="shareCardPreview" alt="Your Love Element share card preview" />
             </div>
-          </article>
-
-          <article class="unlock-box">
-            <div>
-              <p class="card-kicker">Full report - $9.99</p>
-              <h3>Go deeper only after the free preview feels useful.</h3>
-              <ul class="offer-list" aria-label="Full report purchase details">
-                <li>Includes 8 follow-up signals for attachment, conflict, reassurance, boundaries, trust, and 30-day guidance.</li>
-                <li>Delivered by email after payment and your deeper answers are received.</li>
-                <li>Reflective personal insight and entertainment, with support for delivery or charge issues.</li>
-              </ul>
-            </div>
-            <label class="checkout-email">
-              <span>Delivery email</span>
-              <input id="checkoutEmail" type="email" autocomplete="email" placeholder="you@example.com" />
-              <small>Your Lemon checkout and full report delivery will use this email.</small>
-            </label>
-            <a class="price-button" id="unlockReportButton" href="/full-report/" aria-disabled="true">Reveal free preview first</a>
-            <p class="api-status" id="readingSaveStatus" hidden></p>
           </article>
         </div>
       </section>
@@ -560,7 +561,7 @@
 
     <div class="cookie-consent" id="cookieConsent" role="dialog" aria-live="polite" aria-label="Cookie notice" hidden>
       <div>
-        <p class="cookie-title">Cookie preferences</p>
+        <p class="cookie-title">Cookie notice</p>
         <p class="cookie-copy">We use cookies to run and measure the site.</p>
       </div>
       <div class="cookie-actions">
@@ -568,6 +569,6 @@
       </div>
     </div>
 
-    <script src="script.js?v=20260730-first-party-1"></script>
+    <script src="script.js?v=20260730-ux-audit-1"></script>
   </body>
 </html>

@@ -48,17 +48,17 @@ Automation is not operationally autonomous until every capability used by the ac
 | --- | --- | --- |
 | Production and Worker health | Read-only HTTP access to site and four health endpoints | Ready; all returned HTTP 200 with healthy/configured responses on 2026-07-30 |
 | Authoritative purchases and refunds | Lemon Squeezy orders/subscriptions/refunds read access, or reconciled Supabase webhook-backed aggregates | Lemon dashboard/API access deferred by the user because every login requires 2FA; use Supabase webhook-backed state provisionally, while settled revenue remains unavailable |
-| Reading funnel and fulfillment | Supabase aggregate read access to `readings`, `webhook_events`, and jobs, or a protected aggregate endpoint | Partial; project-scoped read-only MCP completed schema/aggregate queries, and the corrected scorecard/funnel migrations were deployed with service-role-only execute and RLS on 2026-07-30. The Worker route and frontend collector remain unpublished pending GitHub re-authentication |
-| Traffic and frontend funnel | First-party funnel plus Google Search Console for the organic plan; Meta only if later reintroduced | Partial; the `sc-domain:yourloveelement.com` Search Console property was DNS-verified and Overview access confirmed on 2026-07-30, but its performance baseline is not yet captured; Meta is deliberately excluded and the first-party collector remains unpublished |
-| Deploy and rollback | Valid GitHub write authentication plus Cloudflare deployment visibility | Partial; Cloudflare dashboard login verified, but GitHub CLI write authentication and deployment authority remain unavailable |
+| Reading funnel and fulfillment | Supabase aggregate read access to `readings`, `webhook_events`, and jobs, or a protected aggregate endpoint | Ready for aggregate collection; project-scoped read-only MCP completed schema/aggregate queries, and the corrected scorecard/funnel migrations, Worker route, and frontend collector were deployed and verified on 2026-07-30. The bearer-protected scorecard remains unavailable to a scheduled run unless `JOB_RUNNER_SECRET` exists in that live environment |
+| Traffic and frontend funnel | First-party funnel plus Google Search Console for the organic plan; Meta only if later reintroduced | Partial; the first-party collector is deployed and receiving allowlisted events, and `sc-domain:yourloveelement.com` was DNS-verified with a successful seven-URL sitemap. Search Console performance is still processing; Meta is deliberately excluded |
+| Deploy and rollback | Valid GitHub write authentication plus Cloudflare deployment visibility | Partial; exact-repository Git HTTPS and Cloudflare deployment paths have worked, and standing authority now covers verified low-risk site conversion/SEO releases. The local `gh` CLI token needs one-time re-authentication before the guarded branch/PR release workflow can run again |
 | Email deliverability | Resend email-log read access | Partial; Resend dashboard login verified, but a current delivery-log sample has not been captured |
-| Organic publishing | Authorized site/SEO publication path and standing publication authority | Blocked/unapproved; Meta/Instagram publishing is not part of the current organic plan |
+| Organic publishing | Authorized site/SEO publication path and standing publication authority | Site-only conversion/SEO publishing is authorized after required checks. Social, Meta/Instagram, customer messaging, and account-wide publishing remain unapproved |
 | Paid acquisition | Ads Manager access plus an explicit daily/lifetime spend cap and pause authority | Deliberately excluded; Meta is not logged in and the default/authorized budget remains `$0` |
 | Paid-flow E2E | Approved test method, test address, and charge/refund authority | Blocked/unapproved |
 
 One-time authentication, OTP, CAPTCHA, payment-method approval, and spend-cap selection cannot be bypassed or inferred. After the one-time bootstrap, routine runs should not require daily user operation.
 
-Standing mutation authority is machine-readable under `harness/contracts.json`. It defaults to denied for production migrations, Git push, Worker/frontend deployment, organic publishing, paid-flow E2E, and customer messaging. Paid media defaults to denied with `$0` daily and lifetime caps. A grant can become active only with an `explicit_user_authorization:` evidence string; paid media also requires positive finite daily/lifetime caps, and its automated increase ceiling cannot exceed 20% per 24 hours. Actual login/tool availability is checked separately every run and cannot be inferred from the standing grant.
+Standing mutation authority is machine-readable under `harness/contracts.json`. The user authorized exact-repository Git push and frontend deployment for verified low-risk measurement, conversion, and SEO changes on 2026-07-30. Production migrations and Worker deployment remain measurement-only; off-site/social organic publishing, paid-flow E2E, customer messaging, and paid media remain denied, with paid caps at `$0`. A grant can become active only with an `explicit_user_authorization:` evidence string; actual login/tool availability is checked separately every run and cannot be inferred from the standing grant.
 
 ## Required measurement plane
 
@@ -79,7 +79,7 @@ Data precedence:
 3. Meta for ad spend, attributed traffic, and browser-event diagnosis.
 4. Public HTTP probes for availability only.
 
-The protected aggregate growth endpoint, authoritative-purchase RPC, and privacy-minimized first-party funnel layer are implemented and tested. The corrected database migrations are deployed; the Worker/frontend remain unpublished pending GitHub re-authentication and the measurement-only push. They return aggregate session stages, UTM labels, verified purchaser counts, refunds, and fulfillment rates; use `JOB_RUNNER_SECRET` for scorecard reads; and expose no email, answers, session hashes, reading/order/customer IDs, tokens, webhook payloads, or report content. Meta/provider access is still required for spend, CAC, ROAS, and actual settled revenue.
+The protected aggregate growth endpoint, authoritative-purchase RPC, and privacy-minimized first-party funnel layer are implemented, deployed, and tested. They return aggregate session stages, UTM labels, verified purchaser counts, refunds, and fulfillment rates; use `JOB_RUNNER_SECRET` for scorecard reads; and expose no email, answers, session hashes, reading/order/customer IDs, tokens, webhook payloads, or report content. Meta/provider access is still required for spend, CAC, ROAS, and actual settled revenue.
 
 ## Milestones
 
@@ -135,10 +135,10 @@ Do not use marketing email without an explicit opt-in and compliant unsubscribe 
 
 ## Scheduling cadence
 
-- Early bootstrap: run hourly until both growth migrations, the Worker scorecard route, and the first-party collector are deployed and verified, followed by seven complete closed days of aggregate data.
+- Early bootstrap: run hourly while there is a ready high-impact task, and at minimum until both growth migrations, the Worker scorecard route, and the first-party collector are deployed and verified, followed by seven complete closed days of aggregate data.
 - Mid-growth: run every four hours after the early exit gate, while acquisition and conversion experiments are active.
 - Streak phase: run daily at 08:30 Asia/Taipei after the first qualifying 10-purchaser day starts the streak.
-- Use only the existing `yle` heartbeat. A phase transition updates that automation instead of creating duplicates. When an hourly run has no new data, perform only lightweight health/access checks and do not create repetitive files or edits.
+- Use only the existing `yle` heartbeat. A phase transition updates that automation instead of creating duplicates. Downshift to mid-growth only after seven complete closed days exist **and** no ready high-impact action has remained in the queue for 24 hours. A lack of new closed-day data is not a reason for a monitoring-only run: choose one non-repetitive, safe task from the current constraint/backlog and produce a verified implementation, test, analysis, release preparation, release, or rollback result.
 
 ## Scheduled autonomous loop
 
@@ -147,14 +147,16 @@ Every scheduled run:
 1. Run Harness preflight and preserve unrelated worktree changes.
 2. Read `PROJECT_STATE.md`, `BACKLOG.md`, and this runbook.
 3. Recheck the authority matrix. Never infer authentication or spend/publication permission.
-4. Probe the production site and four Worker health endpoints read-only.
+4. Probe the production site and four Worker health endpoints read-only as a safety gate, not as the run's result.
 5. When authorized data is available, calculate yesterday, rolling 3/7/14-day metrics, the current streak, and milestone variance.
 6. Classify the primary constraint: access, reliability, observability, traffic, conversion, economics, or fulfillment.
 7. Select the single smallest action with the highest expected impact on the primary constraint. Record hypothesis, primary metric, guardrails, sample/time gate, and stop condition before acting.
-8. Implement safe local work autonomously. Deploy, push, publish, message customers, create purchases, or spend only when the exact standing authority is recorded and the required session/tool access is active.
-9. Verify proportionally, update current state/backlog truthfully, and report outcome, evidence, next action, and any blocked authority.
+8. Deliver exactly one non-repetitive result per run: implement, test, analyze and decide, prepare a reversible release, deploy an authorized change, verify production, or roll back an incident. A monitoring-only result is permitted only when every ready action is blocked by a specific external dependency; record that blocker once instead of repeating it each hour.
+9. Low-risk site conversion/SEO changes may be committed, pushed, and deployed only when the exact standing grants and live exact-asset tool/session are both available. Do not autonomously alter checkout/payment/webhook/report/email/refund-policy/legal-claim behavior, send customer messages, use Meta or Lemon Squeezy, create test transactions, or spend money.
+10. Before any release, require exact-scope checks, Harness PASS, the named browser/manual gate, unchanged paid-flow digest or explicit paid-flow authorization, a reversible branch/PR, successful CI, and a production smoke. Roll back or stop on breakage or an incident.
+11. Verify proportionally, update current state/backlog truthfully, and report outcome, evidence, next action, and any blocked authority.
 
-Review strategy once per 24 early-stage runs, once per 7 mid-stage runs, and once per 7 late-stage daily runs: retain, promote, stop, or replace the active experiment; recompute the forecast; and compare progress with the fixed milestones. Do not reset the deadline or call an incomplete action a win.
+Review strategy once per 6 early-stage runs, once per 7 mid-stage runs, and once per 7 late-stage daily runs: retain, promote, stop, or replace the active experiment; recompute the forecast; and compare progress with the fixed milestones. Do not reset the deadline or call an incomplete action a win.
 
 ## Deterministic decision evaluator
 

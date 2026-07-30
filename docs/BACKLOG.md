@@ -11,9 +11,9 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 
 ## Growth objective: due 2026-10-14
 
-- [x] Create the phased growth-control heartbeat: hourly during bootstrap, every four hours after seven complete aggregate days, and daily after the first qualifying streak day, with fixed milestones and a non-extendable hard review date.
+- [x] Create the phased growth-control heartbeat: hourly while bootstrap/high-impact work remains, every four hours only after seven complete aggregate days and a 24-hour empty ready queue, and daily after the first qualifying streak day. Require one non-repetitive verified result per run, review early-stage strategy every six runs, and keep the hard review date non-extendable.
 - [x] Enforce exact `your-love-element` isolation in the repository contract, Harness, runbook, and sole `yle` heartbeat; allowlist only this filesystem/Git root, Supabase project, GitHub repository, Cloudflare Worker/zone, and Resend domain/addresses while denying every sibling asset in the same accounts.
-- [ ] Complete the organic-plan data/authority gate in `docs/runbooks/GROWTH_CONTROL_LOOP.md` by 2026-08-02: Search Console and the measurement-only GitHub/site deployment path are connected; Search Console is still processing data and a project-scoped Resend delivery aggregate remains unavailable. Lemon Squeezy and Meta access are deliberately deferred; paid media remains unauthorized at `$0`.
+- [ ] Complete the organic-plan data/authority gate in `docs/runbooks/GROWTH_CONTROL_LOOP.md` by 2026-08-02: Search Console and the low-risk site conversion/SEO GitHub/deployment authority are connected, but the guarded `gh` branch/PR workflow needs one-time re-authentication; Search Console is still processing data and a project-scoped Resend delivery aggregate remains unavailable. Lemon Squeezy and Meta access are deliberately deferred; paid media remains unauthorized at `$0`.
 - [x] Verify signed-in Supabase, Cloudflare, and Resend dashboard sessions; confirm the target Supabase project; configure and validate the project-scoped read-only Supabase MCP with schema and aggregate-only queries on 2026-07-30.
 - [ ] Complete the current baseline. First-party landing/full-report events began successfully on 2026-07-30; the seven closed Taipei days through 2026-07-29 had 0 previews, checkouts, verified purchasers/orders, refunds, and deliveries. Search Console is verified and accepted a seven-URL sitemap on 2026-07-30, but query data is still processing and both new content URLs are discovered but not yet indexed; settled revenue, spend, CAC, and a project-scoped Resend delivery aggregate remain unavailable.
 - [x] Implement and locally test the protected aggregate growth scorecard/RPC; it exposes counts only and no customer identifiers or private report data.
@@ -23,6 +23,8 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 - [ ] Reach the dated milestones in the growth runbook, begin the 10-purchaser/day streak no later than 2026-09-15, and complete 30 consecutive qualifying days by 2026-10-14.
 
 ## Ready
+
+- [ ] After one-time `gh` CLI re-authentication, commit the verified conversion audit on a reversible `codex/` branch, open a draft PR, require Harness/CI success, merge/deploy only the allowlisted site, and run production smoke/rollback checks.
 
 - [x] Implement the initial SEO/GEO/AEO foundation: answer-first homepage content, Five Elements pillar guide, methodology/AI disclosure page, internal cluster links, schema, sitemap updates, and automated regression coverage.
 - [x] Browser-smoke the homepage and both search content pages at desktop and `390 x 844`; confirm no horizontal overflow or console warnings/errors, complete the 10-question Earth preview, and keep the local full-report page payment-locked.
@@ -48,6 +50,9 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 ## Requires fresh business data
 
 - [ ] Collect current funnel counts from landing view through Purchase.
+- [ ] Validate the revised preview-to-offer experience with 5-8 target users who read US/UK English; record quiz comprehension, perceived personalization, price clarity, purchase intent, and the exact objections that stop checkout.
+- [ ] Add customer proof only after authentic buyer feedback and explicit publication consent are available; do not fabricate testimonials, star ratings, buyer counts, or outcome claims.
+- [ ] Define a concrete refund eligibility window and decision timeline with business/legal review, then surface the approved rule before checkout; the current policy is intentionally case-based and may leave cautious buyers uncertain.
 - [ ] Confirm which June social items were actually published and record their performance.
 - [ ] Decide the next content or paid-acquisition experiment from current data, not the May/June historical snapshot.
 

@@ -574,6 +574,12 @@ input[type="email"] {
   text-wrap: pretty;
 }
 
+.preview-offer-link {
+  margin-top: 2px;
+  background: linear-gradient(180deg, #347d77, var(--teal));
+  box-shadow: 0 14px 30px rgba(40, 106, 101, 0.2);
+}
+
 .result-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
@@ -876,6 +882,7 @@ input[type="email"] {
   align-items: center;
   gap: 24px;
   padding: 24px;
+  scroll-margin-top: 20px;
   background:
     linear-gradient(135deg, var(--plum), #47202e 52%, #1e3e3c);
   color: #fffaf5;
@@ -1513,7 +1520,7 @@ input[type="email"] {
     width: min(720px, calc(100% - 28px));
   }
 
-  .nav-actions a {
+  .nav-actions {
     display: none;
   }
 

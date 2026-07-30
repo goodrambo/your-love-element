@@ -31,6 +31,41 @@ function graphTypes(html) {
   );
 }
 
+function plainText(html) {
+  return html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function visibleFaqEntries(html, relativePath) {
+  const section = firstMatch(
+    html,
+    /<section[^>]+id=["']faq["'][^>]*>([\s\S]*?)<\/section>/i,
+    `${relativePath} visible FAQ section`,
+  );
+
+  return [...section.matchAll(/<h3[^>]*>([\s\S]*?)<\/h3>\s*<p[^>]*>([\s\S]*?)<\/p>/gi)].map((match) => ({
+    question: plainText(match[1]),
+    answer: plainText(match[2]),
+  }));
+}
+
+function structuredFaqEntries(html, relativePath) {
+  const faqPage = jsonLdBlocks(html)
+    .flatMap((payload) => payload["@graph"] || [payload])
+    .find((item) => item["@type"] === "FAQPage");
+
+  assert.ok(faqPage, `${relativePath} must include FAQPage JSON-LD`);
+  return faqPage.mainEntity.map((entry) => ({
+    question: entry.name.trim(),
+    answer: entry.acceptedAnswer.text.trim(),
+  }));
+}
+
 test("indexable pages have unique search metadata and sitemap entries", () => {
   const sitemap = read("sitemap.xml");
   const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
@@ -87,6 +122,29 @@ test("homepage exposes the entity, product, answer, and content-cluster signals"
   assert.match(html, /\$9\.99/);
 });
 
+test("homepage keeps the preview-to-purchase path explicit and trustworthy", () => {
+  const html = read("index.html");
+  const styles = read("styles.css");
+  const script = read("script.js");
+
+  assert.match(html, /href=["']#unlockReport["'][^>]*data-track-cta=["']preview_offer["']/i);
+  assert.match(html, /id=["']unlockReport["']/i);
+  assert.match(html, /One-time \$9\.99 USD purchase with secure checkout by Lemon Squeezy\./i);
+  assert.match(html, /id=["']checkoutEmail["'][^>]*aria-describedby=["']checkoutEmailHelp["'][^>]*required/i);
+  assert.ok(html.indexOf('id="unlockReport"') < html.indexOf('id="shareCardPanel"'), "The purchase offer must appear before sharing tools");
+  assert.match(styles, /@media \(max-width: 900px\)[\s\S]*?\.nav-actions\s*{\s*display:\s*none;/i);
+  assert.match(script, /Choose your birth month\./);
+  assert.match(script, /Enter your birth day\./);
+  assert.match(script, /Local preview mode keeps checkout safely disabled\./);
+});
+
+test("informational cookie UI does not claim to offer preferences", () => {
+  for (const relativePath of contracts.html_files) {
+    const html = read(relativePath);
+    assert.doesNotMatch(html, /Cookie preferences/i, `${relativePath} must label the single-action UI as a notice`);
+  }
+});
+
 test("editorial pages are answer-first, transparent, and structured", () => {
   for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
     const html = read(relativePath);
@@ -99,6 +157,17 @@ test("editorial pages are answer-first, transparent, and structured", () => {
     assert.match(html, /Published and reviewed by Your Love Element/i);
     assert.match(html, /content=["']index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1["']/i);
     assert.ok(jsonLdBlocks(html).every((payload) => JSON.stringify(payload).length > 100), `${relativePath} JSON-LD must not be empty`);
+  }
+});
+
+test("editorial FAQ schema exactly matches the visible questions and answers", () => {
+  for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
+    const html = read(relativePath);
+    const visible = visibleFaqEntries(html, relativePath);
+    const structured = structuredFaqEntries(html, relativePath);
+
+    assert.ok(visible.length >= 3, `${relativePath} must expose a useful visible FAQ`);
+    assert.deepEqual(structured, visible, `${relativePath} FAQ schema must not drift from visible content`);
   }
 });
 
