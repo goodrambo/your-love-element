@@ -174,6 +174,21 @@ test("free quiz announces automatic step changes without changing its visual pro
   assert.match(html, /<div[^>]+class=["']progress["'][^>]+aria-hidden=["']true["']/i);
 });
 
+test("shared styles honor the operating-system reduced-motion preference", () => {
+  const styles = read("styles.css");
+  const rule = firstMatch(
+    styles,
+    /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{([\s\S]*?)\n\}/i,
+    "reduced-motion media rule",
+  );
+
+  assert.match(rule, /html\s*\{[\s\S]*?scroll-behavior:\s*auto;/i);
+  assert.match(rule, /\*::before[\s\S]*?\*::after[\s\S]*?animation-duration:\s*0\.01ms\s*!important;/i);
+  assert.match(rule, /animation-iteration-count:\s*1\s*!important;/i);
+  assert.match(rule, /transition-delay:\s*0ms\s*!important;/i);
+  assert.match(rule, /transition-duration:\s*0\.01ms\s*!important;/i);
+});
+
 test("share cards use a privacy-safe attributable referral URL", () => {
   const html = read("index.html");
   const script = read("script.js");
