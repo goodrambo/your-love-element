@@ -314,8 +314,9 @@ export function buildGrowthScorecard(input) {
     days,
     attribution,
     limitations: [
-      "Estimated gross uses the fixed USD 9.99 list price and is not settled revenue.",
-      "First-party session counts are diagnostic aggregates; verified purchases remain webhook-backed Supabase state.",
+      "Gross revenue is estimated from the fixed USD 9.99 list price; use Lemon Squeezy settlement data for actual revenue, fees, discounts, taxes, and chargebacks.",
+      "First-party session counts exclude obvious duplicate stages but are diagnostic, not verified humans; Meta spend, CAC, and ROAS still require authorized provider data.",
+      "Refunded orders are excluded using the current reading payment_status, so a later refund can revise an earlier day and reset the streak.",
     ],
   };
 }

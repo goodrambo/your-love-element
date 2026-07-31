@@ -215,7 +215,7 @@ test("protected Worker scorecard stays in golden parity with the aggregate adapt
     });
 
     assert.equal(response.status, 200);
-    for (const field of ["range", "goal", "totals", "days", "attribution"]) {
+    for (const field of ["ok", "source", "privacy", "range", "goal", "totals", "days", "attribution", "limitations"]) {
       assert.deepEqual(actual[field], expected[field], `${field} contract drifted`);
     }
     assert.deepEqual(actual.attribution.map((row) => row.utm_source), ["alpha", "zeta"]);
@@ -337,6 +337,63 @@ test("growth metrics fails closed on unknown RPC aggregate fields", async () => 
       commerce: commerceRows,
       funnel: [funnelRow("2026-07-26", { customer_email: null })],
       error: "Growth scorecard returned unknown funnel field customer_email",
+    },
+  ];
+
+  try {
+    console.error = () => {};
+    for (const scenario of scenarios) {
+      globalThis.fetch = scorecardFetch(scenario.commerce, scenario.funnel);
+      const request = new Request(
+        "https://worker.test/api/admin/growth-metrics?days=3&end_date=2026-07-28",
+        { headers: { authorization: "Bearer test-growth-secret" } },
+      );
+      const response = await worker.fetch(request, env());
+      assert.equal(response.status, 502, `${scenario.name} status`);
+      assert.deepEqual(await response.json(), { error: scenario.error }, `${scenario.name} response`);
+    }
+  } finally {
+    console.error = originalConsoleError;
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("growth metrics fails closed on non-object or missing RPC aggregate fields", async () => {
+  const originalFetch = globalThis.fetch;
+  const originalConsoleError = console.error;
+  const commerceRows = [
+    scorecardRow("2026-07-26", 10),
+    scorecardRow("2026-07-27", 12),
+    scorecardRow("2026-07-28", 11),
+  ];
+  const missingCommerceCount = { ...commerceRows[0] };
+  delete missingCommerceCount.verified_orders;
+  const missingFunnelCount = funnelRow("2026-07-26");
+  delete missingFunnelCount.quiz_starts;
+  const scenarios = [
+    {
+      name: "non-object commerce row",
+      commerce: [null, ...commerceRows.slice(1)],
+      funnel: [],
+      error: "Growth scorecard returned an invalid commerce row",
+    },
+    {
+      name: "non-object funnel row",
+      commerce: commerceRows,
+      funnel: [[]],
+      error: "Growth scorecard returned an invalid funnel row",
+    },
+    {
+      name: "missing commerce count",
+      commerce: [missingCommerceCount, ...commerceRows.slice(1)],
+      funnel: [],
+      error: "Growth scorecard returned invalid verified_orders",
+    },
+    {
+      name: "missing funnel count",
+      commerce: commerceRows,
+      funnel: [missingFunnelCount],
+      error: "Growth scorecard returned invalid quiz_starts",
     },
   ];
 
