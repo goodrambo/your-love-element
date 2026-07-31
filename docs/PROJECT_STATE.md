@@ -15,8 +15,8 @@ This is the only current-state snapshot. It describes what is verified now and m
 - Product: English Five Element-inspired relationship reading; free 10-question preview, optional `$9.99 USD` full report.
 - Production topology: GitHub Pages -> Cloudflare Worker -> Supabase / Lemon Squeezy / OpenAI / Resend, plus Meta Pixel and CAPI.
 - Production site: `https://yourloveelement.com` returned HTTP 200 on 2026-07-31.
-- Public GitHub `main` includes image-discovery release merge `110435efc3afb1f97adffdf3a5df1a0ae81648ee` (`Improve homepage image discovery (#7)`) after CI and Pages deployment succeeded on 2026-07-31. The performance release remains merge `e270c6fff16f7e9050a1ac0fe1faa080e5618ebc`; the conversion release remains merge `c468bf74071aa57ea77d20ca5204ad521e9dd1e8`.
-- Local `main` was fast-forwarded to the verified image-discovery release.
+- Public GitHub `main` includes privacy-safe share-attribution release merge `8cf9210de3e772506e310175f84d128b986cbe7c` (`Add privacy-safe share attribution (#16)`) after CI and Pages deployment succeeded on 2026-07-31. The image-discovery release remains merge `110435efc3afb1f97adffdf3a5df1a0ae81648ee`; the performance release remains merge `e270c6fff16f7e9050a1ac0fe1faa080e5618ebc`; the conversion release remains merge `c468bf74071aa57ea77d20ca5204ad521e9dd1e8`.
+- Local `main` was fast-forwarded to the verified share-attribution release.
 
 ## Verified production state
 
@@ -34,12 +34,13 @@ Read-only checks through 2026-07-31 confirmed:
 - Supabase production has service-role-only `get_growth_scorecard`, `funnel_events`, `funnel_event_maintenance`, and `get_first_party_funnel_scorecard` after the corrected migrations were applied on 2026-07-30. RLS is enabled and `anon`/`authenticated` execute is denied.
 - Public GitHub repository and production Pages are reachable; merge `e270c6f` is the latest fully verified runtime deployment. Harness run `30593389598` and Pages run `30593389276` completed successfully. The homepage now serves the 1672 x 941 hero artwork as a 112,840-byte WebP instead of the 2,268,306-byte PNG for both visible uses, a 95.0% reduction. Production desktop `1440 x 1000` and mobile `390 x 844` browser smoke loaded both images at their natural dimensions with no horizontal overflow or console warnings/errors; the four Worker health endpoints remained HTTP 200 and the unauthenticated scorecard remained HTTP 401.
 - Image-discovery merge `110435e` aligned the homepage WebPage/Product JSON-LD and image sitemap with that deployed WebP. Harness run `30596444920` and Pages run `30596444514` succeeded. Read-only production source and desktop/mobile browser smoke confirmed `dateModified` 2026-07-31, matching WebP URLs, one H1, no horizontal overflow, hidden mobile navigation, and no console warnings/errors; the four Worker health endpoints remained HTTP 200 and the unauthenticated scorecard remained HTTP 401.
+- Share-attribution merge `8cf9210` replaced the untagged homepage link in share text with fixed aggregate-only labels: `utm_source=share_card`, `utm_medium=referral`, `utm_campaign=organic_share`, and `utm_content=result_card`. Harness run `30620576477` and Pages run `30620576216` succeeded. Production source serves cache revision `20260731-share-attribution-1` and the expected fixed URL; the homepage, full-report page, and four Worker health endpoints returned HTTP 200, while the unauthenticated scorecard returned HTTP 401. The release neither changed the native image payload shape nor added answers, element, email, session, reading, order, or customer identifiers to the URL. Desktop full-quiz/share-card and mobile layout/browser checks were completed offline before release; no natural referral event has been observed yet.
 
 Fresh production proof is still required for actual email delivery, payment/webhook behavior, report content, and Meta event receipt after any related deployment.
 
 ## Implemented product capabilities
 
-- Free preview flow and element-specific share cards.
+- Free preview flow and element-specific share cards with a fixed privacy-safe aggregate referral URL.
 - Dynamic Worker-created Lemon Squeezy checkout carrying `reading_id`.
 - Payment verification before the eight paid signals are accepted.
 - Supabase state machine, webhook deduplication, queue claim, and service-role-only access.
@@ -99,4 +100,4 @@ These changes passed Harness checks and a fresh local browser smoke on 2026-07-3
 
 ## Next decision point
 
-Collect six more complete Taipei measurement days through 2026-08-05, then rerun the evaluator on the seven-day baseline; recheck Search Console when processed data becomes available. Until that gate, measurement-plane implementation/tests and other ready high-impact local work remain valid hourly outcomes, but no customer-facing conversion experiment should be promoted from the current three-session sample. Do not run a paid-flow E2E, send customer mail, publish to social channels, use Meta, or access Lemon Squeezy without separate authorization.
+Collect six more complete Taipei measurement days through 2026-08-05, then rerun the evaluator on the seven-day baseline; recheck Search Console when processed data becomes available. Treat share referral impact as unknown until a natural landing with `utm_source=share_card` appears; do not synthesize a production event. Until the seven-day gate, measurement-plane implementation/tests and other ready high-impact local work remain valid hourly outcomes, but no customer-facing conversion experiment should be promoted from the current three-session sample. Do not run a paid-flow E2E, send customer mail, publish to social channels, use Meta, or access Lemon Squeezy without separate authorization.
