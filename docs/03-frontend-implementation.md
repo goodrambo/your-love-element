@@ -191,7 +191,7 @@ Native share payload intentionally sends:
 files + title + text
 ```
 
-It does not send a separate `url` field because some share targets prioritize URL previews and drop the image.
+The text contains a fixed, privacy-safe referral URL tagged only with `utm_source=share_card`, `utm_medium=referral`, `utm_campaign=organic_share`, and `utm_content=result_card`. It never puts answers, element, email, session, reading, order, or customer identifiers in the URL. The payload does not send a separate `url` field because some share targets prioritize URL previews and drop the image.
 
 ## Frontend Tracking
 

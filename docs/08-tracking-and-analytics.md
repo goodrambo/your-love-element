@@ -171,6 +171,14 @@ https://yourloveelement.com/?utm_source=meta&utm_medium=paid_social&utm_campaign
 
 Use consistent naming so Ads Manager and internal logs can be compared.
 
+Organic share-card referrals use one fixed URL:
+
+```text
+https://yourloveelement.com/?utm_source=share_card&utm_medium=referral&utm_campaign=organic_share&utm_content=result_card
+```
+
+The URL deliberately excludes the reader's element, answers, email, session, reading, order, and customer identifiers. Referral impact is evaluated only from aggregate landing/funnel counts after natural visits occur.
+
 ## Recommended Ads Manager Columns
 
 ```text

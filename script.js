@@ -65,6 +65,7 @@ const firstPartyEventNames = new Set([
 const shareCardWidth = 1080;
 const shareCardHeight = 1350;
 const shareTemplateVersion = "20260512-share-templates";
+const shareReferralUrl = "https://yourloveelement.com/?utm_source=share_card&utm_medium=referral&utm_campaign=organic_share&utm_content=result_card";
 const metaPixelId = String(window.YLE_META_PIXEL_ID || "").trim();
 const monthDayLimits = {
   January: 31,
@@ -567,7 +568,7 @@ function shareCardFileName() {
 
 function buildShareText() {
   const element = currentShareCardData?.element || "ready";
-  return `My Love Element is ${element}.\nTake the free reading and discover yours:\nhttps://yourloveelement.com/`;
+  return `My Love Element is ${element}.\nTake the free reading and discover yours:\n${shareReferralUrl}`;
 }
 
 function setShareButtonsLoading(isLoading) {
