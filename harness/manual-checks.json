@@ -3,8 +3,8 @@
   "frontend_smoke": {
     "status": "pass",
     "verified_at": "2026-07-31",
-    "source_digest": "5ea65413e732a596ae1d2d9af3b7a79bec1fbc4fc55ac94b89e50527f3b10e22",
-    "evidence": "Incremental in-app Browser offline smoke for the homepage-only image optimization at desktop 1440x1000 and mobile 390x844. The new 1672x941 WebP loaded successfully as both the high-priority hero and lazy sample image, rendered one H1, kept the mobile navigation hidden, caused no horizontal overflow, and produced no console warnings/errors. The localhost log contained only local page/asset GETs with no API request. /full-report/ remained payment-locked: all 38 radios and Continue were effectively disabled and the missing-checkout guidance was visible. The earlier complete eight-route conversion smoke remains the evidence for unchanged routes and behaviors. This digest invalidates the evidence on later frontend changes."
+    "source_digest": "68d170db7f8d4df2c7ae9c02c674fe2bbe90c096e1c154367296b033877a482d",
+    "evidence": "Incremental in-app Browser offline smoke for the homepage technical-SEO image update at desktop 1440x1000 and mobile 390x844. The 1672x941 WebP loaded successfully, the rendered page kept one H1, the mobile navigation stayed hidden, no horizontal overflow appeared, and there were no console warnings/errors. Browser-read JSON-LD resolved both WebPage and Product image fields to the same production WebP; automated tests separately validate the image sitemap entry. The localhost log contained only local page/asset GETs with no API request. This metadata-only change does not alter the previously verified preview, checkout, or paid-page behaviors. This digest invalidates the evidence on later frontend changes."
   },
   "paid_flow_e2e": {
     "status": "waived",
