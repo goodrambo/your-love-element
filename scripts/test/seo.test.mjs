@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -136,6 +136,16 @@ test("homepage keeps the preview-to-purchase path explicit and trustworthy", () 
   assert.match(script, /Choose your birth month\./);
   assert.match(script, /Enter your birth day\./);
   assert.match(script, /Local preview mode keeps checkout safely disabled\./);
+});
+
+test("homepage serves an optimized, layout-stable hero image", () => {
+  const html = read("index.html");
+  const optimizedAsset = resolve(root, "assets/hero-soulmate-report.webp");
+
+  assert.ok(statSync(optimizedAsset).size < 200_000, "Optimized hero image must stay below 200 KB");
+  assert.match(html, /<img[^>]+class=["']hero-image["'][^>]+src=["']assets\/hero-soulmate-report\.webp["'][^>]+width=["']1672["'][^>]+height=["']941["'][^>]+fetchpriority=["']high["'][^>]+decoding=["']async["']/i);
+  assert.match(html, /<img[^>]+src=["']assets\/hero-soulmate-report\.webp["'][^>]+width=["']1672["'][^>]+height=["']941["'][^>]+loading=["']lazy["'][^>]+decoding=["']async["'][^>]+alt=["']A sample future partner portrait["']/i);
+  assert.doesNotMatch(html, /src=["']assets\/hero-soulmate-report\.png["']/i);
 });
 
 test("informational cookie UI does not claim to offer preferences", () => {
