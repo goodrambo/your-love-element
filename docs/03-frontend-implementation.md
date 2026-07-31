@@ -178,6 +178,7 @@ Key functions:
 - `prepareShareCard()`
 - `shareCardImage()`
 - `downloadShareCard()`
+- `copyShareLink()`
 
 Design decision:
 
@@ -192,6 +193,8 @@ files + title + text
 ```
 
 The text contains a fixed, privacy-safe referral URL tagged only with `utm_source=share_card`, `utm_medium=referral`, `utm_campaign=organic_share`, and `utm_content=result_card`. It never puts answers, element, email, session, reading, order, or customer identifiers in the URL. The payload does not send a separate `url` field because some share targets prioritize URL previews and drop the image.
+
+The share panel also exposes an always-available **Copy link** action for desktop and other browsers where native sharing is unavailable. Copy success is deliberately not recorded as a funnel event because copying does not prove that a link was shared or visited; the experiment is measured only from naturally arriving aggregate landing sessions carrying the fixed `utm_source=share_card` attribution.
 
 ## Frontend Tracking
 
