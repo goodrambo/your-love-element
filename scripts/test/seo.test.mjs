@@ -163,6 +163,17 @@ test("homepage keeps the preview-to-purchase path explicit and trustworthy", () 
   assert.match(script, /Local preview mode keeps checkout safely disabled\./);
 });
 
+test("free quiz announces automatic step changes without changing its visual progress bar", () => {
+  const html = read("index.html");
+
+  assert.match(
+    html,
+    /<div[^>]+class=["']quiz-topline["'][^>]+role=["']status["'][^>]+aria-live=["']polite["'][^>]+aria-atomic=["']true["'][^>]*>/i,
+  );
+  assert.equal((html.match(/class=["']quiz-topline["']/gi) || []).length, 1, "The quiz must expose one step-announcement region");
+  assert.match(html, /<div[^>]+class=["']progress["'][^>]+aria-hidden=["']true["']/i);
+});
+
 test("share cards use a privacy-safe attributable referral URL", () => {
   const html = read("index.html");
   const script = read("script.js");

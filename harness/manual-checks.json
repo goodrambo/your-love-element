@@ -3,8 +3,8 @@
   "frontend_smoke": {
     "status": "pass",
     "verified_at": "2026-07-31",
-    "source_digest": "fbacf4e0e7d2da37ea1e56c2dfd40cc6e8c93abf1411c05d82e285c0a5bc811d",
-    "evidence": "In-app Browser offline smoke for the accessibility-only legal-page change. Contact, Privacy, Refunds, and Terms each exposed exactly one Skip to the main content link and a matching #main-content target with tabindex=-1; the link remained visually off-canvas before focus. All four pages had no horizontal overflow at 1280x900 or 390x844 and produced no console warnings or errors. The localhost server log contained only local page/assets and no API request. Automated SEO coverage additionally verifies one valid skip target on every indexable page. Shared CSS/JavaScript and the paid-flow digest were unchanged, so this check did not exercise checkout, payment, reports, email, or production APIs. This digest invalidates the evidence on later frontend changes."
+    "source_digest": "a8975ed3ef488cca7e639e23475438bb417a2538519ee1d6e5d510de9e75f287",
+    "evidence": "In-app Browser offline smoke for the homepage quiz step-announcement change. At 1280x900 and 390x844, the quiz exposed one status region with aria-live=polite and aria-atomic=true; selecting the first answer auto-advanced to Question 2 of 10 and updated the region to Your intention while the active legend changed to the second question. Both viewports had no horizontal overflow, the production API base stayed blank, and the browser produced no console warnings or errors. The localhost server log contained only local page/assets and no API request. Automated SEO coverage verifies the unique live region and keeps the visual progress bar hidden from assistive technology. No quiz logic, tracking, checkout, payment, report, email, or paid-flow source changed; the paid-flow digest remains unchanged. This digest invalidates the evidence on later frontend changes."
   },
   "paid_flow_e2e": {
     "status": "waived",
