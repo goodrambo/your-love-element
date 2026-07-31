@@ -1,7 +1,7 @@
 ---
 kind: backlog
 status: active
-last_reviewed: 2026-07-30
+last_reviewed: 2026-07-31
 review_after: 2026-08-05
 ---
 
@@ -23,6 +23,8 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 - [ ] Reach the dated milestones in the growth runbook, begin the 10-purchaser/day streak no later than 2026-09-15, and complete 30 consecutive qualifying days by 2026-10-14.
 
 ## Ready
+
+- [x] Release keyboard bypass navigation on the four public legal/support pages through reversible PR [#26](https://github.com/goodrambo/your-love-element/pull/26) and merge `77a4ccb`: each page now has one skip link and a focusable main target, while the SEO suite prevents missing or duplicate targets on every indexable route. Hypothesis: keyboard and assistive-technology visitors can bypass repeated navigation without changing the active referral experiment or paid flow. Primary metric: 12/12 SEO coverage plus desktop/mobile browser conformance on all four routes. Guardrail: shared CSS/JavaScript and paid-flow digest unchanged. Local Harness/browser QA, PR/merge CI, Pages, production source, site/Worker health, and unauthenticated scorecard gates pass.
 
 - [x] Remove the observed Node 20 CI runtime deprecation risk through reversible PR [#24](https://github.com/goodrambo/your-love-element/pull/24) and merge `6ce4d26`: upgrade checkout/setup-python/setup-node to Node 24 action majors. Hypothesis: current action runtimes prevent a future compatibility cutoff from blocking rapid releases. Primary metric: PR and merge Harness success with no Node 20 annotation. Guardrail: workflow refs only; no application, frontend, active-experiment, measurement, or paid-flow changes. Local Harness, PR/merge CI, Pages, empty check annotations, and production health/auth gates pass.
 
