@@ -224,6 +224,55 @@ test("protected Worker scorecard stays in golden parity with the aggregate adapt
   }
 });
 
+test("growth metrics fails closed on incomplete, duplicate, or out-of-range commerce days", async () => {
+  const originalFetch = globalThis.fetch;
+  const originalConsoleError = console.error;
+  const scenarios = [
+    {
+      name: "missing",
+      rows: [scorecardRow("2026-07-26", 10), scorecardRow("2026-07-28", 11)],
+      error: "Growth scorecard omitted closed commerce day 2026-07-27",
+    },
+    {
+      name: "duplicate",
+      rows: [
+        scorecardRow("2026-07-26", 10),
+        scorecardRow("2026-07-27", 12),
+        scorecardRow("2026-07-27", 12),
+        scorecardRow("2026-07-28", 11),
+      ],
+      error: "Growth scorecard returned duplicate commerce day 2026-07-27",
+    },
+    {
+      name: "out-of-range",
+      rows: [
+        scorecardRow("2026-07-25", 9),
+        scorecardRow("2026-07-26", 10),
+        scorecardRow("2026-07-27", 12),
+        scorecardRow("2026-07-28", 11),
+      ],
+      error: "Growth scorecard returned out-of-range commerce day 2026-07-25",
+    },
+  ];
+
+  try {
+    console.error = () => {};
+    for (const scenario of scenarios) {
+      globalThis.fetch = scorecardFetch(scenario.rows);
+      const request = new Request(
+        "https://worker.test/api/admin/growth-metrics?days=3&end_date=2026-07-28",
+        { headers: { authorization: "Bearer test-growth-secret" } },
+      );
+      const response = await worker.fetch(request, env());
+      assert.equal(response.status, 502, `${scenario.name} status`);
+      assert.deepEqual(await response.json(), { error: scenario.error }, `${scenario.name} response`);
+    }
+  } finally {
+    console.error = originalConsoleError;
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("growth streak resets when the latest closed day misses the target", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = scorecardFetch([

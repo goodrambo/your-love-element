@@ -244,19 +244,30 @@ async function getGrowthMetrics(request, env) {
       body: rpcBody,
     }),
   ]);
-  const merged = mergeGrowthMetricRows(commerceRows, funnelRows);
+  const merged = mergeGrowthMetricRows(commerceRows, funnelRows, { startDate, endDate, days });
 
   return buildGrowthMetrics(merged.days, { startDate, endDate, days }, merged.attribution);
 }
 
-function mergeGrowthMetricRows(commerceRows, funnelRows) {
+function mergeGrowthMetricRows(commerceRows, funnelRows, { startDate, endDate, days }) {
   if (!Array.isArray(commerceRows) || !Array.isArray(funnelRows)) {
     throw httpError(502, "Growth scorecard returned an invalid response");
   }
 
+  const expectedDates = Array.from({ length: days }, (_, index) => addDateDays(startDate, index));
+  if (expectedDates.at(-1) !== endDate) {
+    throw httpError(502, "Growth scorecard range is inconsistent");
+  }
+  const expectedDateSet = new Set(expectedDates);
   const daily = new Map();
   for (const row of commerceRows) {
     const date = requireDateString(row.metric_date, "metric_date");
+    if (!expectedDateSet.has(date)) {
+      throw httpError(502, `Growth scorecard returned out-of-range commerce day ${date}`);
+    }
+    if (daily.has(date)) {
+      throw httpError(502, `Growth scorecard returned duplicate commerce day ${date}`);
+    }
     daily.set(date, {
       ...row,
       metric_date: date,
@@ -264,6 +275,11 @@ function mergeGrowthMetricRows(commerceRows, funnelRows) {
       full_report_sessions: 0,
       ...Object.fromEntries(FIRST_PARTY_FUNNEL_FIELDS.map((field) => [field, 0])),
     });
+  }
+  for (const date of expectedDates) {
+    if (!daily.has(date)) {
+      throw httpError(502, `Growth scorecard omitted closed commerce day ${date}`);
+    }
   }
 
   const attribution = [];
