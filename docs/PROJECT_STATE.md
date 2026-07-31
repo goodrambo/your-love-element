@@ -3,7 +3,7 @@ kind: current
 status: active
 last_verified: 2026-07-31
 review_after: 2026-08-05
-evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub runtime releases through 110435e with successful Actions/Pages runs; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
+evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub runtime releases through f47e4ac with successful Actions/Pages runs; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
 ---
 
 # Project State
@@ -15,8 +15,8 @@ This is the only current-state snapshot. It describes what is verified now and m
 - Product: English Five Element-inspired relationship reading; free 10-question preview, optional `$9.99 USD` full report.
 - Production topology: GitHub Pages -> Cloudflare Worker -> Supabase / Lemon Squeezy / OpenAI / Resend, plus Meta Pixel and CAPI.
 - Production site: `https://yourloveelement.com` returned HTTP 200 on 2026-07-31.
-- Public GitHub `main` includes privacy-safe share-attribution release merge `8cf9210de3e772506e310175f84d128b986cbe7c` (`Add privacy-safe share attribution (#16)`) after CI and Pages deployment succeeded on 2026-07-31. The image-discovery release remains merge `110435efc3afb1f97adffdf3a5df1a0ae81648ee`; the performance release remains merge `e270c6fff16f7e9050a1ac0fe1faa080e5618ebc`; the conversion release remains merge `c468bf74071aa57ea77d20ca5204ad521e9dd1e8`.
-- Local `main` was fast-forwarded to the verified share-attribution release.
+- Public GitHub `main` includes referral Copy link release merge `f47e4acccf6b2500c7e35442cd46f5126a3eaa35` (`Add referral copy-link fallback (#18)`) after CI and Pages deployment succeeded on 2026-07-31. The preceding privacy-safe share-attribution release remains merge `8cf9210de3e772506e310175f84d128b986cbe7c`; the image-discovery release remains merge `110435efc3afb1f97adffdf3a5df1a0ae81648ee`; the performance release remains merge `e270c6fff16f7e9050a1ac0fe1faa080e5618ebc`; the conversion release remains merge `c468bf74071aa57ea77d20ca5204ad521e9dd1e8`.
+- Local `main` was fast-forwarded to the verified Copy link release.
 
 ## Verified production state
 
@@ -35,12 +35,13 @@ Read-only checks through 2026-07-31 confirmed:
 - Public GitHub repository and production Pages are reachable; merge `e270c6f` is the latest fully verified runtime deployment. Harness run `30593389598` and Pages run `30593389276` completed successfully. The homepage now serves the 1672 x 941 hero artwork as a 112,840-byte WebP instead of the 2,268,306-byte PNG for both visible uses, a 95.0% reduction. Production desktop `1440 x 1000` and mobile `390 x 844` browser smoke loaded both images at their natural dimensions with no horizontal overflow or console warnings/errors; the four Worker health endpoints remained HTTP 200 and the unauthenticated scorecard remained HTTP 401.
 - Image-discovery merge `110435e` aligned the homepage WebPage/Product JSON-LD and image sitemap with that deployed WebP. Harness run `30596444920` and Pages run `30596444514` succeeded. Read-only production source and desktop/mobile browser smoke confirmed `dateModified` 2026-07-31, matching WebP URLs, one H1, no horizontal overflow, hidden mobile navigation, and no console warnings/errors; the four Worker health endpoints remained HTTP 200 and the unauthenticated scorecard remained HTTP 401.
 - Share-attribution merge `8cf9210` replaced the untagged homepage link in share text with fixed aggregate-only labels: `utm_source=share_card`, `utm_medium=referral`, `utm_campaign=organic_share`, and `utm_content=result_card`. Harness run `30620576477` and Pages run `30620576216` succeeded. Production source serves cache revision `20260731-share-attribution-1` and the expected fixed URL; the homepage, full-report page, and four Worker health endpoints returned HTTP 200, while the unauthenticated scorecard returned HTTP 401. The release neither changed the native image payload shape nor added answers, element, email, session, reading, order, or customer identifiers to the URL. Desktop full-quiz/share-card and mobile layout/browser checks were completed offline before release; no natural referral event has been observed yet.
+- Copy-link merge `f47e4ac` added an always-available desktop/no-WebShare referral path without adding a copy event that could overstate sharing. Harness run `30624138892` and Pages run `30624138534` succeeded for the exact merge SHA. Production source serves cache revision `20260731-copy-link-1` and `copyShareLinkButton`; the homepage, full-report page, and four Worker health endpoints returned HTTP 200, while the unauthenticated scorecard returned HTTP 401. Offline browser QA copied the exact fixed four-UTM URL, rendered the existing `1080 x 1350` share card, preserved a full-width mobile action at `390 x 844`, and found no horizontal overflow, console errors, or API requests. No natural referred landing is claimed yet.
 
 Fresh production proof is still required for actual email delivery, payment/webhook behavior, report content, and Meta event receipt after any related deployment.
 
 ## Implemented product capabilities
 
-- Free preview flow and element-specific share cards with a fixed privacy-safe aggregate referral URL.
+- Free preview flow and element-specific share cards with native share, download, and always-available copy actions for a fixed privacy-safe aggregate referral URL.
 - Dynamic Worker-created Lemon Squeezy checkout carrying `reading_id`.
 - Payment verification before the eight paid signals are accepted.
 - Supabase state machine, webhook deduplication, queue claim, and service-role-only access.
