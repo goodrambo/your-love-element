@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import test from "node:test";
 
 import worker from "../src/index.js";
+import { buildGrowthScorecard } from "../../scripts/growth-scorecard-adapter.mjs";
 
 const COUNT_FIELDS = {
   previewed_readings: "100",
@@ -163,6 +164,61 @@ test("growth metrics returns aggregate-only daily counts and a verified purchase
         p_end_date: "2026-07-28",
       });
     }
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("protected Worker scorecard stays in golden parity with the aggregate adapter", async () => {
+  const originalFetch = globalThis.fetch;
+  const commerceRows = [
+    scorecardRow("2026-07-26", 10),
+    scorecardRow("2026-07-27", 12, { refunded_orders: "1" }),
+    scorecardRow("2026-07-28", 11),
+  ];
+  const funnelRows = [
+    funnelRow("2026-07-26", {
+      utm_source: "zeta",
+      utm_medium: "organic",
+      utm_campaign: "alpha",
+      utm_content: "guide_b",
+    }),
+    funnelRow("2026-07-26", {
+      utm_source: "alpha",
+      utm_medium: "referral",
+      utm_campaign: "zeta",
+      utm_content: "guide_a",
+      page_view_sessions: "7",
+      view_content_sessions: "6",
+    }),
+    funnelRow("2026-07-27", {
+      page: "full_report",
+      page_view_sessions: "3",
+      view_content_sessions: "2",
+    }),
+    funnelRow("2026-07-28"),
+  ];
+  globalThis.fetch = scorecardFetch(commerceRows, funnelRows);
+
+  try {
+    const request = new Request(
+      "https://worker.test/api/admin/growth-metrics?days=3&end_date=2026-07-28",
+      { headers: { authorization: "Bearer test-growth-secret" } },
+    );
+    const response = await worker.fetch(request, env());
+    const actual = await response.json();
+    const expected = buildGrowthScorecard({
+      start_date: "2026-07-26",
+      end_date: "2026-07-28",
+      commerce_rows: commerceRows,
+      funnel_rows: funnelRows,
+    });
+
+    assert.equal(response.status, 200);
+    for (const field of ["range", "goal", "totals", "days", "attribution"]) {
+      assert.deepEqual(actual[field], expected[field], `${field} contract drifted`);
+    }
+    assert.deepEqual(actual.attribution.map((row) => row.utm_source), ["alpha", "zeta"]);
   } finally {
     globalThis.fetch = originalFetch;
   }
