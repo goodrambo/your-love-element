@@ -273,6 +273,50 @@ test("growth metrics fails closed on incomplete, duplicate, or out-of-range comm
   }
 });
 
+test("growth metrics fails closed on duplicate or out-of-range funnel attribution rows", async () => {
+  const originalFetch = globalThis.fetch;
+  const originalConsoleError = console.error;
+  const commerceRows = [
+    scorecardRow("2026-07-26", 10),
+    scorecardRow("2026-07-27", 12),
+    scorecardRow("2026-07-28", 11),
+  ];
+  const attributed = funnelRow("2026-07-26", {
+    utm_source: "google",
+    utm_medium: "organic",
+    utm_campaign: "five_elements",
+  });
+  const scenarios = [
+    {
+      name: "duplicate",
+      rows: [attributed, { ...attributed }],
+      error: "Growth scorecard returned duplicate funnel attribution row 2026-07-26 landing",
+    },
+    {
+      name: "out-of-range",
+      rows: [funnelRow("2026-07-25")],
+      error: "Growth scorecard returned out-of-range funnel day 2026-07-25",
+    },
+  ];
+
+  try {
+    console.error = () => {};
+    for (const scenario of scenarios) {
+      globalThis.fetch = scorecardFetch(commerceRows, scenario.rows);
+      const request = new Request(
+        "https://worker.test/api/admin/growth-metrics?days=3&end_date=2026-07-28",
+        { headers: { authorization: "Bearer test-growth-secret" } },
+      );
+      const response = await worker.fetch(request, env());
+      assert.equal(response.status, 502, `${scenario.name} status`);
+      assert.deepEqual(await response.json(), { error: scenario.error }, `${scenario.name} response`);
+    }
+  } finally {
+    console.error = originalConsoleError;
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("growth streak resets when the latest closed day misses the target", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = scorecardFetch([
