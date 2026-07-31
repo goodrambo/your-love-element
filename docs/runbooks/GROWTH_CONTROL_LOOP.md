@@ -162,6 +162,12 @@ Review strategy once per 6 early-stage runs, once per 7 mid-stage runs, and once
 
 Use `scripts/growth-control.mjs` after the protected scorecard response and any authorized provider aggregates have been collected. The evaluator does not fetch data or read credentials. It accepts aggregate JSON only, rejects customer/session/order/reading/answer/secret-shaped keys, and emits one primary constraint plus a pre-registered action contract.
 
+When `JOB_RUNNER_SECRET` is injected into the live runtime, fetch the latest closed-day scorecard through the exact allowlisted Worker origin. The fetcher requires an explicit end date, never accepts a caller-supplied origin, fails once on `401` or `404`, requires private/no-store and non-CORS response headers, rejects sensitive or unknown fields, and writes only aggregate JSON to stdout. Keep redirected output under ignored `artifacts/growth-control/`, then place that aggregate into the separate growth-control input and run the evaluator CLI below.
+
+```bash
+node scripts/fetch-growth-scorecard.mjs --days 45 --end-date YYYY-MM-DD
+```
+
 When project-scoped access returns the two service-role-only RPC row sets instead of the protected endpoint response, first use the deterministic adapter. Its input contains only `start_date`, `end_date`, `commerce_rows`, and `funnel_rows`; it requires exactly one commerce row for every closed day, merges landing/full-report and sanitized UTM aggregates, and rejects unknown or sensitive fields.
 
 ```bash
