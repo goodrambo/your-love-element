@@ -66,6 +66,15 @@ function structuredFaqEntries(html, relativePath) {
   }));
 }
 
+function structuredItem(html, type, relativePath) {
+  const matches = jsonLdBlocks(html)
+    .flatMap((payload) => payload["@graph"] || [payload])
+    .filter((item) => item["@type"] === type);
+
+  assert.equal(matches.length, 1, `${relativePath} must include exactly one ${type} JSON-LD item`);
+  return matches[0];
+}
+
 test("indexable pages have unique search metadata and sitemap entries", () => {
   const sitemap = read("sitemap.xml");
   const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
@@ -199,6 +208,31 @@ test("editorial pages are answer-first, transparent, and structured", () => {
     assert.match(html, /Published and reviewed by Your Love Element/i);
     assert.match(html, /content=["']index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1["']/i);
     assert.ok(jsonLdBlocks(html).every((payload) => JSON.stringify(payload).length > 100), `${relativePath} JSON-LD must not be empty`);
+  }
+});
+
+test("editorial breadcrumbs form one canonical two-level hierarchy", () => {
+  for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
+    const html = read(relativePath);
+    const canonical = firstMatch(
+      html,
+      /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+      `${relativePath} canonical`,
+    );
+    const page = structuredItem(html, "WebPage", relativePath);
+    const breadcrumb = structuredItem(html, "BreadcrumbList", relativePath);
+    const entries = breadcrumb.itemListElement;
+
+    assert.equal(page.breadcrumb?.["@id"], breadcrumb["@id"], `${relativePath} WebPage must reference its breadcrumb`);
+    assert.ok(breadcrumb["@id"].startsWith(canonical), `${relativePath} breadcrumb id must stay under its canonical URL`);
+    assert.ok(Array.isArray(entries), `${relativePath} breadcrumb items must be an array`);
+    assert.equal(entries.length, 2, `${relativePath} breadcrumb must contain Home and the current page`);
+    assert.deepEqual(entries.map((entry) => entry.position), [1, 2], `${relativePath} breadcrumb positions must be contiguous`);
+    assert.ok(entries.every((entry) => entry["@type"] === "ListItem"), `${relativePath} breadcrumb entries must be ListItem values`);
+    assert.equal(entries[0].name, "Home", `${relativePath} breadcrumb must start at Home`);
+    assert.equal(entries[0].item, `${origin}/`, `${relativePath} Home breadcrumb must use the production root`);
+    assert.equal(entries[1].item, canonical, `${relativePath} current-page breadcrumb must match the canonical URL`);
+    assert.ok(entries[1].name?.trim(), `${relativePath} current-page breadcrumb must have a name`);
   }
 });
 
