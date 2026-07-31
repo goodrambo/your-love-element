@@ -1,7 +1,7 @@
 ---
 kind: backlog
 status: active
-last_reviewed: 2026-07-31
+last_reviewed: 2026-08-01
 review_after: 2026-08-05
 ---
 
@@ -15,7 +15,7 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 - [x] Enforce exact `your-love-element` isolation in the repository contract, Harness, runbook, and sole `yle` heartbeat; allowlist only this filesystem/Git root, Supabase project, GitHub repository, Cloudflare Worker/zone, and Resend domain/addresses while denying every sibling asset in the same accounts.
 - [ ] Complete the organic-plan data/authority gate in `docs/runbooks/GROWTH_CONTROL_LOOP.md` by 2026-08-02: Search Console, exact-repository GitHub/Pages release access, and low-risk site conversion/SEO authority are connected; Search Console is still processing data and a project-scoped Resend delivery aggregate remains unavailable. Lemon Squeezy and Meta access are deliberately deferred; paid media remains unauthorized at `$0`.
 - [x] Verify signed-in Supabase, Cloudflare, and Resend dashboard sessions; confirm the target Supabase project; configure and validate the project-scoped read-only Supabase MCP with schema and aggregate-only queries on 2026-07-30.
-- [ ] Complete the current baseline. The first complete closed Taipei day, 2026-07-30, had `3` landing sessions, `3` view-content sessions, `1` full-report page-view session, and `0` CTA clicks, quiz starts, previews, checkouts, verified purchasers/orders, refunds, deliveries, or failures. Six more closed days are required through 2026-08-05. Search Console is verified and accepted a seven-URL sitemap on 2026-07-30, but query data is still processing and both new content URLs are discovered but not yet indexed; settled revenue, spend, CAC, and a project-scoped Resend delivery aggregate remain unavailable.
+- [ ] Complete the current baseline. The first complete closed Taipei day, 2026-07-30, had `3` landing sessions, `3` view-content sessions, `1` full-report page-view session, and `0` CTA clicks, quiz starts, previews, checkouts, verified purchasers/orders, refunds, deliveries, or failures. The 2026-07-31 day is now closed but its aggregate is unavailable to the scheduled runtime because neither `JOB_RUNNER_SECRET` nor the exact-project Supabase aggregate tool is exposed; do not reuse 2026-07-30 or infer zeros. Six additional collected days are still required through 2026-08-05. Search Console is verified but query data is processing; settled revenue, spend, CAC, and a project-scoped Resend delivery aggregate remain unavailable.
 - [x] Implement and locally test the protected aggregate growth scorecard/RPC; it exposes counts only and no customer identifiers or private report data.
 - [x] Implement and locally test privacy-minimized first-party funnel/UTM aggregates; browser `purchase` is rejected and no contact, reading, answer, URL, referrer, IP, or user-agent data is stored.
 - [x] Implement and test the deterministic aggregate decision evaluator for rolling windows, milestone gaps, constraint selection, authority gating, and experiment promotion/stopping.
@@ -23,6 +23,8 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 - [ ] Reach the dated milestones in the growth runbook, begin the 10-purchaser/day streak no later than 2026-09-15, and complete 30 consecutive qualifying days by 2026-10-14.
 
 ## Ready
+
+- [x] Run the first post-midnight aggregate decision for 2026-08-01 with `scorecard: null` after confirming the scheduled runtime lacks both `JOB_RUNNER_SECRET` and the exact-project Supabase aggregate tool. Hypothesis: a missing latest closed day must fail closed instead of reusing 2026-07-30 or turning unknown purchases into zero. Primary metric: evaluator status `blocked_on_aggregate_truth` with constraint `access`. Guardrail: streak, purchase rates, CAC, and ROAS remain unknown; no customer data, secret, provider mutation, or inferred value. Sample/time gate: retry after one exact-project aggregate access path is exposed; stop on ambiguous project scope or secret disclosure.
 
 - [x] Release an assistive-technology announcement for the auto-advancing free quiz through reversible PR [#28](https://github.com/goodrambo/your-love-element/pull/28) and merge `6df3170`: the visible step summary is now one polite, atomic status region. Hypothesis: announcing each automatic question transition reduces silent abandonment for screen-reader users. Primary metric: desktop/mobile browser interaction updates the region from Question 1 to Question 2 with the correct mood. Guardrail: visuals, quiz logic, tracking, and paid-flow digest unchanged; stop on duplicate announcements, overflow, console/API regression, or paid-flow drift. SEO 13/13, Harness/CI, Pages, production source, and site/Worker health/auth gates pass.
 
