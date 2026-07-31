@@ -139,6 +139,7 @@ test("homepage keeps the preview-to-purchase path explicit and trustworthy", () 
 });
 
 test("share cards use a privacy-safe attributable referral URL", () => {
+  const html = read("index.html");
   const script = read("script.js");
   const shareUrlMatch = script.match(/const shareReferralUrl = "([^"]+)";/);
 
@@ -156,6 +157,11 @@ test("share cards use a privacy-safe attributable referral URL", () => {
     assert.equal(shareUrl.searchParams.has(privateKey), false, `share URL must not include ${privateKey}`);
   }
   assert.match(script, /discover yours:\\n\$\{shareReferralUrl\}/);
+  assert.match(html, /class=["']copy-link-button["'][^>]*id=["']copyShareLinkButton["'][^>]*>Copy link<\/button>/i);
+  assert.match(script, /navigator\.clipboard\.writeText\(shareReferralUrl\)/);
+  assert.match(script, /Referral link copied\./);
+  assert.match(script, /Copying is not available in this browser\./);
+  assert.doesNotMatch(script, /trackMetaCustomEvent\(["']share_card_link_copied["']/);
 });
 
 test("homepage serves an optimized, layout-stable hero image", () => {

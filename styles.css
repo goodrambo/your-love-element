@@ -284,7 +284,8 @@ h1 {
 .secondary-action:hover,
 .ghost-button:hover,
 .share-button:hover,
-.download-button:hover {
+.download-button:hover,
+.copy-link-button:hover {
   transform: translateY(-1px);
 }
 
@@ -294,7 +295,8 @@ h1 {
 .secondary-action:active,
 .ghost-button:active,
 .share-button:active,
-.download-button:active {
+.download-button:active,
+.copy-link-button:active {
   transform: translateY(1px) scale(0.99);
 }
 
@@ -718,7 +720,8 @@ input[type="email"] {
 }
 
 .share-button,
-.download-button {
+.download-button,
+.copy-link-button {
   min-height: 44px;
   border: 0;
   border-radius: 7px;
@@ -733,14 +736,16 @@ input[type="email"] {
   color: #fffaf5;
 }
 
-.download-button {
+.download-button,
+.copy-link-button {
   border: 1px solid rgba(34, 27, 24, 0.16);
   background: rgba(255, 250, 242, 0.72);
   color: var(--ink);
 }
 
 .share-button:disabled,
-.download-button:disabled {
+.download-button:disabled,
+.copy-link-button:disabled {
   cursor: wait;
   opacity: 0.72;
 }
@@ -1757,6 +1762,11 @@ input[type="email"] {
 
   .share-button,
   .download-button {
+    width: 100%;
+  }
+
+  .copy-link-button {
+    grid-column: 1 / -1;
     width: 100%;
   }
 

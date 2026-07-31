@@ -40,6 +40,7 @@ const shareCardPanel = document.querySelector("#shareCardPanel");
 const shareCardPreview = document.querySelector("#shareCardPreview");
 const shareImageButton = document.querySelector("#shareImageButton");
 const downloadShareImageButton = document.querySelector("#downloadShareImageButton");
+const copyShareLinkButton = document.querySelector("#copyShareLinkButton");
 const shareStatus = document.querySelector("#shareStatus");
 
 const apiBaseUrl = window.YLE_API_BASE_URL || "";
@@ -578,6 +579,9 @@ function setShareButtonsLoading(isLoading) {
   if (downloadShareImageButton) {
     downloadShareImageButton.disabled = isLoading;
   }
+  if (copyShareLinkButton) {
+    copyShareLinkButton.disabled = isLoading;
+  }
 }
 
 async function createShareCardBlob(data) {
@@ -721,6 +725,18 @@ async function shareCardImage() {
       return;
     }
     setStatus(shareStatus, "The share sheet could not be opened in this browser.", "error");
+  }
+}
+
+async function copyShareLink() {
+  try {
+    if (!navigator.clipboard?.writeText) {
+      throw new Error("Clipboard writing is not available");
+    }
+    await navigator.clipboard.writeText(shareReferralUrl);
+    setStatus(shareStatus, "Referral link copied.", "success");
+  } catch {
+    setStatus(shareStatus, "Copying is not available in this browser.", "error");
   }
 }
 
@@ -1428,4 +1444,8 @@ if (shareImageButton) {
 
 if (downloadShareImageButton) {
   downloadShareImageButton.addEventListener("click", downloadShareCard);
+}
+
+if (copyShareLinkButton) {
+  copyShareLinkButton.addEventListener("click", copyShareLink);
 }
