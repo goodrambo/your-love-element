@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://yourloveelement.com/</loc>
-    <lastmod>2026-07-30</lastmod>
+    <lastmod>2026-07-31</lastmod>
+    <image:image>
+      <image:loc>https://yourloveelement.com/assets/hero-soulmate-report.webp</image:loc>
+    </image:image>
   </url>
   <url>
     <loc>https://yourloveelement.com/five-elements-love-compatibility/</loc>

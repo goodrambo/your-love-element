@@ -140,12 +140,18 @@ test("homepage keeps the preview-to-purchase path explicit and trustworthy", () 
 
 test("homepage serves an optimized, layout-stable hero image", () => {
   const html = read("index.html");
+  const sitemap = read("sitemap.xml");
   const optimizedAsset = resolve(root, "assets/hero-soulmate-report.webp");
+  const structuredData = JSON.stringify(jsonLdBlocks(html));
 
   assert.ok(statSync(optimizedAsset).size < 200_000, "Optimized hero image must stay below 200 KB");
   assert.match(html, /<img[^>]+class=["']hero-image["'][^>]+src=["']assets\/hero-soulmate-report\.webp["'][^>]+width=["']1672["'][^>]+height=["']941["'][^>]+fetchpriority=["']high["'][^>]+decoding=["']async["']/i);
   assert.match(html, /<img[^>]+src=["']assets\/hero-soulmate-report\.webp["'][^>]+width=["']1672["'][^>]+height=["']941["'][^>]+loading=["']lazy["'][^>]+decoding=["']async["'][^>]+alt=["']A sample future partner portrait["']/i);
   assert.doesNotMatch(html, /src=["']assets\/hero-soulmate-report\.png["']/i);
+  assert.match(structuredData, /https:\/\/yourloveelement\.com\/assets\/hero-soulmate-report\.webp/);
+  assert.doesNotMatch(structuredData, /hero-soulmate-report\.png/);
+  assert.match(sitemap, /xmlns:image=["']http:\/\/www\.google\.com\/schemas\/sitemap-image\/1\.1["']/i);
+  assert.match(sitemap, /<image:loc>https:\/\/yourloveelement\.com\/assets\/hero-soulmate-report\.webp<\/image:loc>/i);
 });
 
 test("informational cookie UI does not claim to offer preferences", () => {
