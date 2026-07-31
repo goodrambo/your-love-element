@@ -90,10 +90,12 @@
     "assets/tracking-config.js",
     "assets/meta-pixel-base.js",
     "worker/src/index.js",
-    "scripts/growth-control.mjs"
+    "scripts/growth-control.mjs",
+    "scripts/growth-scorecard-adapter.mjs"
   ],
   "javascript_tests": [
     "worker/test/growth-metrics.test.mjs",
+    "scripts/test/growth-scorecard-adapter.test.mjs",
     "scripts/test/growth-control.test.mjs",
     "scripts/test/seo.test.mjs"
   ],

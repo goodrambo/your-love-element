@@ -24,7 +24,8 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 
 ## Ready
 
-- [ ] Add a deterministic aggregate adapter and contract test that converts the two service-role-only RPC result sets into evaluator-ready daily input, including landing/full-report merging, while rejecting identifiers and customer-level fields. This removes manual assembly risk without requiring any new secret or external mutation.
+- [x] Add a deterministic aggregate adapter and contract test that converts the two service-role-only RPC result sets into evaluator-ready daily input, including landing/full-report merging, strict closed-day completeness, sanitized UTM validation, and rejection of identifiers, unknown fields, and customer-level fields.
+- [ ] Add a golden parity test that feeds the same aggregate RPC fixtures through the protected Worker route and local adapter, then requires identical days, totals, streak, and attribution. This detects scorecard contract drift without a production mutation.
 - [x] Align homepage WebPage/Product structured-data images and the image sitemap with the deployed 112,840-byte WebP through reversible PR [#7](https://github.com/goodrambo/your-love-element/pull/7); add regression coverage, require Harness/Pages success, and complete production source plus desktop/mobile smoke on merge `110435e`.
 - [x] Optimize the duplicated homepage hero transfer through reversible PR [#5](https://github.com/goodrambo/your-love-element/pull/5): replace the 2,268,306-byte PNG requests with a 112,840-byte WebP, add layout/loading hints and a 200 KB regression budget, require Harness/Pages success, and complete production desktop/mobile smoke on merge `e270c6f`.
 - [x] Release the verified conversion audit through reversible branch `codex/preview-offer-clarity` and PR #2; require Harness/CI success, merge/deploy only the allowlisted site, and complete production desktop/mobile plus SEO schema smoke on merge `c468bf7`.

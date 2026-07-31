@@ -162,6 +162,12 @@ Review strategy once per 6 early-stage runs, once per 7 mid-stage runs, and once
 
 Use `scripts/growth-control.mjs` after the protected scorecard response and any authorized provider aggregates have been collected. The evaluator does not fetch data or read credentials. It accepts aggregate JSON only, rejects customer/session/order/reading/answer/secret-shaped keys, and emits one primary constraint plus a pre-registered action contract.
 
+When project-scoped access returns the two service-role-only RPC row sets instead of the protected endpoint response, first use the deterministic adapter. Its input contains only `start_date`, `end_date`, `commerce_rows`, and `funnel_rows`; it requires exactly one commerce row for every closed day, merges landing/full-report and sanitized UTM aggregates, and rejects unknown or sensitive fields.
+
+```bash
+node scripts/growth-scorecard-adapter.mjs --input /absolute/path/to/aggregate-rpc-input.json
+```
+
 ```bash
 node scripts/growth-control.mjs --input /absolute/path/to/aggregate-growth-input.json
 ```
