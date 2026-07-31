@@ -234,6 +234,15 @@ test("rejects a scorecard with a missing closed day", () => {
   }), /contiguous closed days/);
 });
 
+test("rejects a stale scorecard that does not include the latest closed day", () => {
+  assert.throws(() => evaluateGrowthControl({
+    run_date: "2026-07-31",
+    scorecard: scorecard(),
+    authority: READY_AUTHORITY,
+    provider: { public_health_ok: true, paid_flow_incident: false },
+  }), /latest closed Asia\/Taipei day/);
+});
+
 test("intersects claimed mutation access with the standing-authority contract", () => {
   const result = evaluateGrowthControl({
     run_date: "2026-07-30",

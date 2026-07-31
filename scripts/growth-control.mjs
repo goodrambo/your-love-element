@@ -414,6 +414,9 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
   const scorecard = normalizeScorecard(input.scorecard);
   const taipeiToday = new Date(Date.now() + (8 * 60 * 60 * 1000)).toISOString().slice(0, 10);
   const runDate = requireDate(input.run_date || (scorecard ? addDays(scorecard.end_date, 1) : taipeiToday), "run_date");
+  if (scorecard && scorecard.end_date !== addDays(runDate, -1)) {
+    throw new Error("Scorecard must end on the latest closed Asia/Taipei day");
+  }
   const authority = resolveAuthority(input.authority, standingAuthority);
   const authorityPolicy = authorityPolicySummary(standingAuthority);
   const missingAuthorities = CRITICAL_AUTHORITIES.filter((key) => !authority[key]);
