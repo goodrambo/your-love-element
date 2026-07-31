@@ -283,23 +283,33 @@ function mergeGrowthMetricRows(commerceRows, funnelRows, { startDate, endDate, d
   }
 
   const attribution = [];
+  const attributionKeys = new Set();
   for (const row of funnelRows) {
     const date = requireDateString(row.metric_date, "metric_date");
-    const page = requireAnalyticsValue(row.page, ANALYTICS_PAGES, "page", 502);
-    const day = daily.get(date);
-    if (!day) {
-      continue;
+    if (!expectedDateSet.has(date)) {
+      throw httpError(502, `Growth scorecard returned out-of-range funnel day ${date}`);
     }
+    const page = requireAnalyticsValue(row.page, ANALYTICS_PAGES, "page", 502);
+    const attributionLabels = Object.fromEntries(
+      ANALYTICS_ATTRIBUTION_KEYS.map((key) => [key, nullableAnalyticsLabel(row[key])]),
+    );
+    const attributionKey = JSON.stringify([
+      date,
+      page,
+      ...ANALYTICS_ATTRIBUTION_KEYS.map((key) => attributionLabels[key]),
+    ]);
+    if (attributionKeys.has(attributionKey)) {
+      throw httpError(502, `Growth scorecard returned duplicate funnel attribution row ${date} ${page}`);
+    }
+    attributionKeys.add(attributionKey);
 
+    const day = daily.get(date);
     const pageViews = nonnegativeInteger(row.page_view_sessions, "page_view_sessions");
     day[page === "landing" ? "landing_sessions" : "full_report_sessions"] += pageViews;
     for (const field of FIRST_PARTY_FUNNEL_FIELDS) {
       day[field] += nonnegativeInteger(row[field], field);
     }
 
-    const attributionLabels = Object.fromEntries(
-      ANALYTICS_ATTRIBUTION_KEYS.map((key) => [key, nullableAnalyticsLabel(row[key])]),
-    );
     if (Object.values(attributionLabels).some(Boolean)) {
       attribution.push({
         date,
