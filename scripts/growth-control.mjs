@@ -39,6 +39,10 @@ const CRITICAL_AUTHORITIES = Object.freeze([
   "paid_flow_e2e",
 ]);
 
+const REQUIRED_ACCESS_AUTHORITIES = Object.freeze([
+  "scorecard_read",
+]);
+
 const FUNNEL_STEPS = Object.freeze([
   { id: "landing_to_cta", numerator: "landing_cta_clicks", denominator: "landing_sessions", target: 0.25, minimum: 100 },
   { id: "cta_to_quiz", numerator: "quiz_starts", denominator: "landing_cta_clicks", target: 0.70, minimum: 100 },
@@ -51,13 +55,13 @@ const FUNNEL_STEPS = Object.freeze([
 const ACTIONS = Object.freeze({
   access: {
     id: "complete_authority_and_scorecard_gate",
-    hypothesis: "Once aggregate production truth and standing authorities are available, the loop can choose and evaluate the actual bottleneck instead of optimizing from stale proxies.",
-    primary_metric: "critical_capabilities_ready",
+    hypothesis: "Once one authorized aggregate scorecard path is available, the loop can choose and evaluate the actual bottleneck instead of optimizing from stale proxies.",
+    primary_metric: "scorecard_access_ready",
     guardrails: ["no secrets or customer-level data in logs", "no external mutation without recorded standing authority"],
-    sample_gate: "all required access rows have current evidence",
+    sample_gate: "scorecard_read has current exact-project evidence",
     time_gate: "recheck on every daily run until ready",
     stop_condition: "stop immediately for OTP, CAPTCHA, permission denial, or ambiguous target account",
-    authority_required: [],
+    authority_required: REQUIRED_ACCESS_AUTHORITIES,
   },
   reliability: {
     id: "repair_paid_flow_reliability",
@@ -420,6 +424,7 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
   const authority = resolveAuthority(input.authority, standingAuthority);
   const authorityPolicy = authorityPolicySummary(standingAuthority);
   const missingAuthorities = CRITICAL_AUTHORITIES.filter((key) => !authority[key]);
+  const missingRequiredAccess = REQUIRED_ACCESS_AUTHORITIES.filter((key) => !authority[key]);
   const provider = input.provider || {};
   if (typeof provider.public_health_ok !== "boolean" || typeof provider.paid_flow_incident !== "boolean") {
     throw new Error("Provider health and paid-flow incident signals must be explicit booleans");
@@ -429,10 +434,7 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
 
   if (!scorecard) {
     const empty = aggregateWindow([], 7);
-    const accessAction = {
-      ...actionWithAuthority(ACTIONS.access, authority),
-      missing_authority: missingAuthorities,
-    };
+    const accessAction = actionWithAuthority(ACTIONS.access, authority);
     return {
       schema_version: 1,
       run_date: runDate,
@@ -445,7 +447,7 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
       current_streak: null,
       rolling: { "3d": aggregateWindow([], 3), "7d": empty, "14d": aggregateWindow([], 14) },
       economics: providerMetrics(provider, aggregateWindow([], 3)),
-      next_milestone: nextMilestone(runDate, empty, null, missingAuthorities.length === 0),
+      next_milestone: nextMilestone(runDate, empty, null, missingRequiredAccess.length === 0),
       primary_constraint: "access",
       constraint_evidence: ["protected aggregate scorecard is unavailable"],
       action: accessAction,
@@ -539,7 +541,7 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
     current_streak: scorecard.goal.current_streak,
     rolling: { "3d": rolling3, "7d": rolling7, "14d": rolling14 },
     economics,
-    next_milestone: nextMilestone(runDate, rolling7, scorecard, missingAuthorities.length === 0),
+    next_milestone: nextMilestone(runDate, rolling7, scorecard, missingRequiredAccess.length === 0),
     primary_constraint: constraint,
     constraint_evidence: evidence,
     action: actionWithAuthority(action, authority),

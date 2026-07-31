@@ -84,8 +84,22 @@ test("classifies missing aggregate truth as access and keeps all values unknown"
   assert.equal(result.current_streak, null);
   assert.equal(result.rolling["7d"].purchasers_per_day, null);
   assert.equal(result.action.id, "complete_authority_and_scorecard_gate");
-  assert.equal(result.action.missing_authority.length, 8);
+  assert.deepEqual(result.action.missing_authority, ["scorecard_read"]);
   assert.equal(result.missing_authorities.length, 8);
+});
+
+test("keeps optional and deliberately excluded channels out of the organic authority gate", () => {
+  const result = evaluateGrowthControl({
+    run_date: "2026-07-30",
+    scorecard: scorecard(),
+    authority: { scorecard_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+  });
+
+  assert.equal(result.next_milestone.metric, "authority_gate");
+  assert.equal(result.next_milestone.actual, 1);
+  assert.ok(result.missing_authorities.includes("paid_media"));
+  assert.ok(result.missing_authorities.includes("paid_flow_e2e"));
 });
 
 test("prioritizes fulfillment below 98 percent before traffic or conversion", () => {
