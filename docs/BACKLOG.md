@@ -24,6 +24,7 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 
 ## Ready
 
+- [x] Optimize the duplicated homepage hero transfer through reversible PR [#5](https://github.com/goodrambo/your-love-element/pull/5): replace the 2,268,306-byte PNG requests with a 112,840-byte WebP, add layout/loading hints and a 200 KB regression budget, require Harness/Pages success, and complete production desktop/mobile smoke on merge `e270c6f`.
 - [x] Release the verified conversion audit through reversible branch `codex/preview-offer-clarity` and PR #2; require Harness/CI success, merge/deploy only the allowlisted site, and complete production desktop/mobile plus SEO schema smoke on merge `c468bf7`.
 
 - [x] Implement the initial SEO/GEO/AEO foundation: answer-first homepage content, Five Elements pillar guide, methodology/AI disclosure page, internal cluster links, schema, sitemap updates, and automated regression coverage.

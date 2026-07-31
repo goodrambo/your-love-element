@@ -1,9 +1,9 @@
 ---
 kind: current
 status: active
-last_verified: 2026-07-30
+last_verified: 2026-07-31
 review_after: 2026-08-05
-evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub release merge 0de5835 plus state commit 558a7e1 and successful Actions/Pages runs; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
+evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub release merges through e270c6f with successful Actions/Pages runs; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
 ---
 
 # Project State
@@ -14,13 +14,13 @@ This is the only current-state snapshot. It describes what is verified now and m
 
 - Product: English Five Element-inspired relationship reading; free 10-question preview, optional `$9.99 USD` full report.
 - Production topology: GitHub Pages -> Cloudflare Worker -> Supabase / Lemon Squeezy / OpenAI / Resend, plus Meta Pixel and CAPI.
-- Production site: `https://yourloveelement.com` returned HTTP 200 on 2026-07-30.
-- Public GitHub `main` includes release merge `c468bf74071aa57ea77d20ca5204ad521e9dd1e8` (`Improve preview-to-offer conversion (#2)`) after CI and Pages deployment succeeded on 2026-07-30. The earlier brand/search release remains merge `0de5835f53edf463a3de5a78d79dabbb38e4c70a`.
-- Local `main` was fast-forwarded to the verified production merge; the active documentation-only closeout branch records that external state.
+- Production site: `https://yourloveelement.com` returned HTTP 200 on 2026-07-31.
+- Public GitHub `main` includes performance release merge `e270c6fff16f7e9050a1ac0fe1faa080e5618ebc` (`Optimize homepage hero image (#5)`) after CI and Pages deployment succeeded on 2026-07-31. The conversion release remains merge `c468bf74071aa57ea77d20ca5204ad521e9dd1e8`.
+- Local `main` was fast-forwarded to the verified performance release; the active documentation-only closeout branch records that external state.
 
 ## Verified production state
 
-Read-only checks on 2026-07-30 confirmed:
+Read-only checks through 2026-07-31 confirmed:
 
 - GitHub `harness` run `30502992951` and Pages build/deployment run `30502992303` completed successfully for release merge `0de5835`. The documentation-only follow-up `558a7e1` also passed Harness run `30503346309` and Pages run `30503345639`.
 - Production serves the new homepage title and cache revision, the Five Elements guide, and the methodology/limitations page. The two content pages have their intended canonical URLs; the guide exposes `Article` and `FAQPage` structured data; all three pages had no horizontal overflow or browser console warnings/errors in the release verification.
@@ -32,7 +32,7 @@ Read-only checks on 2026-07-30 confirmed:
 - The protected growth scorecard route is deployed: an unauthenticated request returns HTTP 401. Its positive bearer-secret path passed the dedicated integration test but was not called in production because the secret was not exposed to this session.
 - The analytics route is deployed: an untrusted origin returns HTTP 403 and frontend `Purchase` returns HTTP 400 before storage. A post-release project-scoped aggregate on 2026-07-30 confirmed `3` unique landing sessions with matching `page_view`/`view_content` events and `1` full-report page-view session, without returning hashes or identifiers. The same aggregate found no preview, checkout, purchaser, refund, delivery, or failure event for the open Taipei day.
 - Supabase production has service-role-only `get_growth_scorecard`, `funnel_events`, `funnel_event_maintenance`, and `get_first_party_funnel_scorecard` after the corrected migrations were applied on 2026-07-30. RLS is enabled and `anon`/`authenticated` execute is denied.
-- Public GitHub repository and production Pages are reachable; merge `c468bf7` is the latest fully verified runtime deployment. Harness run `30552067161` and Pages run `30552062765` completed successfully.
+- Public GitHub repository and production Pages are reachable; merge `e270c6f` is the latest fully verified runtime deployment. Harness run `30593389598` and Pages run `30593389276` completed successfully. The homepage now serves the 1672 x 941 hero artwork as a 112,840-byte WebP instead of the 2,268,306-byte PNG for both visible uses, a 95.0% reduction. Production desktop `1440 x 1000` and mobile `390 x 844` browser smoke loaded both images at their natural dimensions with no horizontal overflow or console warnings/errors; the four Worker health endpoints remained HTTP 200 and the unauthenticated scorecard remained HTTP 401.
 
 Fresh production proof is still required for actual email delivery, payment/webhook behavior, report content, and Meta event receipt after any related deployment.
 
