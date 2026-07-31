@@ -104,6 +104,22 @@ test("indexable pages have unique search metadata and sitemap entries", () => {
   }
 });
 
+test("every indexable page exposes one valid keyboard skip target", () => {
+  for (const relativePath of contracts.html_files) {
+    const html = read(relativePath);
+    if (/<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html)) continue;
+
+    const skipLinks = [...html.matchAll(/<a[^>]+class=["'][^"']*\bskip-link\b[^"']*["'][^>]+href=["']#([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)];
+    assert.equal(skipLinks.length, 1, `${relativePath} must expose exactly one skip link`);
+
+    const target = skipLinks[0][1];
+    const label = plainText(skipLinks[0][2]);
+    const escapedTarget = target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    assert.ok(label, `${relativePath} skip link must have an accessible label`);
+    assert.match(html, new RegExp(`\\bid=["']${escapedTarget}["']`, "i"), `${relativePath} skip link target must exist`);
+  }
+});
+
 test("sitemap dates and robots discovery instructions are valid", () => {
   const sitemap = read("sitemap.xml");
   const robots = read("robots.txt");

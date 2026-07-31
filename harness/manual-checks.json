@@ -3,8 +3,8 @@
   "frontend_smoke": {
     "status": "pass",
     "verified_at": "2026-07-31",
-    "source_digest": "e18ea81cd591b0eb0a58bc2e45370fd25abc8d7b1b3041f86b397baa1c3c9820",
-    "evidence": "In-app Browser offline smoke for the always-available referral Copy link action. At the default desktop viewport, all 10 free questions were completed with an Earth answer, the preview revealed, and the share card rendered as a 1080x1350 blob with enabled Share image, Download, and Copy link controls and no horizontal overflow. Copy link wrote exactly https://yourloveelement.com/?utm_source=share_card&utm_medium=referral&utm_campaign=organic_share&utm_content=result_card to the browser clipboard and displayed the success status; no answer, element, email, session, reading, order, or customer identifier appeared. At 390x844, Copy link spanned the full 328px share panel, document scroll width equaled the 390px viewport, and the 1080x1350 preview remained intact. The page used script.js?v=20260731-copy-link-1, kept the production API disabled, and produced no console errors. The localhost server log contained only local page/assets and no API request. This digest invalidates the evidence on later frontend changes."
+    "source_digest": "fbacf4e0e7d2da37ea1e56c2dfd40cc6e8c93abf1411c05d82e285c0a5bc811d",
+    "evidence": "In-app Browser offline smoke for the accessibility-only legal-page change. Contact, Privacy, Refunds, and Terms each exposed exactly one Skip to the main content link and a matching #main-content target with tabindex=-1; the link remained visually off-canvas before focus. All four pages had no horizontal overflow at 1280x900 or 390x844 and produced no console warnings or errors. The localhost server log contained only local page/assets and no API request. Automated SEO coverage additionally verifies one valid skip target on every indexable page. Shared CSS/JavaScript and the paid-flow digest were unchanged, so this check did not exercise checkout, payment, reports, email, or production APIs. This digest invalidates the evidence on later frontend changes."
   },
   "paid_flow_e2e": {
     "status": "waived",
