@@ -69,7 +69,7 @@ const FIRST_PARTY_FUNNEL_FIELDS = [
   "share_card_link_shared",
   "share_card_downloaded",
 ];
-const GROWTH_COUNT_FIELDS = [
+const GROWTH_COMMERCE_FIELDS = [
   "previewed_readings",
   "checkout_readings",
   "verified_purchasers",
@@ -80,6 +80,17 @@ const GROWTH_COUNT_FIELDS = [
   "paid_signal_cohort_delivered_within_15m",
   "delivered_readings",
   "failed_readings",
+];
+const GROWTH_COMMERCE_KEYS = new Set(["metric_date", ...GROWTH_COMMERCE_FIELDS]);
+const GROWTH_FUNNEL_KEYS = new Set([
+  "metric_date",
+  "page",
+  ...ANALYTICS_ATTRIBUTION_KEYS,
+  "page_view_sessions",
+  ...FIRST_PARTY_FUNNEL_FIELDS,
+]);
+const GROWTH_COUNT_FIELDS = [
+  ...GROWTH_COMMERCE_FIELDS,
   "landing_sessions",
   "full_report_sessions",
   ...FIRST_PARTY_FUNNEL_FIELDS,
@@ -261,6 +272,7 @@ function mergeGrowthMetricRows(commerceRows, funnelRows, { startDate, endDate, d
   const expectedDateSet = new Set(expectedDates);
   const daily = new Map();
   for (const row of commerceRows) {
+    assertAllowedGrowthRowKeys(row, GROWTH_COMMERCE_KEYS, "commerce");
     const date = requireDateString(row.metric_date, "metric_date");
     if (!expectedDateSet.has(date)) {
       throw httpError(502, `Growth scorecard returned out-of-range commerce day ${date}`);
@@ -285,6 +297,7 @@ function mergeGrowthMetricRows(commerceRows, funnelRows, { startDate, endDate, d
   const attribution = [];
   const attributionKeys = new Set();
   for (const row of funnelRows) {
+    assertAllowedGrowthRowKeys(row, GROWTH_FUNNEL_KEYS, "funnel");
     const date = requireDateString(row.metric_date, "metric_date");
     if (!expectedDateSet.has(date)) {
       throw httpError(502, `Growth scorecard returned out-of-range funnel day ${date}`);
@@ -333,6 +346,17 @@ function mergeGrowthMetricRows(commerceRows, funnelRows, { startDate, endDate, d
       || String(left.utm_content || "").localeCompare(String(right.utm_content || ""))
     )),
   };
+}
+
+function assertAllowedGrowthRowKeys(row, allowedKeys, rowType) {
+  if (!row || typeof row !== "object" || Array.isArray(row)) {
+    throw httpError(502, `Growth scorecard returned an invalid ${rowType} row`);
+  }
+  for (const key of Object.keys(row)) {
+    if (!allowedKeys.has(key)) {
+      throw httpError(502, `Growth scorecard returned unknown ${rowType} field ${key}`);
+    }
+  }
 }
 
 function buildGrowthMetrics(rows, { startDate, endDate, days }, attribution = []) {

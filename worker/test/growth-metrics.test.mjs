@@ -317,6 +317,47 @@ test("growth metrics fails closed on duplicate or out-of-range funnel attributio
   }
 });
 
+test("growth metrics fails closed on unknown RPC aggregate fields", async () => {
+  const originalFetch = globalThis.fetch;
+  const originalConsoleError = console.error;
+  const commerceRows = [
+    scorecardRow("2026-07-26", 10),
+    scorecardRow("2026-07-27", 12),
+    scorecardRow("2026-07-28", 11),
+  ];
+  const scenarios = [
+    {
+      name: "commerce",
+      commerce: [{ ...commerceRows[0], raw_payload: null }, ...commerceRows.slice(1)],
+      funnel: [],
+      error: "Growth scorecard returned unknown commerce field raw_payload",
+    },
+    {
+      name: "funnel",
+      commerce: commerceRows,
+      funnel: [funnelRow("2026-07-26", { customer_email: null })],
+      error: "Growth scorecard returned unknown funnel field customer_email",
+    },
+  ];
+
+  try {
+    console.error = () => {};
+    for (const scenario of scenarios) {
+      globalThis.fetch = scorecardFetch(scenario.commerce, scenario.funnel);
+      const request = new Request(
+        "https://worker.test/api/admin/growth-metrics?days=3&end_date=2026-07-28",
+        { headers: { authorization: "Bearer test-growth-secret" } },
+      );
+      const response = await worker.fetch(request, env());
+      assert.equal(response.status, 502, `${scenario.name} status`);
+      assert.deepEqual(await response.json(), { error: scenario.error }, `${scenario.name} response`);
+    }
+  } finally {
+    console.error = originalConsoleError;
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("growth streak resets when the latest closed day misses the target", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = scorecardFetch([
