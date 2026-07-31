@@ -138,6 +138,26 @@ test("homepage keeps the preview-to-purchase path explicit and trustworthy", () 
   assert.match(script, /Local preview mode keeps checkout safely disabled\./);
 });
 
+test("share cards use a privacy-safe attributable referral URL", () => {
+  const script = read("script.js");
+  const shareUrlMatch = script.match(/const shareReferralUrl = "([^"]+)";/);
+
+  assert.ok(shareUrlMatch, "script.js must define one fixed share referral URL");
+  const shareUrl = new URL(shareUrlMatch[1]);
+  assert.equal(shareUrl.origin, origin);
+  assert.equal(shareUrl.pathname, "/");
+  assert.deepEqual(Object.fromEntries(shareUrl.searchParams), {
+    utm_source: "share_card",
+    utm_medium: "referral",
+    utm_campaign: "organic_share",
+    utm_content: "result_card",
+  });
+  for (const privateKey of ["answer", "element", "email", "session", "reading_id", "order_id", "customer_id"]) {
+    assert.equal(shareUrl.searchParams.has(privateKey), false, `share URL must not include ${privateKey}`);
+  }
+  assert.match(script, /discover yours:\\n\$\{shareReferralUrl\}/);
+});
+
 test("homepage serves an optimized, layout-stable hero image", () => {
   const html = read("index.html");
   const sitemap = read("sitemap.xml");
