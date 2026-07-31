@@ -302,7 +302,9 @@ function mergeGrowthMetricRows(commerceRows, funnelRows) {
     attribution: attribution.sort((left, right) => (
       left.date.localeCompare(right.date)
       || left.page.localeCompare(right.page)
+      || String(left.utm_source || "").localeCompare(String(right.utm_source || ""))
       || String(left.utm_campaign || "").localeCompare(String(right.utm_campaign || ""))
+      || String(left.utm_content || "").localeCompare(String(right.utm_content || ""))
     )),
   };
 }
