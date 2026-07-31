@@ -3,7 +3,7 @@ kind: current
 status: active
 last_verified: 2026-07-31
 review_after: 2026-08-05
-evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub releases through d06bfc2 with successful Actions/Pages runs; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
+evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub releases through ea3c235 with successful Actions/Pages runs; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
 ---
 
 # Project State
@@ -15,8 +15,8 @@ This is the only current-state snapshot. It describes what is verified now and m
 - Product: English Five Element-inspired relationship reading; free 10-question preview, optional `$9.99 USD` full report.
 - Production topology: GitHub Pages -> Cloudflare Worker -> Supabase / Lemon Squeezy / OpenAI / Resend, plus Meta Pixel and CAPI.
 - Production site: `https://yourloveelement.com` returned HTTP 200 on 2026-07-31.
-- Public GitHub `main` includes scorecard-freshness release merge `d06bfc21b9bc1ee687178ea1e63c4dd94a6d3ce8` (`Reject stale growth scorecards (#20)`) after CI and Pages deployment succeeded on 2026-07-31. The latest customer-facing frontend remains referral Copy link merge `f47e4acccf6b2500c7e35442cd46f5126a3eaa35`; the preceding privacy-safe share-attribution release remains merge `8cf9210de3e772506e310175f84d128b986cbe7c`; the image-discovery release remains merge `110435efc3afb1f97adffdf3a5df1a0ae81648ee`.
-- Local `main` was fast-forwarded to the verified scorecard-freshness release.
+- Public GitHub `main` includes editorial-schema regression merge `ea3c2357e2a9d33a878eab650e5326baaf48f4e2` (`Guard editorial breadcrumb schema (#22)`) and scorecard-freshness release merge `d06bfc21b9bc1ee687178ea1e63c4dd94a6d3ce8`; both passed CI and Pages on 2026-07-31. The latest customer-facing frontend remains referral Copy link merge `f47e4acccf6b2500c7e35442cd46f5126a3eaa35`; the preceding privacy-safe share-attribution release remains merge `8cf9210de3e772506e310175f84d128b986cbe7c`; the image-discovery release remains merge `110435efc3afb1f97adffdf3a5df1a0ae81648ee`.
+- Local `main` was fast-forwarded to the verified editorial-schema regression release.
 
 ## Verified production state
 
@@ -37,6 +37,7 @@ Read-only checks through 2026-07-31 confirmed:
 - Share-attribution merge `8cf9210` replaced the untagged homepage link in share text with fixed aggregate-only labels: `utm_source=share_card`, `utm_medium=referral`, `utm_campaign=organic_share`, and `utm_content=result_card`. Harness run `30620576477` and Pages run `30620576216` succeeded. Production source serves cache revision `20260731-share-attribution-1` and the expected fixed URL; the homepage, full-report page, and four Worker health endpoints returned HTTP 200, while the unauthenticated scorecard returned HTTP 401. The release neither changed the native image payload shape nor added answers, element, email, session, reading, order, or customer identifiers to the URL. Desktop full-quiz/share-card and mobile layout/browser checks were completed offline before release; no natural referral event has been observed yet.
 - Copy-link merge `f47e4ac` added an always-available desktop/no-WebShare referral path without adding a copy event that could overstate sharing. Harness run `30624138892` and Pages run `30624138534` succeeded for the exact merge SHA. Production source serves cache revision `20260731-copy-link-1` and `copyShareLinkButton`; the homepage, full-report page, and four Worker health endpoints returned HTTP 200, while the unauthenticated scorecard returned HTTP 401. Offline browser QA copied the exact fixed four-UTM URL, rendered the existing `1080 x 1350` share card, preserved a full-width mobile action at `390 x 844`, and found no horizontal overflow, console errors, or API requests. No natural referred landing is claimed yet.
 - Scorecard-freshness merge `d06bfc2` makes the local decision CLI reject any aggregate range that does not end on the Asia/Taipei day immediately before `run_date`, preventing a prior day's decision input from being reused after a new day closes. The 12/12 evaluator regressions include stale rejection, while the current 2026-07-30 closed-day input remains valid for the 2026-07-31 run and still selects observability. Harness run `30627161698` and Pages run `30627160722` succeeded for the exact merge SHA; no frontend or paid-flow source changed.
+- Editorial-schema regression merge `ea3c235` makes the SEO suite verify exactly one `WebPage` and `BreadcrumbList` on each editorial page, the WebPage-to-breadcrumb reference, contiguous two-level positions, the production Home item, and a current-page item equal to the canonical URL. PR [#22](https://github.com/goodrambo/your-love-element/pull/22), Harness run `30630891712`, and Pages run `30630891220` succeeded; the SEO suite passed 11/11 and post-release site/Worker health remained HTTP 200 with unauthenticated scorecard HTTP 401. No customer-facing, frontend-runtime, experiment, or paid-flow source changed.
 
 Fresh production proof is still required for actual email delivery, payment/webhook behavior, report content, and Meta event receipt after any related deployment.
 
