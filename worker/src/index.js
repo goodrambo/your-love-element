@@ -531,7 +531,7 @@ function addDateDays(date, delta) {
 }
 
 function nonnegativeInteger(value, label) {
-  const number = Number(value ?? 0);
+  const number = typeof value === "string" && /^\d+$/.test(value) ? Number(value) : value;
   if (!Number.isSafeInteger(number) || number < 0) {
     throw httpError(502, `Growth scorecard returned invalid ${label}`);
   }
