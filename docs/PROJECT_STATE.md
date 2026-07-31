@@ -3,7 +3,7 @@ kind: current
 status: active
 last_verified: 2026-08-01
 review_after: 2026-08-05
-evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub releases through 6df3170 with successful Actions/Pages runs; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
+evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub releases through cc709ba with successful Actions/Pages runs; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
 ---
 
 # Project State
@@ -15,8 +15,8 @@ This is the only current-state snapshot. It describes what is verified now and m
 - Product: English Five Element-inspired relationship reading; free 10-question preview, optional `$9.99 USD` full report.
 - Production topology: GitHub Pages -> Cloudflare Worker -> Supabase / Lemon Squeezy / OpenAI / Resend, plus Meta Pixel and CAPI.
 - Production site: `https://yourloveelement.com` returned HTTP 200 on 2026-08-01.
-- Public GitHub `main` includes free-quiz announcement merge `6df31705a9bcb514b92ce4eb59020df9c6e8ef3b`, legal-page accessibility merge `77a4ccb27de6710cf0ccce872295b8048803bf8e`, CI runtime release merge `6ce4d26b5953fab6d28cd464c814159b7502f16b`, editorial-schema regression merge `ea3c2357e2a9d33a878eab650e5326baaf48f4e2`, and scorecard-freshness release merge `d06bfc21b9bc1ee687178ea1e63c4dd94a6d3ce8`; all passed CI and Pages on 2026-07-31. The active referral experiment remains Copy link merge `f47e4acccf6b2500c7e35442cd46f5126a3eaa35`.
-- Local `main` was fast-forwarded to the verified free-quiz announcement release.
+- Public GitHub `main` includes reduced-motion accessibility merge `cc709ba6af356cf573ccaa94e185b3253dd3049a`, free-quiz announcement merge `6df31705a9bcb514b92ce4eb59020df9c6e8ef3b`, legal-page accessibility merge `77a4ccb27de6710cf0ccce872295b8048803bf8e`, CI runtime release merge `6ce4d26b5953fab6d28cd464c814159b7502f16b`, editorial-schema regression merge `ea3c2357e2a9d33a878eab650e5326baaf48f4e2`, and scorecard-freshness release merge `d06bfc21b9bc1ee687178ea1e63c4dd94a6d3ce8`; all passed CI and Pages by 2026-08-01. The active referral experiment remains Copy link merge `f47e4acccf6b2500c7e35442cd46f5126a3eaa35`.
+- Local `main` was fast-forwarded to the verified reduced-motion accessibility release.
 
 ## Verified production state
 
@@ -41,6 +41,7 @@ Read-only checks through 2026-08-01 confirmed:
 - CI runtime merge `6ce4d26` upgrades checkout/setup-python/setup-node to their Node 24 action majors after PR [#24](https://github.com/goodrambo/your-love-element/pull/24) demonstrated that the preceding majors emitted Node 20 deprecation annotations. PR and merge Harness run `30634619926` plus Pages run `30634619511` succeeded with empty check annotations; post-release site/Worker health remained HTTP 200 and unauthenticated scorecard HTTP 401. No application, frontend, experiment, measurement, or paid-flow source changed.
 - Legal-page accessibility merge `77a4ccb` adds one skip-to-main link and focusable target to Contact, Privacy, Refunds, and Terms, with indexable-page regression coverage. PR [#26](https://github.com/goodrambo/your-love-element/pull/26), merge Harness run `30639362716`, and Pages run `30639360766` succeeded. Offline desktop/mobile QA found one valid target per route, no horizontal overflow, no console errors, and no API requests; production source contains the links/targets, the site and four Worker health endpoints remained HTTP 200, and the unauthenticated scorecard remained HTTP 401. Shared CSS/JavaScript and the paid-flow digest were unchanged.
 - Free-quiz announcement merge `6df3170` exposes the existing visible Question N of 10 and mood summary as one polite, atomic status region, without changing quiz logic, tracking, layout, or paid-flow source. PR [#28](https://github.com/goodrambo/your-love-element/pull/28), merge Harness run `30643361622`, and Pages run `30643361191` succeeded. Offline desktop/mobile interaction advanced from Question 1 to Question 2 with the correct live-region text, no overflow, no console errors, blank production API base, and no API requests. Production source contains exactly one region; the site and four Worker health endpoints remained HTTP 200 and the unauthenticated scorecard remained HTTP 401.
+- Reduced-motion accessibility merge `cc709ba` makes the shared stylesheet honor `prefers-reduced-motion: reduce` by restoring automatic scrolling and reducing animation/transition duration and iteration. PR [#33](https://github.com/goodrambo/your-love-element/pull/33), merge Harness run `30656144374`, and Pages run `30656143258` succeeded. The 14/14 SEO suite verifies the exact CSS rule; offline no-preference desktop/mobile interaction preserved Question 1 to Question 2 progression, layout, blank production API base, and a clean console. Production source serves cache revision `20260801-reduced-motion-1` and the rule; the site and four Worker health endpoints returned HTTP 200 and the unauthenticated scorecard returned HTTP 401. Quiz, tracking, checkout, payment, webhook, report, email, and Worker behavior were unchanged; the paid-flow waiver is not E2E proof.
 
 Fresh production proof is still required for actual email delivery, payment/webhook behavior, report content, and Meta event receipt after any related deployment.
 
