@@ -3,8 +3,8 @@
   "frontend_smoke": {
     "status": "pass",
     "verified_at": "2026-08-02",
-    "source_digest": "efedc162a3925e883883696a6b6f94c8480436ec79faa8ea274adb117f0b29f7",
-    "evidence": "In-app Browser offline smoke for free-quiz auto-advance focus at 1280x720 and 390x844. Before the change, selecting the first radio advanced to Question 2 while document.activeElement fell back to BODY. After the change, every automatic transition from Questions 1 through 9 focused the first control in the newly active question; the trail ended on the birth-month SELECT for Question 10. The desktop flow then revealed the Wood preview, focused H2#previewTitle, and rendered the complete 1080x1350 share card. At 390x844, Question 1 advanced to Question 2 with the intent radio focused and no horizontal overflow. The production API base stayed blank, and the localhost server recorded only local page/assets plus the Wood share template with no API request. Question order, answers, 220ms timing, live status, result, share/referral/tracking, API, checkout, and paid-flow behavior were unchanged. This digest invalidates the evidence on later frontend changes."
+    "source_digest": "0f78da77cdfcbb486ad02ca85c39c56a5735bf06d7f61614420006f70e653439",
+    "evidence": "In-app Browser offline skip-navigation smoke on the homepage, Five Elements guide, and methodology page at desktop and 390x844. Before the change, activating the homepage skip link changed the fragment but left document.activeElement on BODY. After the change, each existing link focused its intended target: FORM#reading on the homepage and MAIN#main-content on both editorial routes. All targets had tabindex=-1, every route had no horizontal overflow, the production API base stayed blank, and the localhost server recorded page/assets only with no API request. Content, quiz, share/referral experiment, tracking, checkout, and paid-flow behavior were unchanged. This digest invalidates the evidence on later frontend changes."
   },
   "paid_flow_e2e": {
     "status": "waived",
