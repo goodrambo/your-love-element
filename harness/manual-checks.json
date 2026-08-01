@@ -3,8 +3,8 @@
   "frontend_smoke": {
     "status": "pass",
     "verified_at": "2026-08-02",
-    "source_digest": "817b82e2df7091b87571df250c5f60fa6d8decd45a2f7c5324136e53b362fea0",
-    "evidence": "In-app Browser offline smoke for the hero image preload at 1280x900 and 390x844. Each viewport exposed exactly one image preload with the same absolute WebP URL as the complete 1672-pixel hero image, type image/webp, and high fetch priority. The browser asset inventory contained one hero URL with the preload and both image consumers as sources; the localhost server recorded one hero request and no API request. Both viewports had no horizontal overflow, the production API base stayed blank, selecting the first unique answer auto-advanced from Question 1 to Question 2, and the browser produced no console warnings or errors. No quiz logic, tracking, checkout, payment, report, email, or Worker source changed. This digest invalidates the evidence on later frontend changes."
+    "source_digest": "f805e5d7a075d8a3805b7ce9a2bfe9bd38c5126ed53a90829cb50bf0f5bf0a3c",
+    "evidence": "In-app Browser offline smoke for the below-fold report artwork at 1280x900 and 390x844. At the top of each viewport the 1440 x 810 Earth banner retained an empty currentSrc, zero natural width, and no page-asset entry while sitting about 3394 px and 6039 px below the viewport, respectively. After scrolling into the sample section, each viewport exposed one complete 1440-pixel image and one matching page-asset URL. Both viewports had no horizontal overflow, the production API base stayed blank, selecting the first unique answer auto-advanced from Question 1 to Question 2, and the browser produced no console warnings or errors. The localhost server recorded only local page requests and no API request. No quiz logic, tracking, checkout, payment, report, email, or Worker source changed. This digest invalidates the evidence on later frontend changes."
   },
   "paid_flow_e2e": {
     "status": "waived",
