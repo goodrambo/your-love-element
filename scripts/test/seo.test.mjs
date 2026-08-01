@@ -233,6 +233,12 @@ test("homepage serves an optimized, layout-stable hero image", () => {
   assert.match(sitemap, /<image:loc>https:\/\/yourloveelement\.com\/assets\/hero-soulmate-report\.webp<\/image:loc>/i);
 });
 
+test("below-fold report artwork is lazy and layout-stable", () => {
+  const html = read("index.html");
+
+  assert.match(html, /<img[^>]+src=["']assets\/elements\/earth-banner\.jpg["'][^>]+width=["']1440["'][^>]+height=["']810["'][^>]+loading=["']lazy["'][^>]+decoding=["']async["'][^>]+alt=["']Earth element relationship report banner sample["']/i);
+});
+
 test("informational cookie UI does not claim to offer preferences", () => {
   for (const relativePath of contracts.html_files) {
     const html = read(relativePath);
