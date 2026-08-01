@@ -202,7 +202,7 @@
             </div>
           </div>
 
-          <form class="quiz-panel" id="reading" tabindex="-1" aria-label="Love reading quiz">
+          <form class="quiz-panel" id="reading" tabindex="-1" aria-label="Love reading quiz" aria-describedby="quizHelper">
             <div class="quiz-topline" role="status" aria-live="polite" aria-atomic="true">
               <span>Question <strong id="stepNumber">1</strong> of <strong id="totalSteps">10</strong></span>
               <span id="quizMood">Your current chapter</span>
@@ -210,7 +210,7 @@
             <div class="progress" aria-hidden="true">
               <span id="progressBar"></span>
             </div>
-            <p class="quiz-helper">Your answers shape the preview before any checkout or email field appears.</p>
+            <p class="quiz-helper" id="quizHelper">Your answers shape the preview before any checkout or email field appears.</p>
 
             <fieldset class="quiz-step is-active" data-step="0">
               <legend>What best describes your love life right now?</legend>

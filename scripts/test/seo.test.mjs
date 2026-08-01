@@ -193,6 +193,17 @@ test("free quiz announces automatic step changes without changing its visual pro
   assert.match(html, /<div[^>]+class=["']progress["'][^>]+aria-hidden=["']true["']/i);
 });
 
+test("free quiz exposes its no-email helper as the form description", () => {
+  const html = read("index.html");
+
+  assert.match(html, /<form[^>]+id=["']reading["'][^>]+aria-describedby=["']quizHelper["'][^>]*>/i);
+  assert.match(
+    html,
+    /<p[^>]+class=["']quiz-helper["'][^>]+id=["']quizHelper["'][^>]*>\s*Your answers shape the preview before any checkout or email field appears\.\s*<\/p>/i,
+  );
+  assert.equal((html.match(/\bid=["']quizHelper["']/gi) || []).length, 1, "The quiz helper id must be unique");
+});
+
 test("auto-advancing quiz keeps keyboard focus in the active question", () => {
   const script = read("script.js");
 

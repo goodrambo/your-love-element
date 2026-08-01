@@ -3,8 +3,8 @@
   "frontend_smoke": {
     "status": "pass",
     "verified_at": "2026-08-02",
-    "source_digest": "0f78da77cdfcbb486ad02ca85c39c56a5735bf06d7f61614420006f70e653439",
-    "evidence": "In-app Browser offline skip-navigation smoke on the homepage, Five Elements guide, and methodology page at desktop and 390x844. Before the change, activating the homepage skip link changed the fragment but left document.activeElement on BODY. After the change, each existing link focused its intended target: FORM#reading on the homepage and MAIN#main-content on both editorial routes. All targets had tabindex=-1, every route had no horizontal overflow, the production API base stayed blank, and the localhost server recorded page/assets only with no API request. Content, quiz, share/referral experiment, tracking, checkout, and paid-flow behavior were unchanged. This digest invalidates the evidence on later frontend changes."
+    "source_digest": "0bf128623be32d346b0ac2285f7cfb0cd83cf6df4ef601fac14b6e0389d3c7d1",
+    "evidence": "In-app Browser offline quiz-description smoke on the homepage at desktop and 390x844. Before the change, FORM#reading had no aria-describedby and the visible no-email/no-checkout helper had no id, so the helper was not associated with the quiz. After the change, FORM#reading referenced the unique quizHelper id, the existing helper remained visible with unchanged text, and the page had no horizontal overflow. The production API base stayed blank, and the localhost server recorded page/assets only with no API request. Visible content, question order, quiz behavior, share/referral experiment, tracking, API calls, checkout, and paid-flow behavior were unchanged. This digest invalidates the evidence on later frontend changes."
   },
   "paid_flow_e2e": {
     "status": "waived",
