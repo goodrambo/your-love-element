@@ -1,9 +1,9 @@
 ---
 kind: current
 status: active
-last_verified: 2026-08-01
+last_verified: 2026-08-02
 review_after: 2026-08-05
-evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub releases through dddb619 with successful Actions/Pages runs; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
+evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub releases through 89bb655 with successful Actions/Pages runs; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
 ---
 
 # Project State
@@ -14,13 +14,13 @@ This is the only current-state snapshot. It describes what is verified now and m
 
 - Product: English Five Element-inspired relationship reading; free 10-question preview, optional `$9.99 USD` full report.
 - Production topology: GitHub Pages -> Cloudflare Worker -> Supabase / Lemon Squeezy / OpenAI / Resend, plus Meta Pixel and CAPI.
-- Production site: `https://yourloveelement.com` returned HTTP 200 on 2026-08-01.
-- Public GitHub `main` includes organic authority-gate correction merge `dddb6196b2ec5e854f45c068ff96dee46ed3dac1`, reduced-motion accessibility merge `cc709ba6af356cf573ccaa94e185b3253dd3049a`, free-quiz announcement merge `6df31705a9bcb514b92ce4eb59020df9c6e8ef3b`, legal-page accessibility merge `77a4ccb27de6710cf0ccce872295b8048803bf8e`, CI runtime release merge `6ce4d26b5953fab6d28cd464c814159b7502f16b`, editorial-schema regression merge `ea3c2357e2a9d33a878eab650e5326baaf48f4e2`, and scorecard-freshness release merge `d06bfc21b9bc1ee687178ea1e63c4dd94a6d3ce8`; all passed CI and Pages by 2026-08-01. The active referral experiment remains Copy link merge `f47e4acccf6b2500c7e35442cd46f5126a3eaa35`.
-- Local `main` was fast-forwarded to the verified organic authority-gate correction.
+- Production site: `https://yourloveelement.com` returned HTTP 200 on 2026-08-02.
+- Public GitHub `main` includes hero-image preload merge `89bb6559358dcae9c30bde5cc2ae6e32d711a7fa`, organic authority-gate correction merge `dddb6196b2ec5e854f45c068ff96dee46ed3dac1`, reduced-motion accessibility merge `cc709ba6af356cf573ccaa94e185b3253dd3049a`, and the earlier verified releases; all passed CI and Pages by 2026-08-02. The active referral experiment remains Copy link merge `f47e4acccf6b2500c7e35442cd46f5126a3eaa35`.
+- Local `main` was fast-forwarded to the verified hero-image preload release.
 
 ## Verified production state
 
-Read-only checks through 2026-08-01 confirmed:
+Read-only checks through 2026-08-02 confirmed:
 
 - GitHub `harness` run `30502992951` and Pages build/deployment run `30502992303` completed successfully for release merge `0de5835`. The documentation-only follow-up `558a7e1` also passed Harness run `30503346309` and Pages run `30503345639`.
 - Production serves the new homepage title and cache revision, the Five Elements guide, and the methodology/limitations page. The two content pages have their intended canonical URLs; the guide exposes `Article` and `FAQPage` structured data; all three pages had no horizontal overflow or browser console warnings/errors in the release verification.
@@ -43,6 +43,7 @@ Read-only checks through 2026-08-01 confirmed:
 - Free-quiz announcement merge `6df3170` exposes the existing visible Question N of 10 and mood summary as one polite, atomic status region, without changing quiz logic, tracking, layout, or paid-flow source. PR [#28](https://github.com/goodrambo/your-love-element/pull/28), merge Harness run `30643361622`, and Pages run `30643361191` succeeded. Offline desktop/mobile interaction advanced from Question 1 to Question 2 with the correct live-region text, no overflow, no console errors, blank production API base, and no API requests. Production source contains exactly one region; the site and four Worker health endpoints remained HTTP 200 and the unauthenticated scorecard remained HTTP 401.
 - Reduced-motion accessibility merge `cc709ba` makes the shared stylesheet honor `prefers-reduced-motion: reduce` by restoring automatic scrolling and reducing animation/transition duration and iteration. PR [#33](https://github.com/goodrambo/your-love-element/pull/33), merge Harness run `30656144374`, and Pages run `30656143258` succeeded. The 14/14 SEO suite verifies the exact CSS rule; offline no-preference desktop/mobile interaction preserved Question 1 to Question 2 progression, layout, blank production API base, and a clean console. Production source serves cache revision `20260801-reduced-motion-1` and the rule; the site and four Worker health endpoints returned HTTP 200 and the unauthenticated scorecard returned HTTP 401. Quiz, tracking, checkout, payment, webhook, report, email, and Worker behavior were unchanged; the paid-flow waiver is not E2E proof.
 - Organic authority-gate correction merge `dddb619` limits the missing-scorecard action and 2026-08-02 authority milestone to the current organic loop's required `scorecard_read` path. The evaluator still reports all unavailable optional or deliberately excluded capabilities and does not grant, infer, or hide authority. PR [#35](https://github.com/goodrambo/your-love-element/pull/35), merge Harness run `30659675719`, and Pages run `30659672766` succeeded; the evaluator suite passed 13/13, the published main source contains the required-access contract, the site and four Worker health endpoints returned HTTP 200, and the unauthenticated scorecard returned HTTP 401. Frontend, Worker, paid flow, metrics, and the `$0` paid-media cap were unchanged.
+- Hero-image preload merge `89bb655` adds one high-priority WebP preload matching the existing above-the-fold hero source. PR [#37](https://github.com/goodrambo/your-love-element/pull/37), merge Harness run `30707772203`, and Pages run `30707771835` succeeded. The 14/14 SEO suite locks exact URL/type/priority/cardinality; offline `1280 x 900` and `390 x 844` browser QA found one hero asset/request, no overflow, console/API regression, or quiz-progression failure. Production source contains the preload; the site and four Worker health endpoints returned HTTP 200 and the unauthenticated scorecard returned HTTP 401. Tracking and paid-flow source were unchanged.
 
 Fresh production proof is still required for actual email delivery, payment/webhook behavior, report content, and Meta event receipt after any related deployment.
 
@@ -109,4 +110,4 @@ These changes passed Harness checks and a fresh local browser smoke on 2026-07-3
 
 ## Next decision point
 
-Expose one exact-project aggregate access path to the `yle` runtime—prefer `JOB_RUNNER_SECRET` for the protected scorecard, otherwise the allowlisted Supabase aggregate tool—then collect the closed 2026-07-31 day and resume the seven-day baseline through 2026-08-05. Recheck Search Console when processed data becomes available. Treat share referral impact as unknown until a natural attributed landing appears; do not synthesize an event or promote a customer-facing experiment while the latest closed day is missing. Do not run a paid-flow E2E, send customer mail, publish to social channels, use Meta, or access Lemon Squeezy without separate authorization.
+The 2026-08-02 authority milestone is currently missed by one required capability: `scorecard_read`. The aggregate evaluator returned `blocked_on_aggregate_truth` with primary constraint `access`; streak, 1d/7d purchases, settled revenue, CAC, and ROAS remain unknown rather than zero. Expose one exact-project aggregate access path to the `yle` runtime—prefer `JOB_RUNNER_SECRET` for the protected scorecard, otherwise the allowlisted Supabase aggregate tool—then collect the closed 2026-07-31 and 2026-08-01 days and resume the seven-day baseline through 2026-08-05. Recheck Search Console when processed data becomes available. Treat share referral impact as unknown until a natural attributed landing appears; do not synthesize an event or promote a customer-facing experiment while the latest closed day is missing. Do not run a paid-flow E2E, send customer mail, publish to social channels, use Meta, or access Lemon Squeezy without separate authorization.
