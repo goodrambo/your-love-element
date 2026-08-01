@@ -1014,6 +1014,11 @@ function advanceFreeQuiz(trigger = "continue") {
   if (currentStep < steps.length - 1) {
     currentStep += 1;
     updateStep();
+    if (trigger === "answer_tap") {
+      window.requestAnimationFrame(() => {
+        steps[currentStep]?.querySelector("input, select")?.focus({ preventScroll: true });
+      });
+    }
     return;
   }
 
