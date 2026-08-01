@@ -232,6 +232,16 @@ test("share cards use a privacy-safe attributable referral URL", () => {
   assert.doesNotMatch(script, /trackMetaCustomEvent\(["']share_card_link_copied["']/);
 });
 
+test("share actions announce asynchronous feedback", () => {
+  const html = read("index.html");
+
+  assert.match(
+    html,
+    /<p[^>]+class=["']share-status["'][^>]+id=["']shareStatus["'][^>]+role=["']status["'][^>]+aria-live=["']polite["'][^>]+aria-atomic=["']true["'][^>]+hidden[^>]*><\/p>/i,
+  );
+  assert.equal((html.match(/\bid=["']shareStatus["']/gi) || []).length, 1, "Share feedback must expose one status region");
+});
+
 test("homepage serves an optimized, layout-stable hero image", () => {
   const html = read("index.html");
   const sitemap = read("sitemap.xml");
