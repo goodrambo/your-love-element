@@ -3,8 +3,8 @@
   "frontend_smoke": {
     "status": "pass",
     "verified_at": "2026-08-02",
-    "source_digest": "d12e2a563592d12a28b9f5db379990a4eb255d94cd34416eeb648d4dc5dc3cb4",
-    "evidence": "In-app Browser offline smoke for current-page navigation semantics at 1280x900 and 390x844. The homepage exposed exactly one current-page home link; the Five Elements guide and How It Works routes each exposed exactly one matching self-link inside a consistent four-link content navigation. All six route/viewport checks matched the expected path and had no horizontal overflow. On mobile the editorial topbar stacked and the four links wrapped into a 56-pixel navigation region; the homepage's secondary navigation stayed hidden as designed. Selecting the first unique answer auto-advanced the free quiz from Question 1 to Question 2. The localhost server recorded only local page requests and no API request. No quiz logic, tracking, checkout, payment, report, email, or Worker source changed. This digest invalidates the evidence on later frontend changes."
+    "source_digest": "c439b6ca522e780e10bf900c7eb3db07acda900fbfc7cbb1b432c1218b3d7b98",
+    "evidence": "In-app Browser offline smoke for asynchronous share feedback at 1280x900 and 390x844. The desktop flow completed all ten free-preview questions, rendered the Wood result and a 1080x1350 share-card preview, and Copy link updated the single #shareStatus region to 'Referral link copied.' with role=status, aria-live=polite, and aria-atomic=true. The same result, status semantics, and 1080x1350 preview remained intact at 390x844; neither viewport had horizontal overflow. The production API base stayed blank. The localhost server recorded only the homepage, local CSS/JS, and the local Wood share template, with no API request. No referral URL, analytics event, quiz logic, checkout, payment, report, email, or Worker source changed. This digest invalidates the evidence on later frontend changes."
   },
   "paid_flow_e2e": {
     "status": "waived",
