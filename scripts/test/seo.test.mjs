@@ -220,8 +220,10 @@ test("homepage serves an optimized, layout-stable hero image", () => {
   const sitemap = read("sitemap.xml");
   const optimizedAsset = resolve(root, "assets/hero-soulmate-report.webp");
   const structuredData = JSON.stringify(jsonLdBlocks(html));
+  const heroPreloads = html.match(/<link[^>]+rel=["']preload["'][^>]+as=["']image["'][^>]+href=["']assets\/hero-soulmate-report\.webp["'][^>]+type=["']image\/webp["'][^>]+fetchpriority=["']high["'][^>]*>/gi) ?? [];
 
   assert.ok(statSync(optimizedAsset).size < 200_000, "Optimized hero image must stay below 200 KB");
+  assert.equal(heroPreloads.length, 1, "Homepage must preload the hero WebP exactly once");
   assert.match(html, /<img[^>]+class=["']hero-image["'][^>]+src=["']assets\/hero-soulmate-report\.webp["'][^>]+width=["']1672["'][^>]+height=["']941["'][^>]+fetchpriority=["']high["'][^>]+decoding=["']async["']/i);
   assert.match(html, /<img[^>]+src=["']assets\/hero-soulmate-report\.webp["'][^>]+width=["']1672["'][^>]+height=["']941["'][^>]+loading=["']lazy["'][^>]+decoding=["']async["'][^>]+alt=["']A sample future partner portrait["']/i);
   assert.doesNotMatch(html, /src=["']assets\/hero-soulmate-report\.png["']/i);

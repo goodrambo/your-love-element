@@ -2,9 +2,9 @@
   "schema_version": 1,
   "frontend_smoke": {
     "status": "pass",
-    "verified_at": "2026-08-01",
-    "source_digest": "d8f079f27d16f2270e8b95ce4ff1bda5f54c71ee53363443db2931eb12345d43",
-    "evidence": "In-app Browser offline smoke for the shared reduced-motion stylesheet at 1280x900 and 390x844. With the browser's operating-system preference in its normal no-preference state, selecting the first unique answer auto-advanced from Question 1 to Question 2 with the correct status and active step; both viewports had no horizontal overflow, mobile navigation stayed collapsed, the mobile primary action was 362 px wide, the production API base stayed blank, and the browser produced no console warnings or errors. The localhost server log contained only local page/assets and no API request. Automated SEO coverage verifies the exact prefers-reduced-motion rule, including automatic scrolling, animation, and transition reduction; the in-app browser did not emulate the reduced preference. No quiz logic, tracking, checkout, payment, report, email, or Worker source changed. This digest invalidates the evidence on later frontend changes."
+    "verified_at": "2026-08-02",
+    "source_digest": "817b82e2df7091b87571df250c5f60fa6d8decd45a2f7c5324136e53b362fea0",
+    "evidence": "In-app Browser offline smoke for the hero image preload at 1280x900 and 390x844. Each viewport exposed exactly one image preload with the same absolute WebP URL as the complete 1672-pixel hero image, type image/webp, and high fetch priority. The browser asset inventory contained one hero URL with the preload and both image consumers as sources; the localhost server recorded one hero request and no API request. Both viewports had no horizontal overflow, the production API base stayed blank, selecting the first unique answer auto-advanced from Question 1 to Question 2, and the browser produced no console warnings or errors. No quiz logic, tracking, checkout, payment, report, email, or Worker source changed. This digest invalidates the evidence on later frontend changes."
   },
   "paid_flow_e2e": {
     "status": "waived",
