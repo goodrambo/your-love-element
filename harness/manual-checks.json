@@ -3,8 +3,8 @@
   "frontend_smoke": {
     "status": "pass",
     "verified_at": "2026-08-02",
-    "source_digest": "f805e5d7a075d8a3805b7ce9a2bfe9bd38c5126ed53a90829cb50bf0f5bf0a3c",
-    "evidence": "In-app Browser offline smoke for the below-fold report artwork at 1280x900 and 390x844. At the top of each viewport the 1440 x 810 Earth banner retained an empty currentSrc, zero natural width, and no page-asset entry while sitting about 3394 px and 6039 px below the viewport, respectively. After scrolling into the sample section, each viewport exposed one complete 1440-pixel image and one matching page-asset URL. Both viewports had no horizontal overflow, the production API base stayed blank, selecting the first unique answer auto-advanced from Question 1 to Question 2, and the browser produced no console warnings or errors. The localhost server recorded only local page requests and no API request. No quiz logic, tracking, checkout, payment, report, email, or Worker source changed. This digest invalidates the evidence on later frontend changes."
+    "source_digest": "d12e2a563592d12a28b9f5db379990a4eb255d94cd34416eeb648d4dc5dc3cb4",
+    "evidence": "In-app Browser offline smoke for current-page navigation semantics at 1280x900 and 390x844. The homepage exposed exactly one current-page home link; the Five Elements guide and How It Works routes each exposed exactly one matching self-link inside a consistent four-link content navigation. All six route/viewport checks matched the expected path and had no horizontal overflow. On mobile the editorial topbar stacked and the four links wrapped into a 56-pixel navigation region; the homepage's secondary navigation stayed hidden as designed. Selecting the first unique answer auto-advanced the free quiz from Question 1 to Question 2. The localhost server recorded only local page requests and no API request. No quiz logic, tracking, checkout, payment, report, email, or Worker source changed. This digest invalidates the evidence on later frontend changes."
   },
   "paid_flow_e2e": {
     "status": "waived",
