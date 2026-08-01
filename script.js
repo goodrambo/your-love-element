@@ -1071,6 +1071,9 @@ async function revealPreview() {
   });
 
   document.querySelector("#preview").scrollIntoView({ behavior: "smooth", block: "start" });
+  window.requestAnimationFrame(() => {
+    previewTitle?.focus({ preventScroll: true });
+  });
   trackMetaCustomEvent("preview_revealed", {
     element,
     relationship_status: status,

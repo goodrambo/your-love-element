@@ -191,6 +191,17 @@ test("free quiz announces automatic step changes without changing its visual pro
   assert.match(html, /<div[^>]+class=["']progress["'][^>]+aria-hidden=["']true["']/i);
 });
 
+test("revealed preview receives a programmatic heading focus target", () => {
+  const html = read("index.html");
+  const script = read("script.js");
+
+  assert.match(html, /<h2[^>]+id=["']previewTitle["'][^>]+tabindex=["']-1["'][^>]*>/i);
+  assert.match(
+    script,
+    /document\.querySelector\(["']#preview["']\)\.scrollIntoView\([^;]+;\s*window\.requestAnimationFrame\(\(\)\s*=>\s*\{\s*previewTitle\?\.focus\(\{\s*preventScroll:\s*true\s*\}\);\s*\}\);/i,
+  );
+});
+
 test("shared styles honor the operating-system reduced-motion preference", () => {
   const styles = read("styles.css");
   const rule = firstMatch(
