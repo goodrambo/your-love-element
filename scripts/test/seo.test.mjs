@@ -120,6 +120,23 @@ test("every indexable page exposes one valid keyboard skip target", () => {
   }
 });
 
+test("core navigation identifies the current page exactly once", () => {
+  const corePages = [
+    ["index.html", "/"],
+    ["five-elements-love-compatibility/index.html", "/five-elements-love-compatibility/"],
+    ["how-it-works/index.html", "/how-it-works/"],
+  ];
+
+  for (const [relativePath, expectedPath] of corePages) {
+    const html = read(relativePath);
+    const currentLinks = [...html.matchAll(/<a\b([^>]*\baria-current=["']page["'][^>]*)>/gi)];
+
+    assert.equal(currentLinks.length, 1, `${relativePath} must identify one current-page link`);
+    const href = firstMatch(currentLinks[0][1], /\bhref=["']([^"']+)["']/i, `${relativePath} current-page href`);
+    assert.equal(new URL(href, origin).pathname, expectedPath, `${relativePath} current-page link must match its route`);
+  }
+});
+
 test("sitemap dates and robots discovery instructions are valid", () => {
   const sitemap = read("sitemap.xml");
   const robots = read("robots.txt");
