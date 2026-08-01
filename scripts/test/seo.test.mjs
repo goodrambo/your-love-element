@@ -117,6 +117,8 @@ test("every indexable page exposes one valid keyboard skip target", () => {
     const escapedTarget = target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     assert.ok(label, `${relativePath} skip link must have an accessible label`);
     assert.match(html, new RegExp(`\\bid=["']${escapedTarget}["']`, "i"), `${relativePath} skip link target must exist`);
+    const targetElement = html.match(new RegExp(`<[^>]*\\bid=["']${escapedTarget}["'][^>]*>`, "i"))?.[0] || "";
+    assert.match(targetElement, /\btabindex=["']-1["']/i, `${relativePath} skip link target must receive programmatic focus`);
   }
 });
 
