@@ -191,6 +191,15 @@ test("free quiz announces automatic step changes without changing its visual pro
   assert.match(html, /<div[^>]+class=["']progress["'][^>]+aria-hidden=["']true["']/i);
 });
 
+test("auto-advancing quiz keeps keyboard focus in the active question", () => {
+  const script = read("script.js");
+
+  assert.match(
+    script,
+    /currentStep \+= 1;\s*updateStep\(\);\s*if \(trigger === ["']answer_tap["']\) \{\s*window\.requestAnimationFrame\(\(\)\s*=>\s*\{\s*steps\[currentStep\]\?\.querySelector\(["']input, select["']\)\?\.focus\(\{\s*preventScroll:\s*true\s*\}\);\s*\}\);\s*\}/i,
+  );
+});
+
 test("revealed preview receives a programmatic heading focus target", () => {
   const html = read("index.html");
   const script = read("script.js");
