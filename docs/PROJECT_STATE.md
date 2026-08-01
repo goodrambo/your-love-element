@@ -3,7 +3,7 @@ kind: current
 status: active
 last_verified: 2026-08-02
 review_after: 2026-08-05
-evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub releases through 89bb655 with successful Actions/Pages runs; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
+evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub releases through 00c540b with successful Actions/Pages runs; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
 ---
 
 # Project State
@@ -15,8 +15,8 @@ This is the only current-state snapshot. It describes what is verified now and m
 - Product: English Five Element-inspired relationship reading; free 10-question preview, optional `$9.99 USD` full report.
 - Production topology: GitHub Pages -> Cloudflare Worker -> Supabase / Lemon Squeezy / OpenAI / Resend, plus Meta Pixel and CAPI.
 - Production site: `https://yourloveelement.com` returned HTTP 200 on 2026-08-02.
-- Public GitHub `main` includes hero-image preload merge `89bb6559358dcae9c30bde5cc2ae6e32d711a7fa`, organic authority-gate correction merge `dddb6196b2ec5e854f45c068ff96dee46ed3dac1`, reduced-motion accessibility merge `cc709ba6af356cf573ccaa94e185b3253dd3049a`, and the earlier verified releases; all passed CI and Pages by 2026-08-02. The active referral experiment remains Copy link merge `f47e4acccf6b2500c7e35442cd46f5126a3eaa35`.
-- Local `main` was fast-forwarded to the verified hero-image preload release.
+- Public GitHub `main` includes lazy report-sample image merge `00c540bbca5dcaa86a2a34f18aa6fa66ea3b5194`, hero-image preload merge `89bb6559358dcae9c30bde5cc2ae6e32d711a7fa`, organic authority-gate correction merge `dddb6196b2ec5e854f45c068ff96dee46ed3dac1`, and the earlier verified releases; all passed CI and Pages by 2026-08-02. The active referral experiment remains Copy link merge `f47e4acccf6b2500c7e35442cd46f5126a3eaa35`.
+- Local `main` was fast-forwarded to the verified lazy report-sample image release.
 
 ## Verified production state
 
@@ -44,6 +44,7 @@ Read-only checks through 2026-08-02 confirmed:
 - Reduced-motion accessibility merge `cc709ba` makes the shared stylesheet honor `prefers-reduced-motion: reduce` by restoring automatic scrolling and reducing animation/transition duration and iteration. PR [#33](https://github.com/goodrambo/your-love-element/pull/33), merge Harness run `30656144374`, and Pages run `30656143258` succeeded. The 14/14 SEO suite verifies the exact CSS rule; offline no-preference desktop/mobile interaction preserved Question 1 to Question 2 progression, layout, blank production API base, and a clean console. Production source serves cache revision `20260801-reduced-motion-1` and the rule; the site and four Worker health endpoints returned HTTP 200 and the unauthenticated scorecard returned HTTP 401. Quiz, tracking, checkout, payment, webhook, report, email, and Worker behavior were unchanged; the paid-flow waiver is not E2E proof.
 - Organic authority-gate correction merge `dddb619` limits the missing-scorecard action and 2026-08-02 authority milestone to the current organic loop's required `scorecard_read` path. The evaluator still reports all unavailable optional or deliberately excluded capabilities and does not grant, infer, or hide authority. PR [#35](https://github.com/goodrambo/your-love-element/pull/35), merge Harness run `30659675719`, and Pages run `30659672766` succeeded; the evaluator suite passed 13/13, the published main source contains the required-access contract, the site and four Worker health endpoints returned HTTP 200, and the unauthenticated scorecard returned HTTP 401. Frontend, Worker, paid flow, metrics, and the `$0` paid-media cap were unchanged.
 - Hero-image preload merge `89bb655` adds one high-priority WebP preload matching the existing above-the-fold hero source. PR [#37](https://github.com/goodrambo/your-love-element/pull/37), merge Harness run `30707772203`, and Pages run `30707771835` succeeded. The 14/14 SEO suite locks exact URL/type/priority/cardinality; offline `1280 x 900` and `390 x 844` browser QA found one hero asset/request, no overflow, console/API regression, or quiz-progression failure. Production source contains the preload; the site and four Worker health endpoints returned HTTP 200 and the unauthenticated scorecard returned HTTP 401. Tracking and paid-flow source were unchanged.
+- Lazy report-sample image merge `00c540b` adds intrinsic `1440 x 810` dimensions plus lazy, asynchronous loading to the 314 KB Earth report banner several screens below the first viewport. PR [#39](https://github.com/goodrambo/your-love-element/pull/39), merge Harness run `30709885938`, and Pages run `30709885582` succeeded. The 15/15 SEO suite locks the loading contract; offline `1280 x 900` and `390 x 844` browser QA kept the banner out of the initial resource set and loaded one complete asset after scrolling, with no overflow, console/API, or quiz regression. Production source contains the attributes; the site and four Worker health endpoints returned HTTP 200 and the unauthenticated scorecard returned HTTP 401. Tracking and paid-flow source were unchanged.
 
 Fresh production proof is still required for actual email delivery, payment/webhook behavior, report content, and Meta event receipt after any related deployment.
 
