@@ -303,6 +303,15 @@ test("shared styles honor the operating-system reduced-motion preference", () =>
   assert.match(rule, /transition-duration:\s*0\.01ms\s*!important;/i);
 });
 
+test("free-quiz radio focus is visible across the full option card", () => {
+  const styles = read("styles.css");
+
+  assert.match(
+    styles,
+    /\.quiz-step\s+label:has\(input:focus-visible\)\s*\{[\s\S]*?outline:\s*3px\s+solid\s+rgba\(198,\s*155,\s*71,\s*0\.72\);[\s\S]*?outline-offset:\s*3px;[\s\S]*?box-shadow:\s*0\s+0\s+0\s+3px\s+rgba\(255,\s*250,\s*242,\s*0\.9\),\s*0\s+10px\s+24px\s+rgba\(34,\s*27,\s*24,\s*0\.08\);[\s\S]*?\}/i,
+  );
+});
+
 test("share cards use a privacy-safe attributable referral URL", () => {
   const html = read("index.html");
   const script = read("script.js");

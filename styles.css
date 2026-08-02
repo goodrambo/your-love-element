@@ -435,6 +435,16 @@ legend {
   transform: translateY(-1px);
 }
 
+.quiz-step label:has(input:focus-visible) {
+  outline: 3px solid rgba(198, 155, 71, 0.72);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px rgba(255, 250, 242, 0.9), 0 10px 24px rgba(34, 27, 24, 0.08);
+}
+
+.quiz-step label:has(input:focus-visible) input {
+  outline: none;
+}
+
 .quiz-step label:has(input:checked) {
   border-color: rgba(199, 90, 112, 0.58);
   background:
