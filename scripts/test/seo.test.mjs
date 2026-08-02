@@ -248,8 +248,15 @@ test("auto-advancing quiz keeps keyboard focus in the active question", () => {
 
   assert.match(
     script,
-    /currentStep \+= 1;\s*updateStep\(\);\s*if \(trigger === ["']answer_tap["']\) \{\s*window\.requestAnimationFrame\(\(\)\s*=>\s*\{\s*steps\[currentStep\]\?\.querySelector\(["']input, select["']\)\?\.focus\(\{\s*preventScroll:\s*true\s*\}\);\s*\}\);\s*\}/i,
+    /currentStep \+= 1;\s*updateStep\(\);\s*focusStepAnswer\(steps\[currentStep\]\);\s*return;/i,
   );
+});
+
+test("manual forward quiz navigation shares the active-question focus path", () => {
+  const script = read("script.js");
+
+  assert.doesNotMatch(script, /if \(trigger === ["']answer_tap["']\)/i);
+  assert.equal((script.match(/focusStepAnswer\(steps\[currentStep\]\);/g) || []).length, 2);
 });
 
 test("revealed preview receives a programmatic heading focus target", () => {
