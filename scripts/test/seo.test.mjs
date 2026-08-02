@@ -219,6 +219,17 @@ test("free quiz advances through one guarded form submit path", () => {
   assert.doesNotMatch(script, /(?:^|\n)\s*nextButton\.addEventListener\(["']click["']/i);
 });
 
+test("free quiz focuses the unresolved control after validation failure", () => {
+  const script = read("script.js");
+
+  assert.match(script, /function focusInvalidControl\(step, form\)/);
+  assert.match(script, /step\?\.querySelector\(["']\.date-grid["']\)/);
+  assert.match(script, /monthField\?\.value\s*\?\s*dayField\s*:\s*monthField/);
+  assert.match(script, /step\?\.querySelector\(["']input\[type=[\\"']radio[\\"']\], input, select["']\)/);
+  assert.match(script, /control\?\.focus\(\{ preventScroll: true \}\)/);
+  assert.equal((script.match(/focusInvalidControl\(step, form\);/g) || []).length, 2);
+});
+
 test("auto-advancing quiz keeps keyboard focus in the active question", () => {
   const script = read("script.js");
 

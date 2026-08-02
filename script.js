@@ -817,6 +817,20 @@ function clearStepValidation(target, step) {
   step?.removeAttribute("data-invalid");
 }
 
+function focusInvalidControl(step, form) {
+  const monthField = form?.elements?.month;
+  const dayField = form?.elements?.day;
+  const control = step?.querySelector(".date-grid")
+    ? monthField?.value
+      ? dayField
+      : monthField
+    : step?.querySelector('input[type="radio"], input, select');
+
+  window.requestAnimationFrame(() => {
+    control?.focus({ preventScroll: true });
+  });
+}
+
 function validateStep(step, target, form) {
   if (!step) {
     return true;
@@ -826,6 +840,7 @@ function validateStep(step, target, form) {
     const isValid = validateBirthdate(form);
     if (!isValid) {
       showValidation(target, step, birthdateValidationMessage(form));
+      focusInvalidControl(step, form);
       return false;
     }
     clearStepValidation(target, step);
@@ -834,6 +849,7 @@ function validateStep(step, target, form) {
 
   if (!activeRadioValue(step)) {
     showValidation(target, step, "Choose one answer to continue.");
+    focusInvalidControl(step, form);
     return false;
   }
 
