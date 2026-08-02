@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "harness_version": "1.0.0",
-  "cache_revision": "20260802-quiz-invalid-focus-1",
+  "cache_revision": "20260802-quiz-back-focus-1",
   "state_max_review_days": 30,
   "backlog_max_review_days": 30,
   "manual_check_max_age_days": {
