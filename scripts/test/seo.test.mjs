@@ -204,6 +204,21 @@ test("free quiz exposes its no-email helper as the form description", () => {
   assert.equal((html.match(/\bid=["']quizHelper["']/gi) || []).length, 1, "The quiz helper id must be unique");
 });
 
+test("free quiz advances through one guarded form submit path", () => {
+  const html = read("index.html");
+  const script = read("script.js");
+
+  assert.match(html, /<button[^>]+id=["']nextButton["'][^>]+type=["']submit["'][^>]*>/i);
+  assert.match(
+    script,
+    /form\?\.addEventListener\(["']submit["'],\s*\(event\)\s*=>\s*\{\s*event\.preventDefault\(\);\s*window\.clearTimeout\(autoAdvanceTimer\);\s*advanceFreeQuiz\(["']continue["']\);\s*\}\);/i,
+  );
+  assert.match(script, /form\?\.addEventListener\(["']keydown["'],\s*\(event\)\s*=>/i);
+  assert.match(script, /event\.key !== ["']Enter["'] \|\| event\.target !== form\.elements\.day/i);
+  assert.match(script, /event\.preventDefault\(\);\s*form\.requestSubmit\(nextButton\);/i);
+  assert.doesNotMatch(script, /(?:^|\n)\s*nextButton\.addEventListener\(["']click["']/i);
+});
+
 test("auto-advancing quiz keeps keyboard focus in the active question", () => {
   const script = read("script.js");
 

@@ -1104,10 +1104,20 @@ function initQuiz() {
   }
 
   let autoAdvanceTimer = null;
+  const form = document.querySelector("#reading");
 
-  nextButton.addEventListener("click", () => {
+  form?.addEventListener("submit", (event) => {
+    event.preventDefault();
     window.clearTimeout(autoAdvanceTimer);
     advanceFreeQuiz("continue");
+  });
+
+  form?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || event.target !== form.elements.day) {
+      return;
+    }
+    event.preventDefault();
+    form.requestSubmit(nextButton);
   });
 
   backButton.addEventListener("click", () => {
@@ -1118,7 +1128,6 @@ function initQuiz() {
     }
   });
 
-  const form = document.querySelector("#reading");
   form?.addEventListener("change", (event) => {
     syncBirthDayLimit(form);
     previewReadyForCheckout = false;
