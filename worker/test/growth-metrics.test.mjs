@@ -51,6 +51,13 @@ function funnelRow(metricDate, overrides = {}) {
   };
 }
 
+function sourceSetValues(relativePath, constantName) {
+  const source = readFileSync(new URL(relativePath, import.meta.url), "utf8");
+  const setMatch = source.match(new RegExp(`const ${constantName} = new Set\\(\\[([\\s\\S]*?)\\]\\);`));
+  assert.ok(setMatch, `${relativePath} must define ${constantName}`);
+  return [...setMatch[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+}
+
 function scorecardFetch(commerceRows, funnelRows = []) {
   return async (url, options) => {
     const value = String(url);
@@ -579,6 +586,61 @@ test("active share referral labels cross the first-party collector boundary", as
       ...attribution,
       utm_term: null,
     });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("frontend funnel event names stay accepted by the first-party collector", async () => {
+  const frontendEventNames = sourceSetValues("../../script.js", "firstPartyEventNames");
+  const workerEventNames = sourceSetValues("../src/index.js", "ANALYTICS_EVENT_NAMES");
+  assert.deepEqual(frontendEventNames, [
+    "page_view",
+    "view_content",
+    "landing_cta_click",
+    "quiz_start",
+    "preview_revealed",
+    "checkout_created",
+    "paid_signals_submitted",
+    "share_card_generated",
+    "share_card_shared",
+    "share_card_link_shared",
+    "share_card_downloaded",
+  ]);
+  assert.deepEqual(workerEventNames, frontendEventNames);
+
+  const originalFetch = globalThis.fetch;
+  const requests = [];
+  globalThis.fetch = async (url, options) => {
+    requests.push({ url: String(url), options });
+    return new Response(JSON.stringify([{ id: "11111111-1111-4111-8111-111111111111" }]), {
+      status: 201,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  try {
+    for (const [index, eventName] of frontendEventNames.entries()) {
+      const eventSuffix = String(index + 1).padStart(12, "0");
+      const response = await worker.fetch(new Request("https://worker.test/api/analytics/events", {
+        method: "POST",
+        headers: {
+          origin: "https://yourloveelement.com",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          event_id: `10000000-0000-4000-8000-${eventSuffix}`,
+          session_id: "ffffffff-ffff-4fff-8fff-ffffffffffff",
+          event_name: eventName,
+          page: "landing",
+        }),
+      }), env());
+      assert.equal(response.status, 202, `${eventName} must remain collector-compatible`);
+      assert.deepEqual(await response.json(), { ok: true });
+    }
+
+    assert.equal(requests.length, frontendEventNames.length);
+    assert.deepEqual(requests.map(({ options }) => JSON.parse(options.body).event_name), frontendEventNames);
   } finally {
     globalThis.fetch = originalFetch;
   }
