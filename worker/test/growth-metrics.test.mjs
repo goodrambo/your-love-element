@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import worker from "../src/index.js";
@@ -518,6 +519,66 @@ test("first-party analytics hashes the session and stores only allowlisted field
     assert.equal(JSON.stringify(stored).includes("must-not-be-stored"), false);
     assert.equal(JSON.stringify(stored).includes("reading_id"), false);
     assert.equal(JSON.stringify(stored).includes(sessionId), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("active share referral labels cross the first-party collector boundary", async () => {
+  const script = readFileSync(new URL("../../script.js", import.meta.url), "utf8");
+  const shareReferralMatch = script.match(/const shareReferralUrl = "([^"]+)";/);
+  assert.ok(shareReferralMatch, "script.js must define the active share referral URL");
+
+  const shareUrl = new URL(shareReferralMatch[1]);
+  const attribution = Object.fromEntries(shareUrl.searchParams);
+  assert.deepEqual(attribution, {
+    utm_source: "share_card",
+    utm_medium: "referral",
+    utm_campaign: "organic_share",
+    utm_content: "result_card",
+  });
+
+  const originalFetch = globalThis.fetch;
+  const requests = [];
+  globalThis.fetch = async (url, options) => {
+    requests.push({ url: String(url), options });
+    return new Response(JSON.stringify([{ id: "11111111-1111-4111-8111-111111111111" }]), {
+      status: 201,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  try {
+    const request = new Request("https://worker.test/api/analytics/events", {
+      method: "POST",
+      headers: {
+        origin: "https://yourloveelement.com",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        event_id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+        session_id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+        event_name: "page_view",
+        page: "landing",
+        ...attribution,
+      }),
+    });
+    const response = await worker.fetch(request, env());
+
+    assert.equal(response.status, 202);
+    assert.deepEqual(await response.json(), { ok: true });
+    assert.equal(requests.length, 1);
+    const stored = JSON.parse(requests[0].options.body);
+    assert.deepEqual({
+      utm_source: stored.utm_source,
+      utm_medium: stored.utm_medium,
+      utm_campaign: stored.utm_campaign,
+      utm_content: stored.utm_content,
+      utm_term: stored.utm_term,
+    }, {
+      ...attribution,
+      utm_term: null,
+    });
   } finally {
     globalThis.fetch = originalFetch;
   }
