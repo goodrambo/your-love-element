@@ -189,6 +189,22 @@ test("core acquisition pages keep complete social preview metadata", () => {
   }
 });
 
+test("social preview asset matches its declared format, dimensions, and transfer budget", () => {
+  const assetPath = resolve(root, "assets/social-preview.png");
+  const asset = readFileSync(assetPath);
+
+  assert.ok(asset.length >= 24, "Social preview asset must contain a complete PNG header");
+  assert.deepEqual(
+    [...asset.subarray(0, 8)],
+    [137, 80, 78, 71, 13, 10, 26, 10],
+    "Social preview asset must remain a PNG",
+  );
+  assert.equal(asset.toString("ascii", 12, 16), "IHDR", "Social preview asset must start with an IHDR chunk");
+  assert.equal(asset.readUInt32BE(16), 1200, "Social preview asset width must match Open Graph metadata");
+  assert.equal(asset.readUInt32BE(20), 630, "Social preview asset height must match Open Graph metadata");
+  assert.ok(statSync(assetPath).size <= 200_000, "Social preview asset must stay within a 200 KB transfer budget");
+});
+
 test("sitemap dates and robots discovery instructions are valid", () => {
   const sitemap = read("sitemap.xml");
   const robots = read("robots.txt");
