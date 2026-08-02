@@ -230,6 +230,24 @@ test("free quiz focuses the unresolved control after validation failure", () => 
   assert.equal((script.match(/focusInvalidControl\(step, form\);/g) || []).length, 2);
 });
 
+test("free quiz exposes and clears control-level validation semantics", () => {
+  const script = read("script.js");
+
+  assert.match(script, /function setControlValidation\(step, target, invalidControls\)/);
+  assert.match(script, /control\.setAttribute\(["']aria-invalid["'], ["']true["']\)/);
+  assert.match(script, /descriptionIds\.add\(target\.id\)/);
+  assert.match(script, /control\.setAttribute\(["']aria-describedby["'], \[\.\.\.descriptionIds\]\.join\(["'] ["']\)\)/);
+  assert.match(script, /control\.removeAttribute\(["']aria-invalid["']\)/);
+  assert.match(script, /descriptionIds\.delete\(target\.id\)/);
+  assert.match(script, /if \(invalidControls\.length\) \{\s*setControlValidation\(step, target, invalidControls\);\s*\}/);
+  assert.match(script, /function validateStep\(step, target, form, exposeControlValidation = false\)/);
+  assert.match(script, /const invalidControl = form\?\.elements\?\.month\?\.value \? form\?\.elements\?\.day : form\?\.elements\?\.month/);
+  assert.match(script, /exposeControlValidation \? \[invalidControl\] : \[\]/);
+  assert.match(script, /exposeControlValidation \? \[\.\.\.step\.querySelectorAll\(["']input\[type=[\\"']radio[\\"']\]["']\)\] : \[\]/);
+  assert.equal((script.match(/validateStep\([^\n]+quizValidation[^\n]+true\)/g) || []).length, 2);
+  assert.doesNotMatch(script, /validateStep\([^\n]+paidValidation[^\n]+true\)/);
+});
+
 test("free quiz returns keyboard focus to the selected previous answer", () => {
   const script = read("script.js");
 

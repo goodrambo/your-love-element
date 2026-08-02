@@ -807,14 +807,46 @@ function syncBirthDayLimit(form) {
   }
 }
 
-function showValidation(target, step, message) {
-  setStatus(target, message, "error");
-  step?.setAttribute("data-invalid", "true");
+function setControlValidation(step, target, invalidControls) {
+  const controls = [...(step?.querySelectorAll("input, select") || [])];
+
+  controls.forEach((control) => {
+    const descriptionIds = new Set((control.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean));
+    control.removeAttribute("aria-invalid");
+    if (target?.id) {
+      descriptionIds.delete(target.id);
+    }
+    if (descriptionIds.size) {
+      control.setAttribute("aria-describedby", [...descriptionIds].join(" "));
+    } else {
+      control.removeAttribute("aria-describedby");
+    }
+  });
+
+  invalidControls.filter(Boolean).forEach((control) => {
+    const descriptionIds = new Set((control.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean));
+    control.setAttribute("aria-invalid", "true");
+    if (target?.id) {
+      descriptionIds.add(target.id);
+      control.setAttribute("aria-describedby", [...descriptionIds].join(" "));
+    }
+  });
 }
 
-function clearStepValidation(target, step) {
+function showValidation(target, step, message, invalidControls = []) {
+  setStatus(target, message, "error");
+  step?.setAttribute("data-invalid", "true");
+  if (invalidControls.length) {
+    setControlValidation(step, target, invalidControls);
+  }
+}
+
+function clearStepValidation(target, step, clearControlSemantics = false) {
   clearStatus(target);
   step?.removeAttribute("data-invalid");
+  if (clearControlSemantics) {
+    setControlValidation(step, target, []);
+  }
 }
 
 function focusInvalidControl(step, form) {
@@ -839,7 +871,7 @@ function focusStepAnswer(step) {
   });
 }
 
-function validateStep(step, target, form) {
+function validateStep(step, target, form, exposeControlValidation = false) {
   if (!step) {
     return true;
   }
@@ -847,21 +879,32 @@ function validateStep(step, target, form) {
   if (step.querySelector(".date-grid")) {
     const isValid = validateBirthdate(form);
     if (!isValid) {
-      showValidation(target, step, birthdateValidationMessage(form));
+      const invalidControl = form?.elements?.month?.value ? form?.elements?.day : form?.elements?.month;
+      showValidation(
+        target,
+        step,
+        birthdateValidationMessage(form),
+        exposeControlValidation ? [invalidControl] : [],
+      );
       focusInvalidControl(step, form);
       return false;
     }
-    clearStepValidation(target, step);
+    clearStepValidation(target, step, exposeControlValidation);
     return true;
   }
 
   if (!activeRadioValue(step)) {
-    showValidation(target, step, "Choose one answer to continue.");
+    showValidation(
+      target,
+      step,
+      "Choose one answer to continue.",
+      exposeControlValidation ? [...step.querySelectorAll('input[type="radio"]')] : [],
+    );
     focusInvalidControl(step, form);
     return false;
   }
 
-  clearStepValidation(target, step);
+  clearStepValidation(target, step, exposeControlValidation);
   return true;
 }
 
@@ -1029,7 +1072,7 @@ function trackQuizStart(trigger = "continue") {
 
 function advanceFreeQuiz(trigger = "continue") {
   const current = steps[currentStep];
-  if (!validateStep(current, quizValidation, document.querySelector("#reading"))) {
+  if (!validateStep(current, quizValidation, document.querySelector("#reading"), true)) {
     return;
   }
 
@@ -1142,7 +1185,7 @@ function initQuiz() {
 
   backButton.addEventListener("click", () => {
     if (currentStep > 0) {
-      clearStepValidation(quizValidation, steps[currentStep]);
+      clearStepValidation(quizValidation, steps[currentStep], true);
       currentStep -= 1;
       updateStep();
       focusStepAnswer(steps[currentStep]);
@@ -1159,9 +1202,9 @@ function initQuiz() {
     }
     const activeStep = steps[currentStep];
     if (activeStep?.querySelector(".date-grid")) {
-      clearStepValidation(quizValidation, activeStep);
+      clearStepValidation(quizValidation, activeStep, true);
     } else {
-      validateStep(activeStep, quizValidation, form);
+      validateStep(activeStep, quizValidation, form, true);
     }
 
     const target = event.target;
