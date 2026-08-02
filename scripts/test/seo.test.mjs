@@ -112,6 +112,49 @@ test("indexable pages have unique search metadata and sitemap entries", () => {
   }
 });
 
+test("same-origin fragment links resolve to one configured page target", () => {
+  const pagesByPath = new Map();
+
+  for (const relativePath of contracts.html_files) {
+    const html = read(relativePath);
+    const canonical = firstMatch(
+      html,
+      /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+      `${relativePath} canonical`,
+    );
+    pagesByPath.set(new URL(canonical).pathname, { html, relativePath });
+  }
+
+  let checkedLinks = 0;
+  for (const { html, relativePath } of pagesByPath.values()) {
+    const canonical = firstMatch(
+      html,
+      /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+      `${relativePath} canonical`,
+    );
+
+    for (const match of html.matchAll(/<a\b[^>]*\bhref=["']([^"']+)["'][^>]*>/gi)) {
+      const targetUrl = new URL(match[1], canonical);
+      if (targetUrl.origin !== origin || !targetUrl.hash) continue;
+
+      checkedLinks += 1;
+      const targetPage = pagesByPath.get(targetUrl.pathname);
+      assert.ok(targetPage, `${relativePath} fragment link must target a configured local page: ${match[1]}`);
+
+      const targetId = decodeURIComponent(targetUrl.hash.slice(1));
+      const idMatches = [...targetPage.html.matchAll(/\bid=["']([^"']+)["']/gi)]
+        .filter((idMatch) => idMatch[1] === targetId);
+      assert.equal(
+        idMatches.length,
+        1,
+        `${relativePath} fragment link must resolve to one target in ${targetPage.relativePath}: ${match[1]}`,
+      );
+    }
+  }
+
+  assert.ok(checkedLinks > 0, "At least one same-origin fragment link must be covered");
+});
+
 test("every indexable page exposes one valid keyboard skip target", () => {
   for (const relativePath of contracts.html_files) {
     const html = read(relativePath);
