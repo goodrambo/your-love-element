@@ -831,6 +831,14 @@ function focusInvalidControl(step, form) {
   });
 }
 
+function focusStepAnswer(step) {
+  const control = step?.querySelector("input:checked") || step?.querySelector("input, select");
+
+  window.requestAnimationFrame(() => {
+    control?.focus({ preventScroll: true });
+  });
+}
+
 function validateStep(step, target, form) {
   if (!step) {
     return true;
@@ -1141,6 +1149,7 @@ function initQuiz() {
       clearStepValidation(quizValidation, steps[currentStep]);
       currentStep -= 1;
       updateStep();
+      focusStepAnswer(steps[currentStep]);
     }
   });
 

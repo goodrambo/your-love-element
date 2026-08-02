@@ -230,6 +230,19 @@ test("free quiz focuses the unresolved control after validation failure", () => 
   assert.equal((script.match(/focusInvalidControl\(step, form\);/g) || []).length, 2);
 });
 
+test("free quiz returns keyboard focus to the selected previous answer", () => {
+  const script = read("script.js");
+
+  assert.match(script, /function focusStepAnswer\(step\)/);
+  assert.match(script, /step\?\.querySelector\(["']input:checked["']\)/);
+  assert.match(script, /step\?\.querySelector\(["']input, select["']\)/);
+  assert.match(script, /control\?\.focus\(\{ preventScroll: true \}\)/);
+  assert.match(
+    script,
+    /backButton\.addEventListener\(["']click["'],\s*\(\)\s*=>\s*\{[\s\S]*?currentStep -= 1;\s*updateStep\(\);\s*focusStepAnswer\(steps\[currentStep\]\);/i,
+  );
+});
+
 test("auto-advancing quiz keeps keyboard focus in the active question", () => {
   const script = read("script.js");
 
