@@ -18,6 +18,14 @@ function firstMatch(html, expression, label) {
   return match[1].trim();
 }
 
+function uniqueMetaContent(html, attribute, value, label) {
+  const matches = [
+    ...html.matchAll(new RegExp(`<meta\\b(?=[^>]*\\b${attribute}=["']${value}["'])[^>]*\\bcontent=["']([^"']+)["'][^>]*>`, "gi")),
+  ];
+  assert.equal(matches.length, 1, `${label} must appear exactly once`);
+  return matches[0][1].trim();
+}
+
 function jsonLdBlocks(html) {
   return [...html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)].map((match) => JSON.parse(match[1]));
 }
@@ -136,6 +144,48 @@ test("core navigation identifies the current page exactly once", () => {
     assert.equal(currentLinks.length, 1, `${relativePath} must identify one current-page link`);
     const href = firstMatch(currentLinks[0][1], /\bhref=["']([^"']+)["']/i, `${relativePath} current-page href`);
     assert.equal(new URL(href, origin).pathname, expectedPath, `${relativePath} current-page link must match its route`);
+  }
+});
+
+test("core acquisition pages keep complete social preview metadata", () => {
+  const corePages = [
+    ["index.html", "website"],
+    ["five-elements-love-compatibility/index.html", "article"],
+    ["how-it-works/index.html", "article"],
+  ];
+
+  for (const [relativePath, expectedType] of corePages) {
+    const html = read(relativePath);
+    const canonical = firstMatch(html, /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i, `${relativePath} canonical`);
+    const ogType = uniqueMetaContent(html, "property", "og:type", `${relativePath} og:type`);
+    const ogLocale = uniqueMetaContent(html, "property", "og:locale", `${relativePath} og:locale`);
+    const ogSiteName = uniqueMetaContent(html, "property", "og:site_name", `${relativePath} og:site_name`);
+    const ogTitle = uniqueMetaContent(html, "property", "og:title", `${relativePath} og:title`);
+    const ogDescription = uniqueMetaContent(html, "property", "og:description", `${relativePath} og:description`);
+    const ogUrl = uniqueMetaContent(html, "property", "og:url", `${relativePath} og:url`);
+    const ogImage = uniqueMetaContent(html, "property", "og:image", `${relativePath} og:image`);
+    const ogImageWidth = uniqueMetaContent(html, "property", "og:image:width", `${relativePath} og:image:width`);
+    const ogImageHeight = uniqueMetaContent(html, "property", "og:image:height", `${relativePath} og:image:height`);
+    const ogImageAlt = uniqueMetaContent(html, "property", "og:image:alt", `${relativePath} og:image:alt`);
+    const twitterCard = uniqueMetaContent(html, "name", "twitter:card", `${relativePath} twitter:card`);
+    const twitterTitle = uniqueMetaContent(html, "name", "twitter:title", `${relativePath} twitter:title`);
+    const twitterDescription = uniqueMetaContent(html, "name", "twitter:description", `${relativePath} twitter:description`);
+    const twitterImage = uniqueMetaContent(html, "name", "twitter:image", `${relativePath} twitter:image`);
+    const twitterImageAlt = uniqueMetaContent(html, "name", "twitter:image:alt", `${relativePath} twitter:image:alt`);
+
+    assert.equal(ogType, expectedType, `${relativePath} Open Graph type must match its page role`);
+    assert.equal(ogLocale, "en_US", `${relativePath} Open Graph locale must match the English-market site`);
+    assert.equal(ogSiteName, "Your Love Element", `${relativePath} Open Graph site name must stay stable`);
+    assert.equal(ogUrl, canonical, `${relativePath} Open Graph URL must match canonical`);
+    assert.equal(ogImage, `${origin}/assets/social-preview.png`, `${relativePath} must use the production social preview asset`);
+    assert.equal(ogImageWidth, "1200", `${relativePath} Open Graph image width must remain explicit`);
+    assert.equal(ogImageHeight, "630", `${relativePath} Open Graph image height must remain explicit`);
+    assert.equal(twitterCard, "summary_large_image", `${relativePath} must request a large Twitter preview`);
+    assert.equal(twitterTitle, ogTitle, `${relativePath} social preview titles must agree`);
+    assert.equal(twitterImage, ogImage, `${relativePath} social preview images must agree`);
+    assert.equal(twitterImageAlt, ogImageAlt, `${relativePath} social preview image alternatives must agree`);
+    assert.ok(ogDescription, `${relativePath} Open Graph description must not be empty`);
+    assert.ok(twitterDescription, `${relativePath} Twitter description must not be empty`);
   }
 });
 
