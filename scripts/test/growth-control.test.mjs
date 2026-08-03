@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { evaluateGrowthControl } from "../growth-control.mjs";
+
+const CLI_PATH = fileURLToPath(new URL("../growth-control.mjs", import.meta.url));
 
 const DEFAULT_COUNTS = {
   landing_sessions: 160,
@@ -83,9 +87,96 @@ test("classifies missing aggregate truth as access and keeps all values unknown"
   assert.equal(result.primary_constraint, "access");
   assert.equal(result.current_streak, null);
   assert.equal(result.rolling["7d"].purchasers_per_day, null);
+  for (const window of Object.values(result.rolling)) {
+    assert.equal(window.closed_days, 0);
+    for (const field of Object.keys(DEFAULT_COUNTS)) {
+      assert.equal(window[field], null);
+    }
+  }
   assert.equal(result.action.id, "complete_authority_and_scorecard_gate");
   assert.deepEqual(result.action.missing_authority, ["scorecard_read"]);
   assert.equal(result.missing_authorities.length, 8);
+});
+
+test("retains an active experiment while aggregate experiment metrics are unavailable", () => {
+  const result = evaluateGrowthControl({
+    run_date: "2026-08-03",
+    scorecard: null,
+    authority: {},
+    provider: { public_health_ok: true, paid_flow_incident: false },
+    active_experiment: {
+      started_on: "2026-07-31",
+      eligible_sessions: null,
+      baseline_primary_rate: null,
+      current_primary_rate: null,
+      baseline_guardrail_rate: null,
+      current_guardrail_rate: null,
+      has_breakage: false,
+    },
+  });
+
+  assert.equal(result.experiment.decision, "continue");
+  assert.equal(result.experiment.measurement_status, "unavailable");
+  assert.equal(result.experiment.eligible_sessions, null);
+  assert.match(result.experiment.reason, /awaiting aggregate measurement/);
+});
+
+test("CLI preserves unavailable totals and the active unmeasured experiment", () => {
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: "2026-08-03",
+      scorecard: null,
+      authority: {},
+      provider: {
+        public_health_ok: true,
+        paid_flow_incident: false,
+        rolling_3d_start_date: "2026-07-31",
+        rolling_3d_end_date: "2026-08-02",
+        rolling_3d_spend_usd: null,
+        rolling_3d_settled_revenue_usd: null,
+        max_acceptable_cac_usd: null,
+      },
+      active_experiment: {
+        started_on: "2026-07-31",
+        eligible_sessions: null,
+        baseline_primary_rate: null,
+        current_primary_rate: null,
+        baseline_guardrail_rate: null,
+        current_guardrail_rate: null,
+        has_breakage: false,
+      },
+    }),
+  });
+
+  assert.equal(completed.status, 0, completed.stderr);
+  const result = JSON.parse(completed.stdout);
+  for (const window of Object.values(result.rolling)) {
+    assert.equal(window.closed_days, 0);
+    for (const field of Object.keys(DEFAULT_COUNTS)) {
+      assert.equal(window[field], null);
+    }
+  }
+  assert.equal(result.experiment.decision, "continue");
+  assert.equal(result.experiment.measurement_status, "unavailable");
+});
+
+test("rejects a partially unavailable active experiment measurement", () => {
+  assert.throws(() => evaluateGrowthControl({
+    run_date: "2026-08-03",
+    scorecard: null,
+    authority: {},
+    provider: { public_health_ok: true, paid_flow_incident: false },
+    active_experiment: {
+      started_on: "2026-07-31",
+      eligible_sessions: 10,
+      baseline_primary_rate: null,
+      current_primary_rate: 0.02,
+      baseline_guardrail_rate: 1,
+      current_guardrail_rate: 1,
+      has_breakage: false,
+    },
+  }), /must be all available or all null/);
 });
 
 test("keeps optional and deliberately excluded channels out of the organic authority gate", () => {
