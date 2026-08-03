@@ -203,6 +203,12 @@ test("rejects sensitive or unknown response fields", async () => {
   for (const [body, message] of [
     [scorecard({ customer_email: "hidden@example.test" }), /forbidden field/],
     [scorecard({ diagnostic: true }), /unknown top-level field/],
+    [scorecard({ range: { ...scorecard().range, diagnostic: true } }), /unknown field/],
+    [scorecard({ goal: { ...scorecard().goal, diagnostic: true } }), /unknown field/],
+    [scorecard({ totals: { ...scorecard().totals, diagnostic: true } }), /unknown field/],
+    [scorecard({ days: [{ diagnostic: true }] }), /unknown field/],
+    [scorecard({ attribution: [{ diagnostic: true }] }), /unknown field/],
+    [scorecard({ limitations: [{}] }), /aggregate contract/],
     [scorecard({ generated_at: "yesterday" }), /aggregate contract/],
     [scorecard({ generated_at: undefined }), /aggregate contract/],
   ]) {
