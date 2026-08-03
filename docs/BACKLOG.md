@@ -1,14 +1,13 @@
 ---
 kind: backlog
 status: active
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 review_after: 2026-08-05
 ---
 
 # Active Backlog
 
 This is the only active task list. History files may contain old “next tasks”; those are not actionable unless copied here after revalidation.
-
 ## Growth objective: due 2026-10-14
 
 - [x] Create the phased growth-control heartbeat: hourly while bootstrap/high-impact work remains, every four hours only after seven complete aggregate days and a 24-hour empty ready queue, and daily after the first qualifying streak day. Require one non-repetitive verified result per run, review early-stage strategy every six runs, and keep the hard review date non-extendable.
@@ -24,6 +23,7 @@ This is the only active task list. History files may contain old “next tasks�
 
 ## Ready
 
+- [x] Release the protected-scorecard evaluator handoff regression through reversible PR [#81](https://github.com/goodrambo/your-love-element/pull/81) and merge `78aad56`. Hypothesis: exercising the exact Worker response through both the protected fetcher and deterministic evaluator prevents independently passing measurement components from drifting at the final bootstrap-to-decision boundary. Primary metric: the 6/6 fetcher suite carries two mocked RPC days through the real Worker handler into an `observability` decision with exact totals of `7` landing sessions and `1` verified purchaser. Guardrail: fully mocked aggregate-only data; no runtime, migration, event, customer data, frontend, paid flow, report, email, spend, or active Copy link experiment change. Sample/time gate: targeted 24/24 tests, local/CI Harness, Pages/Worker builds, and production health/auth; stop on any non-mock network, schema broadening, decision-total drift, or guardrail failure. All gates pass; positive production scorecard access remains blocked by unavailable `JOB_RUNNER_SECRET` and exact-project Supabase reader.
 - [x] Release the protected scorecard fetch-contract repair through reversible PR [#79](https://github.com/goodrambo/your-love-element/pull/79) and merge `139d093`. Hypothesis: closing the actual fetcher-to-Worker schema gap lets a future authorized secret bootstrap reach aggregate evaluation instead of rejecting the Worker's existing `generated_at` field. Primary metric: the 6/6 fetcher suite drives the exact fetcher through the real Worker handler and both aggregate RPC mocks for the requested closed-day range. Guardrail: only a valid millisecond-precision UTC ISO timestamp is accepted; missing/invalid timestamps, unknown/sensitive fields, cache/CORS/date/auth failures remain rejected; no Worker, RPC, migration, event, customer data, frontend, paid flow, report, email, spend, or active Copy link experiment change. Sample/time gate: local/CI/Harness, Pages/Worker builds, and production health/auth; stop on any schema broadening, non-mock request, or guardrail failure. All gates pass; the positive production bearer path remains blocked by unavailable `JOB_RUNNER_SECRET`.
 - [x] Release the accepted-event-to-aggregate boundary regression through reversible PR [#77](https://github.com/goodrambo/your-love-element/pull/77) and merge `9f4ffd4`. Hypothesis: exact parity from the frontend allowlist through the database event constraint and scorecard RPC filters prevents a collector-accepted stage from silently disappearing from aggregate decisions. Primary metric: the 14/14 Worker suite requires the same 11 events in all three layers and no duplicate aggregate filter. Guardrail: no migration, RPC, event, runtime, customer data, paid flow, report, email, spend, or active Copy link experiment change. Sample/time gate: local/CI/Harness, Pages/Worker builds, and production health/auth; stop on vocabulary drift, missing/duplicate filters, source-scope expansion, or any guardrail failure. All gates pass.
 - [x] Release frontend/Worker funnel-event boundary regression through reversible PR [#75](https://github.com/goodrambo/your-love-element/pull/75) and merge `dfb0517`. Hypothesis: exact allowlist parity plus real collector acceptance prevents a frontend/Worker name drift from silently erasing one or more first-party funnel stages. Primary metric: the 13/13 Worker suite requires the same 11 current funnel/share names in both source constants and HTTP 202 for every frontend name. Guardrail: no event, call site, runtime, customer data, paid flow, report, email, spend, or active Copy link experiment change. Sample/time gate: local/CI/Harness, Pages/Worker builds, and production health/auth; stop on set drift, any rejected name, or source-scope expansion. All gates pass.
