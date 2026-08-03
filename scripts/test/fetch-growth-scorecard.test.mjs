@@ -2,10 +2,51 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { fetchGrowthScorecard, GROWTH_SCORECARD_ORIGIN } from "../fetch-growth-scorecard.mjs";
+import worker from "../../worker/src/index.js";
+
+function commerceRow(metricDate, verifiedPurchasers = 0) {
+  return {
+    metric_date: metricDate,
+    previewed_readings: "0",
+    checkout_readings: "0",
+    verified_purchasers: String(verifiedPurchasers),
+    verified_orders: String(verifiedPurchasers),
+    refunded_orders: "0",
+    paid_signals_submitted: "0",
+    paid_signal_cohort_delivered: "0",
+    paid_signal_cohort_delivered_within_15m: "0",
+    delivered_readings: "0",
+    failed_readings: "0",
+  };
+}
+
+function funnelRow(metricDate, pageViewSessions) {
+  return {
+    metric_date: metricDate,
+    page: "landing",
+    utm_source: null,
+    utm_medium: null,
+    utm_campaign: null,
+    utm_content: null,
+    utm_term: null,
+    page_view_sessions: String(pageViewSessions),
+    view_content_sessions: String(pageViewSessions),
+    landing_cta_clicks: "0",
+    quiz_starts: "0",
+    previews_revealed: "0",
+    checkouts_created: "0",
+    paid_signals_submitted_events: "0",
+    share_card_generated: "0",
+    share_card_shared: "0",
+    share_card_link_shared: "0",
+    share_card_downloaded: "0",
+  };
+}
 
 function scorecard(overrides = {}) {
   return {
     ok: true,
+    generated_at: "2026-08-01T00:00:00.000Z",
     source: "supabase_verified_lemon_state_and_first_party_funnel",
     privacy: "aggregate_counts_only",
     range: {
@@ -55,6 +96,62 @@ test("fetches only the exact Worker aggregate route without exposing the secret"
   assert.equal(result.range.end_date, "2026-07-31");
 });
 
+test("fetcher accepts the protected Worker aggregate contract end to end", async () => {
+  const originalFetch = globalThis.fetch;
+  const rpcRequests = [];
+  globalThis.fetch = async (url, options) => {
+    const value = String(url);
+    rpcRequests.push({ value, body: JSON.parse(options.body) });
+    if (value.endsWith("/rest/v1/rpc/get_growth_scorecard")) {
+      return jsonResponse([
+        commerceRow("2026-07-30"),
+        commerceRow("2026-07-31", 1),
+      ]);
+    }
+    if (value.endsWith("/rest/v1/rpc/get_first_party_funnel_scorecard")) {
+      return jsonResponse([
+        funnelRow("2026-07-30", 3),
+        funnelRow("2026-07-31", 4),
+      ]);
+    }
+    throw new Error(`Unexpected mocked RPC request: ${value}`);
+  };
+
+  try {
+    const result = await fetchGrowthScorecard({
+      secret: "test-growth-secret",
+      days: 2,
+      endDate: "2026-07-31",
+      fetchImpl: (url, options) => worker.fetch(new Request(url, options), {
+        JOB_RUNNER_SECRET: "test-growth-secret",
+        SUPABASE_URL: "https://database.example.test",
+        SUPABASE_SERVICE_ROLE_KEY: "test-service-role",
+      }),
+    });
+
+    assert.deepEqual(result.range, {
+      timezone: "Asia/Taipei",
+      start_date: "2026-07-30",
+      end_date: "2026-07-31",
+      closed_days: 2,
+    });
+    assert.equal(result.totals.verified_purchasers, 1);
+    assert.equal(result.totals.landing_sessions, 7);
+    assert.deepEqual(new Set(rpcRequests.map(({ value }) => value)), new Set([
+      "https://database.example.test/rest/v1/rpc/get_growth_scorecard",
+      "https://database.example.test/rest/v1/rpc/get_first_party_funnel_scorecard",
+    ]));
+    for (const { body } of rpcRequests) {
+      assert.deepEqual(body, {
+        p_start_date: "2026-07-30",
+        p_end_date: "2026-07-31",
+      });
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("requires a secret and explicit real closed-day date before any request", async () => {
   let calls = 0;
   const fetchImpl = async () => {
@@ -95,6 +192,8 @@ test("rejects sensitive or unknown response fields", async () => {
   for (const [body, message] of [
     [scorecard({ customer_email: "hidden@example.test" }), /forbidden field/],
     [scorecard({ diagnostic: true }), /unknown top-level field/],
+    [scorecard({ generated_at: "yesterday" }), /aggregate contract/],
+    [scorecard({ generated_at: undefined }), /aggregate contract/],
   ]) {
     await assert.rejects(
       fetchGrowthScorecard({

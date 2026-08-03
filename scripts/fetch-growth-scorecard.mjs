@@ -6,6 +6,7 @@ export const GROWTH_SCORECARD_ORIGIN = "https://your-love-element-api.goodrambo2
 
 const TOP_LEVEL_FIELDS = new Set([
   "ok",
+  "generated_at",
   "source",
   "privacy",
   "range",
@@ -17,6 +18,7 @@ const TOP_LEVEL_FIELDS = new Set([
 ]);
 const SENSITIVE_KEY_PATTERN = /(^|_)(email|customer|reading_id|order_id|session_hash|answers?|webhook|report_json|token|secret)($|_)/i;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
 function requireDate(value, label) {
   if (typeof value !== "string" || !DATE_PATTERN.test(value)) {
@@ -63,8 +65,14 @@ function assertAggregateContract(scorecard, endDate) {
       throw new Error(`scorecard contains unknown top-level field ${key}`);
     }
   }
+  const generatedAt = typeof scorecard.generated_at === "string"
+    ? new Date(scorecard.generated_at)
+    : null;
   if (
     scorecard.ok !== true
+    || !ISO_TIMESTAMP_PATTERN.test(scorecard.generated_at)
+    || Number.isNaN(generatedAt?.getTime())
+    || generatedAt?.toISOString() !== scorecard.generated_at
     || scorecard.source !== "supabase_verified_lemon_state_and_first_party_funnel"
     || scorecard.privacy !== "aggregate_counts_only"
     || scorecard.range?.timezone !== "Asia/Taipei"
