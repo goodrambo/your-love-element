@@ -16,6 +16,71 @@ const TOP_LEVEL_FIELDS = new Set([
   "attribution",
   "limitations",
 ]);
+const RANGE_FIELDS = new Set(["timezone", "start_date", "end_date", "closed_days"]);
+const GOAL_FIELDS = new Set([
+  "daily_verified_purchasers",
+  "consecutive_days",
+  "current_streak",
+  "streak_start_date",
+  "latest_qualifying_date",
+  "qualifying_days_in_range",
+  "complete",
+]);
+const COUNT_FIELDS = [
+  "previewed_readings",
+  "checkout_readings",
+  "verified_purchasers",
+  "verified_orders",
+  "refunded_orders",
+  "paid_signals_submitted",
+  "paid_signal_cohort_delivered",
+  "paid_signal_cohort_delivered_within_15m",
+  "delivered_readings",
+  "failed_readings",
+  "landing_sessions",
+  "full_report_sessions",
+  "view_content_sessions",
+  "landing_cta_clicks",
+  "quiz_starts",
+  "previews_revealed",
+  "checkouts_created",
+  "paid_signals_submitted_events",
+  "share_card_generated",
+  "share_card_shared",
+  "share_card_link_shared",
+  "share_card_downloaded",
+];
+const TOTAL_FIELDS = new Set([
+  ...COUNT_FIELDS,
+  "estimated_gross_usd",
+  "paid_signal_delivery_rate",
+  "delivery_within_15m_rate",
+]);
+const DAY_FIELDS = new Set([
+  "date",
+  ...TOTAL_FIELDS,
+  "qualifies_for_daily_goal",
+]);
+const ATTRIBUTION_FIELDS = new Set([
+  "date",
+  "page",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+  "page_view_sessions",
+  "view_content_sessions",
+  "landing_cta_clicks",
+  "quiz_starts",
+  "previews_revealed",
+  "checkouts_created",
+  "paid_signals_submitted_events",
+  "share_card_generated",
+  "share_card_shared",
+  "share_card_link_shared",
+  "share_card_downloaded",
+]);
 const SENSITIVE_KEY_PATTERN = /(^|_)(email|customer|reading_id|order_id|session_hash|answers?|webhook|report_json|token|secret)($|_)/i;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
@@ -55,6 +120,17 @@ function assertNoSensitiveKeys(value, path = "scorecard") {
   }
 }
 
+function assertKnownObjectFields(value, allowedFields, path) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("scorecard response does not match the aggregate contract");
+  }
+  for (const key of Object.keys(value)) {
+    if (!allowedFields.has(key)) {
+      throw new Error(`scorecard contains unknown field at ${path}.${key}`);
+    }
+  }
+}
+
 function assertAggregateContract(scorecard, endDate) {
   if (!scorecard || typeof scorecard !== "object" || Array.isArray(scorecard)) {
     throw new Error("scorecard response must be an object");
@@ -85,6 +161,18 @@ function assertAggregateContract(scorecard, endDate) {
     || !Array.isArray(scorecard.attribution)
     || !Array.isArray(scorecard.limitations)
   ) {
+    throw new Error("scorecard response does not match the aggregate contract");
+  }
+  assertKnownObjectFields(scorecard.range, RANGE_FIELDS, "scorecard.range");
+  assertKnownObjectFields(scorecard.goal, GOAL_FIELDS, "scorecard.goal");
+  assertKnownObjectFields(scorecard.totals, TOTAL_FIELDS, "scorecard.totals");
+  scorecard.days.forEach((day, index) => {
+    assertKnownObjectFields(day, DAY_FIELDS, `scorecard.days[${index}]`);
+  });
+  scorecard.attribution.forEach((row, index) => {
+    assertKnownObjectFields(row, ATTRIBUTION_FIELDS, `scorecard.attribution[${index}]`);
+  });
+  if (scorecard.limitations.some((limitation) => typeof limitation !== "string")) {
     throw new Error("scorecard response does not match the aggregate contract");
   }
 }
