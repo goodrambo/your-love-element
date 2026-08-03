@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { fetchGrowthScorecard, GROWTH_SCORECARD_ORIGIN } from "../fetch-growth-scorecard.mjs";
+import { evaluateGrowthControl } from "../growth-control.mjs";
 import worker from "../../worker/src/index.js";
 
 function commerceRow(metricDate, verifiedPurchasers = 0) {
@@ -137,6 +138,16 @@ test("fetcher accepts the protected Worker aggregate contract end to end", async
     });
     assert.equal(result.totals.verified_purchasers, 1);
     assert.equal(result.totals.landing_sessions, 7);
+    const decision = evaluateGrowthControl({
+      run_date: "2026-08-01",
+      scorecard: result,
+      authority: { scorecard_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    });
+    assert.equal(decision.primary_constraint, "observability");
+    assert.equal(decision.rolling["7d"].closed_days, 2);
+    assert.equal(decision.rolling["7d"].landing_sessions, 7);
+    assert.equal(decision.rolling["7d"].verified_purchasers, 1);
     assert.deepEqual(new Set(rpcRequests.map(({ value }) => value)), new Set([
       "https://database.example.test/rest/v1/rpc/get_growth_scorecard",
       "https://database.example.test/rest/v1/rpc/get_first_party_funnel_scorecard",
