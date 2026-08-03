@@ -240,16 +240,19 @@ function aggregateWindow(days, requestedDays) {
     }
   }
   const closedDays = selected.length;
+  const totals = closedDays
+    ? sums
+    : Object.fromEntries(COUNT_FIELDS.map((field) => [field, null]));
   return {
     closed_days: closedDays,
     start_date: selected[0]?.date || null,
     end_date: selected.at(-1)?.date || null,
-    ...sums,
-    purchasers_per_day: closedDays ? Number((sums.verified_purchasers / closedDays).toFixed(2)) : null,
-    landing_sessions_per_day: closedDays ? Number((sums.landing_sessions / closedDays).toFixed(2)) : null,
-    landing_to_purchase_rate: ratio(sums.verified_purchasers, sums.landing_sessions),
-    paid_signals_to_delivery_rate: ratio(sums.paid_signal_cohort_delivered, sums.paid_signals_submitted),
-    paid_signals_to_delivery_within_15m_rate: ratio(sums.paid_signal_cohort_delivered_within_15m, sums.paid_signals_submitted),
+    ...totals,
+    purchasers_per_day: closedDays ? Number((totals.verified_purchasers / closedDays).toFixed(2)) : null,
+    landing_sessions_per_day: closedDays ? Number((totals.landing_sessions / closedDays).toFixed(2)) : null,
+    landing_to_purchase_rate: ratio(totals.verified_purchasers, totals.landing_sessions),
+    paid_signals_to_delivery_rate: ratio(totals.paid_signal_cohort_delivered, totals.paid_signals_submitted),
+    paid_signals_to_delivery_within_15m_rate: ratio(totals.paid_signal_cohort_delivered_within_15m, totals.paid_signals_submitted),
   };
 }
 
@@ -283,6 +286,36 @@ function evaluateExperiment(experiment, runDate) {
     return { decision: "none", reason: "no active experiment" };
   }
   const startedOn = requireDate(experiment.started_on, "active_experiment.started_on");
+  const elapsedDays = Math.max(0, daysBetween(startedOn, runDate));
+  const measurementValues = [
+    experiment.eligible_sessions,
+    experiment.baseline_primary_rate,
+    experiment.current_primary_rate,
+    experiment.baseline_guardrail_rate,
+    experiment.current_guardrail_rate,
+  ];
+  const measurementAvailability = measurementValues.map((value) => value !== undefined && value !== null);
+  if (!measurementAvailability.some(Boolean)) {
+    if (experiment.has_breakage === true) {
+      return {
+        decision: "stop",
+        reason: "breakage reported",
+        measurement_status: "unavailable",
+        elapsed_days: elapsedDays,
+        eligible_sessions: null,
+      };
+    }
+    return {
+      decision: "continue",
+      reason: "active experiment is awaiting aggregate measurement",
+      measurement_status: "unavailable",
+      elapsed_days: elapsedDays,
+      eligible_sessions: null,
+    };
+  }
+  if (!measurementAvailability.every(Boolean)) {
+    throw new Error("Active experiment aggregate measurements must be all available or all null");
+  }
   const eligible = requireCount(experiment.eligible_sessions, "active_experiment.eligible_sessions");
   const baseline = Number(experiment.baseline_primary_rate);
   const current = Number(experiment.current_primary_rate);
@@ -291,7 +324,6 @@ function evaluateExperiment(experiment, runDate) {
   if (![baseline, current, baselineGuardrail, currentGuardrail].every((value) => Number.isFinite(value) && value >= 0 && value <= 1)) {
     throw new Error("Invalid active experiment rate");
   }
-  const elapsedDays = Math.max(0, daysBetween(startedOn, runDate));
   const relativeLift = baseline > 0 ? (current - baseline) / baseline : null;
   const guardrailDecline = baselineGuardrail > 0 ? (baselineGuardrail - currentGuardrail) / baselineGuardrail : 0;
   const minimumLift = Number.isFinite(experiment.minimum_relative_lift)
