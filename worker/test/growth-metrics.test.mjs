@@ -646,6 +646,31 @@ test("frontend funnel event names stay accepted by the first-party collector", a
   }
 });
 
+test("accepted frontend events stay included in the aggregate scorecard RPC", () => {
+  const frontendEventNames = sourceSetValues("../../script.js", "firstPartyEventNames");
+  const migration = readFileSync(
+    new URL("../../supabase/migrations/202607300001_add_first_party_funnel_events.sql", import.meta.url),
+    "utf8",
+  );
+  const eventConstraint = migration.match(
+    /constraint funnel_events_event_name_known\s+check \(event_name in \(([\s\S]*?)\)\),/,
+  );
+  assert.ok(eventConstraint, "funnel_events must constrain the accepted event vocabulary");
+  const constrainedEventNames = [...eventConstraint[1].matchAll(/'([^']+)'/g)].map((match) => match[1]);
+
+  const scorecardFunction = migration.match(
+    /create or replace function public\.get_first_party_funnel_scorecard[\s\S]*?as \$\$([\s\S]*?)\$\$;/,
+  );
+  assert.ok(scorecardFunction, "migration must define the aggregate funnel scorecard RPC");
+  const aggregatedEventNames = [
+    ...scorecardFunction[1].matchAll(/filter \(where f\.event_name = '([^']+)'\)/g),
+  ].map((match) => match[1]);
+
+  assert.deepEqual(constrainedEventNames, frontendEventNames);
+  assert.deepEqual(aggregatedEventNames, frontendEventNames);
+  assert.equal(new Set(aggregatedEventNames).size, frontendEventNames.length);
+});
+
 test("first-party analytics rejects frontend purchase and untrusted origins before storage", async () => {
   const originalFetch = globalThis.fetch;
   let calls = 0;
