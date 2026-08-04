@@ -25,7 +25,7 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 ## Ready
 
 - [x] Establish a repeatable exact-property GSC aggregate read for `yle`. The 2026-08-04 run passed final property-level `web` clicks/impressions for 2026-07-28 through 2026-08-02 to the evaluator without property enumeration, query/page detail, credentials, preliminary data, or impressions-as-visits substitution; 1d/7d/30d clicks and current traffic streak are all `0`.
-- [x] Add a local technical SEO regression that requires every indexable configured page to receive a crawlable same-origin link from another indexable page. The 30/30 focused SEO suite proves the current seven-URL cluster has no orphan page; HTML, runtime, sitemap, paid flow, and the active Copy link experiment are unchanged. Release preparation remains pending on `codex/seo-inbound-link-coverage`.
+- [x] Add a technical SEO regression that requires every indexable configured page to receive a crawlable same-origin link from another indexable page. The 30/30 focused SEO suite proves the current seven-URL cluster has no orphan page; HTML, runtime, sitemap, paid flow, and the active Copy link experiment are unchanged. Commit `5139ea0` is pushed in draft PR [#90](https://github.com/goodrambo/your-love-element/pull/90), with both PR Harness checks passing; merge and production verification remain pending.
 - [ ] After a fresh GSC window is available, choose one search-acquisition action from indexing/query evidence and pre-register one primary metric plus guardrail/sample/time/stop gates. Keep the existing Copy link experiment until its gate is measured or explicitly stop/replace it at the strategy review; never run two primary experiments concurrently.
 
 ## Stage 2 later
