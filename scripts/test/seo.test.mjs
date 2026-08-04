@@ -299,6 +299,39 @@ test("sitemap dates and robots discovery instructions are valid", () => {
   assert.match(robots, new RegExp(`Sitemap:\\s*${origin.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\/sitemap\\.xml`, "i"));
 });
 
+test("core acquisition freshness signals agree with sitemap", () => {
+  const sitemap = read("sitemap.xml");
+  const sitemapDates = new Map(
+    [...sitemap.matchAll(/<url>\s*<loc>([^<]+)<\/loc>\s*<lastmod>([^<]+)<\/lastmod>[\s\S]*?<\/url>/g)]
+      .map((match) => [match[1], match[2]]),
+  );
+  const pages = [
+    ["index.html", ["WebPage"]],
+    ["five-elements-love-compatibility/index.html", ["WebPage", "Article"]],
+    ["how-it-works/index.html", ["WebPage", "Article"]],
+  ];
+
+  for (const [relativePath, structuredTypes] of pages) {
+    const html = read(relativePath);
+    const canonical = firstMatch(
+      html,
+      /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+      `${relativePath} canonical`,
+    );
+    const sitemapDate = sitemapDates.get(canonical);
+
+    assert.ok(sitemapDate, `${relativePath} must have a sitemap lastmod value`);
+    for (const type of structuredTypes) {
+      const item = structuredItem(html, type, relativePath);
+      assert.equal(
+        item.dateModified,
+        sitemapDate,
+        `${relativePath} ${type} dateModified must match sitemap lastmod`,
+      );
+    }
+  }
+});
+
 test("homepage exposes the entity, product, answer, and content-cluster signals", () => {
   const html = read("index.html");
   const types = graphTypes(html);
