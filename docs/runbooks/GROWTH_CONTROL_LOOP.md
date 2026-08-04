@@ -1,17 +1,18 @@
 # Growth Control Loop
 
-Last updated: 2026-07-30
+Last updated: 2026-08-04
 
 ## Goal and deadline
 
-Reach at least `10` unique, verified, non-refunded purchasers per Asia/Taipei calendar day for `30` consecutive days.
+The growth objective now has two sequential stages.
 
-- Streak must begin no later than 2026-09-15.
-- Target completion date: 2026-10-14.
-- Hard review date: 2026-10-15. Do not silently extend the deadline. If the target is missed, report the miss, the measured bottleneck, spend and revenue, and the smallest product/channel reset required.
-- At `$9.99 USD`, 300 purchases in the qualifying 30-day window represent `$2,997 USD` gross revenue before fees, refunds, generation costs, and acquisition spend.
+1. Traffic stage: exceed `1,000` Google Search clicks per complete Search Console day for `30` consecutive days. The executable threshold is therefore `>= 1,001` clicks. Use only final `web` Performance data at property aggregation for exact property `sc-domain:yourloveelement.com`; impressions, Discover/News traffic, browser analytics, and preliminary data do not qualify. Search Console daily dates use `America/Los_Angeles`, not Asia/Taipei, and normal reporting lag is recorded rather than converted into inferred values. No Stage 1 deadline was supplied, so its deadline is explicitly `null`.
+2. Purchase stage: after Stage 1 is complete, reach at least `10` unique, verified, non-refunded purchasers per Asia/Taipei calendar day for `30` consecutive days.
 
-The streak counter uses the authoritative Lemon Squeezy payment/webhook state, not frontend clicks or Meta attribution. Count one purchaser per day by Lemon customer identity, falling back to normalized customer email only inside a protected aggregate query. Never expose identities in reports or logs. A refunded order is excluded and can invalidate an earlier provisional day.
+- The Stage 2 purchase streak planning target remains 2026-09-15, target completion remains 2026-10-14, and 2026-10-15 remains a hard review. These dates do not override the Stage 1 gate. If Stage 1 has not completed by then, report it as the blocking missed stage rather than silently extending or skipping it.
+- At `$9.99 USD`, 300 purchases in the qualifying purchase window represent `$2,997 USD` gross revenue before fees, refunds, generation costs, and acquisition spend.
+
+The Stage 2 streak counter uses the authoritative Lemon Squeezy payment/webhook state, not GSC clicks, frontend clicks, or Meta attribution. Count one purchaser per day by Lemon customer identity, falling back to normalized customer email only inside a protected aggregate query. Never expose identities in reports or logs. A refunded order is excluded and can invalidate an earlier provisional day.
 
 ## Project isolation
 
@@ -49,7 +50,7 @@ Automation is not operationally autonomous until every capability used by the ac
 | Production and Worker health | Read-only HTTP access to site and four health endpoints | Ready; all returned HTTP 200 with healthy/configured responses on 2026-07-30 |
 | Authoritative purchases and refunds | Lemon Squeezy orders/subscriptions/refunds read access, or reconciled Supabase webhook-backed aggregates | Lemon dashboard/API access deferred by the user because every login requires 2FA; use Supabase webhook-backed state provisionally, while settled revenue remains unavailable |
 | Reading funnel and fulfillment | Supabase aggregate read access to `readings`, `webhook_events`, and jobs, or a protected aggregate endpoint | Ready for aggregate collection; project-scoped read-only MCP completed schema/aggregate queries, and the corrected scorecard/funnel migrations, Worker route, and frontend collector were deployed and verified on 2026-07-30. The bearer-protected scorecard remains unavailable to a scheduled run unless `JOB_RUNNER_SECRET` exists in that live environment |
-| Traffic and frontend funnel | First-party funnel plus Google Search Console for the organic plan; Meta only if later reintroduced | Partial; the first-party collector is deployed and receiving allowlisted events, and `sc-domain:yourloveelement.com` was DNS-verified with a successful seven-URL sitemap. Search Console performance is still processing; Meta is deliberately excluded |
+| Traffic and frontend funnel | Final property-level GSC `web` clicks for Stage 1, plus the first-party funnel for diagnosis; Meta only if later reintroduced | Partial; the first-party collector is deployed and receiving allowlisted events, and `sc-domain:yourloveelement.com` was DNS-verified with a successful seven-URL sitemap. The latest verified Performance baseline covers 2026-07-28 through 2026-07-31 at `0` clicks and `0` impressions; later final data is not yet recorded. Meta is deliberately excluded |
 | Deploy and rollback | Valid GitHub write authentication plus Cloudflare deployment visibility | Ready for the authorized site-only scope; exact-repository `gh` authentication, reversible branch/PR, CI, Pages deployment, and production smoke completed for PR #2 on 2026-07-30 |
 | Email deliverability | Resend email-log read access | Partial; Resend dashboard login verified, but a current delivery-log sample has not been captured |
 | Organic publishing | Authorized site/SEO publication path and standing publication authority | Site-only conversion/SEO publishing is authorized after required checks. Social, Meta/Instagram, customer messaging, and account-wide publishing remain unapproved |
@@ -62,7 +63,7 @@ Standing mutation authority is machine-readable under `harness/contracts.json`. 
 
 ## Required measurement plane
 
-The daily scorecard uses closed Asia/Taipei days and rolling 3/7/14-day windows.
+Stage 1 uses final Search Console property-level `web` data in `America/Los_Angeles`, with rolling 1/7/14/30-day windows and a contiguous qualifying-day streak. Stage 2 uses the protected business scorecard on closed Asia/Taipei days and rolling 3/7/14-day windows.
 
 Authoritative business metrics:
 
@@ -74,14 +75,17 @@ Authoritative business metrics:
 
 Data precedence:
 
-1. Lemon verified orders/refunds for purchase and revenue.
-2. Supabase state for reading and fulfillment truth.
-3. Meta for ad spend, attributed traffic, and browser-event diagnosis.
-4. Public HTTP probes for availability only.
+1. Google Search Console final property-level web clicks for the Stage 1 traffic streak.
+2. Lemon verified orders/refunds for Stage 2 purchase and revenue.
+3. Supabase state for reading and fulfillment truth.
+4. Meta for ad spend, attributed traffic, and browser-event diagnosis only if separately reintroduced.
+5. Public HTTP probes for availability only.
 
 The protected aggregate growth endpoint, authoritative-purchase RPC, and privacy-minimized first-party funnel layer are implemented, deployed, and tested. They return aggregate session stages, UTM labels, verified purchaser counts, refunds, and fulfillment rates; use `JOB_RUNNER_SECRET` for scorecard reads; and expose no email, answers, session hashes, reading/order/customer IDs, tokens, webhook payloads, or report content. Meta/provider access is still required for spend, CAC, ROAS, and actual settled revenue.
 
 ## Milestones
+
+Stage 1 has one data-driven milestone: `30` contiguous final GSC days at `>= 1,001` clicks. Its completion date cannot be forecast from the current zero-click baseline without fabricating a growth rate. The dated milestones below remain the Stage 2 purchase plan and hard-review risk controls; Stage 2 cannot start until the traffic audit passes.
 
 | Date | Exit criterion |
 | --- | --- |
@@ -135,9 +139,9 @@ Do not use marketing email without an explicit opt-in and compliant unsubscribe 
 
 ## Scheduling cadence
 
-- Early bootstrap: run hourly while there is a ready high-impact task, and at minimum until both growth migrations, the Worker scorecard route, and the first-party collector are deployed and verified, followed by seven complete closed days of aggregate data.
+- Early bootstrap: run every 30 minutes while there is a ready high-impact task, and at minimum until the exact-property final GSC aggregate read, both growth migrations, the Worker scorecard route, and the first-party collector are deployed and verified, followed by seven complete final GSC days and a 24-hour empty ready queue.
 - Mid-growth: run every four hours after the early exit gate, while acquisition and conversion experiments are active.
-- Streak phase: run daily at 08:30 Asia/Taipei after the first qualifying 10-purchaser day starts the streak.
+- Streak phase: run daily at 08:30 Asia/Taipei after Stage 1 is complete and the first qualifying 10-purchaser day starts the Stage 2 streak.
 - Use only the existing `yle` heartbeat. A phase transition updates that automation instead of creating duplicates. Downshift to mid-growth only after seven complete closed days exist **and** no ready high-impact action has remained in the queue for 24 hours. A lack of new closed-day data is not a reason for a monitoring-only run: choose one non-repetitive, safe task from the current constraint/backlog and produce a verified implementation, test, analysis, release preparation, release, or rollback result.
 
 ## Scheduled autonomous loop
@@ -148,10 +152,10 @@ Every scheduled run:
 2. Read `PROJECT_STATE.md`, `BACKLOG.md`, and this runbook.
 3. Recheck the authority matrix. Never infer authentication or spend/publication permission.
 4. Probe the production site and four Worker health endpoints read-only as a safety gate, not as the run's result.
-5. When authorized data is available, calculate yesterday, rolling 3/7/14-day metrics, the current streak, and milestone variance.
+5. Retrieve final aggregate GSC `web` clicks for exact property `sc-domain:yourloveelement.com`, calculate rolling 1/7/14/30-day traffic metrics and the Stage 1 streak, then calculate Stage 2 scorecard metrics only after Stage 1 completes. Never substitute impressions for clicks or preliminary data for final days.
 6. Classify the primary constraint: access, reliability, observability, traffic, conversion, economics, or fulfillment.
 7. Select the single smallest action with the highest expected impact on the primary constraint. Record hypothesis, primary metric, guardrails, sample/time gate, and stop condition before acting.
-8. Deliver exactly one non-repetitive result per run: implement, test, analyze and decide, prepare a reversible release, deploy an authorized change, verify production, or roll back an incident. A monitoring-only result is permitted only when every ready action is blocked by a specific external dependency; record that blocker once instead of repeating it each hour.
+8. Deliver exactly one non-repetitive result per run: implement, test, analyze and decide, prepare a reversible release, deploy an authorized change, verify production, or roll back an incident. A monitoring-only result is permitted only when every ready action is blocked by a specific external dependency; record that blocker once instead of repeating it every run.
 9. Low-risk site conversion/SEO changes may be committed, pushed, and deployed only when the exact standing grants and live exact-asset tool/session are both available. Do not autonomously alter checkout/payment/webhook/report/email/refund-policy/legal-claim behavior, send customer messages, use Meta or Lemon Squeezy, create test transactions, or spend money.
 10. Before any release, require exact-scope checks, Harness PASS, the named browser/manual gate, unchanged paid-flow digest or explicit paid-flow authorization, a reversible branch/PR, successful CI, and a production smoke. Roll back or stop on breakage or an incident.
 11. Verify proportionally, update current state/backlog truthfully, and report outcome, evidence, next action, and any blocked authority.
@@ -160,7 +164,7 @@ Review strategy once per 6 early-stage runs, once per 7 mid-stage runs, and once
 
 ## Deterministic decision evaluator
 
-Use `scripts/growth-control.mjs` after the protected scorecard response and any authorized provider aggregates have been collected. The evaluator does not fetch data or read credentials. It accepts aggregate JSON only, rejects customer/session/order/reading/answer/secret-shaped keys, and emits one primary constraint plus a pre-registered action contract.
+Use `scripts/growth-control.mjs` after the exact-property GSC aggregate, protected scorecard response when required, and any authorized provider aggregates have been collected. The evaluator does not fetch data or read credentials. It accepts aggregate JSON only, rejects customer/session/order/reading/answer/secret-shaped keys, and emits one active stage, one primary constraint, and one pre-registered action contract.
 
 When `JOB_RUNNER_SECRET` is injected into the live runtime, fetch the latest closed-day scorecard through the exact allowlisted Worker origin. The fetcher requires an explicit end date, never accepts a caller-supplied origin, fails once on `401` or `404`, requires private/no-store and non-CORS response headers, rejects sensitive or unknown fields, and writes only aggregate JSON to stdout. Keep redirected output under ignored `artifacts/growth-control/`, then place that aggregate into the separate growth-control input and run the evaluator CLI below.
 
@@ -181,13 +185,14 @@ node scripts/growth-control.mjs --input /absolute/path/to/aggregate-growth-input
 The input contract is:
 
 - `run_date`: Asia/Taipei decision date in `YYYY-MM-DD` form.
-- `scorecard`: the complete aggregate response from `GET /api/admin/growth-metrics`, or `null` when unavailable.
-- `authority`: live-session/tool booleans for `lemon_read`, `scorecard_read`, `meta_read`, `resend_read`, `deploy`, `publish`, `paid_media`, and `paid_flow_e2e`. The CLI intersects mutation booleans with `harness/contracts.json`; an input cannot grant itself deployment, publication, paid-media, or paid-E2E authority.
+- `search_console`: a freshly fetched aggregate object for exact property `sc-domain:yourloveelement.com`, source `google_search_console_performance`, `search_type: web`, `aggregation: property`, `data_state: final`, timezone `America/Los_Angeles`, privacy `aggregate_counts_only`, `fetched_on` equal to `run_date`, matching start/end dates, and contiguous daily `clicks` plus `impressions`; or `null` when unavailable. Clicks determine qualification; impressions are diagnostic only.
+- `scorecard`: the complete aggregate response from `GET /api/admin/growth-metrics`, or `null` when unavailable. It becomes the required goal truth only after Stage 1 completes.
+- `authority`: live-session/tool booleans for `gsc_read`, `lemon_read`, `scorecard_read`, `meta_read`, `resend_read`, `deploy`, `publish`, `paid_media`, and `paid_flow_e2e`. The CLI intersects mutation booleans with `harness/contracts.json`; an input cannot grant itself deployment, publication, paid-media, or paid-E2E authority.
 - `provider.public_health_ok` and `provider.paid_flow_incident`: current production safety signals.
 - `provider.rolling_3d_start_date`, `provider.rolling_3d_end_date`, `provider.rolling_3d_spend_usd`, `provider.rolling_3d_settled_revenue_usd`, and `provider.max_acceptable_cac_usd`: authorized monetary aggregates for exactly the same rolling three closed days; use `null` when unavailable. The evaluator rejects a monetary window that does not match the scorecard.
 - `active_experiment`: optional aggregate experiment state containing start date, eligible sessions, baseline/current primary rates, baseline/current guardrail rates, breakage status, and optional minimum relative lift. When an experiment is known to be active but its aggregate measurements are unavailable, keep the object and set all five measurement fields to `null` together; the evaluator returns `continue` with `measurement_status: unavailable`. Use `active_experiment: null` only when no experiment is active. Partial measurement availability is rejected.
 
-The evaluator requires the exact scorecard source/privacy/timezone contract, contiguous closed days, and a range ending on the calendar day immediately before `run_date`. It rejects a stale range instead of reusing yesterday's decision input after another Asia/Taipei day closes. When the scorecard is unavailable, rolling count totals and rates remain `null` while `closed_days` remains `0`; this distinguishes missing evidence from observed zero activity. It calculates rolling 3/7/14-day windows, CAC/ROAS only when matching provider aggregates exist, milestone variance, the estimated landing-session requirement, missing authorities, and experiment `continue`, `promote`, or `stop` status. Priority is: completed-streak audit, production reliability, fulfillment below 98%, insufficient observation window, uneconomic CAC, adequately sampled funnel conversion gap, missing revenue/spend observability, then qualified traffic. External actions remain `local_only_until_authorized` whenever their authority is missing.
+The evaluator requires the exact GSC contract above, contiguous final dates, and a fresh `fetched_on` date. It records the latest final date and lag because Search Console normally trails the present day. Exactly `1,000` clicks fails; `1,001` qualifies. Before the 30-day traffic streak completes, priority is GSC access, production reliability, then traffic. After completion, the evaluator requires the exact scorecard source/privacy/timezone contract, contiguous closed days, and a range ending on the calendar day immediately before `run_date`; Stage 2 priority remains completed-purchase-streak audit, reliability, fulfillment below 98%, insufficient observation window, uneconomic CAC, adequately sampled conversion gap, missing revenue/spend, then qualified traffic. Missing values stay `null`, and external actions remain `local_only_until_authorized` whenever authority is absent.
 
 ## Experiment decision rules
 
@@ -199,6 +204,6 @@ The evaluator requires the exact scorecard source/privacy/timezone contract, con
 
 ## Completion and escalation
 
-The goal is complete only after the authoritative scorecard shows 30 consecutive qualifying days and the most recent day has closed. A single day below 10 resets the streak to zero.
+Stage 1 completes only after final Search Console data shows 30 consecutive days with more than 1,000 web clicks; a final day at 1,000 or below resets the current traffic streak. Stage 2 then completes only after the authoritative purchase scorecard shows 30 consecutive qualifying days and the most recent Asia/Taipei day has closed; a day below 10 verified non-refunded purchasers resets the purchase streak. The overall goal is complete only after both stages pass in order.
 
 Notify the user immediately only for a production incident, unauthorized/missing permission that prevents meaningful progress, spend-cap/policy breach, or required authentication/OTP/CAPTCHA. Routine successful runs should remain quiet except for compact scheduled summaries.
