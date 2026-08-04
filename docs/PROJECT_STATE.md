@@ -17,7 +17,7 @@ This is the only current-state snapshot. It describes what is verified now and m
 - Production topology: GitHub Pages -> Cloudflare Worker -> Supabase / Lemon Squeezy / OpenAI / Resend, plus Meta Pixel and CAPI.
 - Production site: `https://yourloveelement.com` returned HTTP 200 on 2026-08-04.
 - Public GitHub `main` includes evaluator unavailable-data merge `cc0c52eddbbc9a57beb1b3b7359b882453a52b1d`, sixth-strategy-review merge `f6fefc47176d4a907650cfa3972ca1af1ca6c052`, nested scorecard-contract merge `a69640e48a055c85ccf5db76fcfda6b249d6bf40`, evaluator-handoff merge `78aad56e04ce7daa6cd443ccc09c6fb8e0821ccb`, fetch-contract merge `139d0938dc02e9f537507732b03a55f83ac63d7f`, and the earlier verified releases. The active referral experiment remains Copy link merge `f47e4acccf6b2500c7e35442cd46f5126a3eaa35`.
-- Local `main` is synchronized at verified evaluator unavailable-data merge `cc0c52eddbbc9a57beb1b3b7359b882453a52b1d`.
+- Local `main` was fast-forwarded to `origin/main` on 2026-08-05 after the PR #91 release verification; resolve the exact branch SHA live instead of treating this prose as a branch pointer.
 
 ## Verified production state
 
