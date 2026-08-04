@@ -112,6 +112,43 @@ test("indexable pages have unique search metadata and sitemap entries", () => {
   }
 });
 
+test("every indexable page receives a crawlable internal link from another page", () => {
+  const indexablePages = new Map();
+
+  for (const relativePath of contracts.html_files) {
+    const html = read(relativePath);
+    if (/<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html)) continue;
+
+    const canonical = firstMatch(
+      html,
+      /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+      `${relativePath} canonical`,
+    );
+    indexablePages.set(new URL(canonical).pathname, {
+      canonical,
+      html,
+      inboundSources: new Set(),
+      relativePath,
+    });
+  }
+
+  for (const [sourcePath, sourcePage] of indexablePages) {
+    for (const match of sourcePage.html.matchAll(/<a\b[^>]*\bhref=["']([^"']+)["'][^>]*>/gi)) {
+      const targetUrl = new URL(match[1], sourcePage.canonical);
+      if (targetUrl.origin !== origin || targetUrl.pathname === sourcePath) continue;
+
+      indexablePages.get(targetUrl.pathname)?.inboundSources.add(sourcePath);
+    }
+  }
+
+  for (const page of indexablePages.values()) {
+    assert.ok(
+      page.inboundSources.size > 0,
+      `${page.relativePath} must receive a crawlable internal link from another indexable page`,
+    );
+  }
+});
+
 test("same-origin fragment links resolve to one configured page target", () => {
   const pagesByPath = new Map();
 
