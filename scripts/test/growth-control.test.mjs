@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { evaluateGrowthControl } from "../growth-control.mjs";
+import { evaluateGrowthControl, GOAL } from "../growth-control.mjs";
 
 const CLI_PATH = fileURLToPath(new URL("../growth-control.mjs", import.meta.url));
 
@@ -24,6 +25,7 @@ const DEFAULT_COUNTS = {
 };
 
 const READY_AUTHORITY = {
+  gsc_read: true,
   lemon_read: true,
   scorecard_read: true,
   meta_read: true,
@@ -75,7 +77,35 @@ function scorecard(overrides = {}, dayCount = 14) {
   };
 }
 
-test("classifies missing aggregate truth as access and keeps all values unknown", () => {
+function searchConsole(runDate, overrides = {}, dayCount = 30) {
+  const endDate = addDays(runDate, -3);
+  const days = Array.from({ length: dayCount }, (_, index) => ({
+    date: addDays(endDate, index - dayCount + 1),
+    clicks: 1001,
+    impressions: 5000,
+    ...overrides,
+  }));
+  return {
+    property: "sc-domain:yourloveelement.com",
+    source: "google_search_console_performance",
+    search_type: "web",
+    aggregation: "property",
+    data_state: "final",
+    timezone: "America/Los_Angeles",
+    privacy: "aggregate_counts_only",
+    fetched_on: runDate,
+    start_date: days[0].date,
+    end_date: endDate,
+    days,
+  };
+}
+
+test("keeps the evaluator goal aligned with the Harness contract", () => {
+  const contracts = JSON.parse(readFileSync(new URL("../../harness/contracts.json", import.meta.url), "utf8"));
+  assert.deepEqual(GOAL, contracts.growth_goal);
+});
+
+test("classifies missing GSC truth as access and keeps traffic values unknown", () => {
   const result = evaluateGrowthControl({
     run_date: "2026-07-30",
     scorecard: null,
@@ -83,8 +113,10 @@ test("classifies missing aggregate truth as access and keeps all values unknown"
     provider: { public_health_ok: true, paid_flow_incident: false },
   });
 
-  assert.equal(result.status, "blocked_on_aggregate_truth");
+  assert.equal(result.status, "blocked_on_gsc_truth");
   assert.equal(result.primary_constraint, "access");
+  assert.equal(result.traffic_streak, null);
+  assert.equal(result.traffic.rolling["7d"].clicks, null);
   assert.equal(result.current_streak, null);
   assert.equal(result.rolling["7d"].purchasers_per_day, null);
   for (const window of Object.values(result.rolling)) {
@@ -93,9 +125,9 @@ test("classifies missing aggregate truth as access and keeps all values unknown"
       assert.equal(window[field], null);
     }
   }
-  assert.equal(result.action.id, "complete_authority_and_scorecard_gate");
-  assert.deepEqual(result.action.missing_authority, ["scorecard_read"]);
-  assert.equal(result.missing_authorities.length, 8);
+  assert.equal(result.action.id, "complete_gsc_traffic_gate");
+  assert.deepEqual(result.action.missing_authority, ["gsc_read"]);
+  assert.equal(result.missing_authorities.length, 9);
 });
 
 test("retains an active experiment while aggregate experiment metrics are unavailable", () => {
@@ -179,11 +211,72 @@ test("rejects a partially unavailable active experiment measurement", () => {
   }), /must be all available or all null/);
 });
 
+test("treats exactly 1000 GSC clicks as non-qualifying even with high impressions", () => {
+  const runDate = "2026-07-30";
+  const result = evaluateGrowthControl({
+    run_date: runDate,
+    search_console: searchConsole(runDate, { clicks: 1000, impressions: 100000 }),
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+  });
+
+  assert.equal(result.active_stage, "gsc_traffic");
+  assert.equal(result.primary_constraint, "traffic");
+  assert.equal(result.traffic_streak, 0);
+  assert.equal(result.traffic.rolling["30d"].qualifying_days, 0);
+  assert.equal(result.action.id, "increase_final_gsc_web_clicks");
+});
+
+test("qualifies 1001 GSC clicks for 30 contiguous final days and advances to purchase stage", () => {
+  const runDate = "2026-07-30";
+  const result = evaluateGrowthControl({
+    run_date: runDate,
+    search_console: searchConsole(runDate),
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+  });
+
+  assert.equal(result.traffic.complete, true);
+  assert.equal(result.traffic_streak, 30);
+  assert.equal(result.traffic.data_lag_days, 3);
+  assert.equal(result.active_stage, "verified_purchases");
+  assert.equal(result.status, "blocked_on_aggregate_truth");
+  assert.equal(result.action.id, "complete_authority_and_scorecard_gate");
+  assert.deepEqual(result.action.missing_authority, ["scorecard_read"]);
+  assert.equal(result.action.execution_scope, "one_time_user_bootstrap_required");
+});
+
+test("rejects a gap or preliminary state in GSC traffic evidence", () => {
+  const runDate = "2026-07-30";
+  const gapped = searchConsole(runDate);
+  gapped.days.splice(5, 1);
+  assert.throws(() => evaluateGrowthControl({
+    run_date: runDate,
+    search_console: gapped,
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+  }), /contiguous final days/);
+
+  const preliminary = searchConsole(runDate);
+  preliminary.data_state = "preliminary";
+  assert.throws(() => evaluateGrowthControl({
+    run_date: runDate,
+    search_console: preliminary,
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+  }), /Invalid aggregate Search Console contract/);
+});
+
 test("keeps optional and deliberately excluded channels out of the organic authority gate", () => {
   const result = evaluateGrowthControl({
     run_date: "2026-07-30",
+    search_console: searchConsole("2026-07-30"),
     scorecard: scorecard(),
-    authority: { scorecard_read: true },
+    authority: { gsc_read: true, scorecard_read: true },
     provider: { public_health_ok: true, paid_flow_incident: false },
   });
 
@@ -196,6 +289,7 @@ test("keeps optional and deliberately excluded channels out of the organic autho
 test("prioritizes fulfillment below 98 percent before traffic or conversion", () => {
   const result = evaluateGrowthControl({
     run_date: "2026-07-30",
+    search_console: searchConsole("2026-07-30"),
     scorecard: scorecard({
       paid_signals_submitted: 10,
       paid_signal_cohort_delivered: 10,
@@ -213,6 +307,7 @@ test("prioritizes fulfillment below 98 percent before traffic or conversion", ()
 test("selects the largest adequately sampled conversion gap", () => {
   const result = evaluateGrowthControl({
     run_date: "2026-07-30",
+    search_console: searchConsole("2026-07-30"),
     scorecard: scorecard({
       landing_sessions: 200,
       landing_cta_clicks: 80,
@@ -239,6 +334,7 @@ test("selects the largest adequately sampled conversion gap", () => {
 test("selects economics when measured CAC exceeds the approved cap", () => {
   const result = evaluateGrowthControl({
     run_date: "2026-07-30",
+    search_console: searchConsole("2026-07-30"),
     scorecard: scorecard(),
     authority: READY_AUTHORITY,
     provider: { public_health_ok: true, paid_flow_incident: false, rolling_3d_start_date: "2026-07-27", rolling_3d_end_date: "2026-07-29", rolling_3d_spend_usd: 75, rolling_3d_settled_revenue_usd: 59.94, max_acceptable_cac_usd: 8 },
@@ -253,6 +349,7 @@ test("selects economics when measured CAC exceeds the approved cap", () => {
 test("falls back to a quantified traffic action when the measured funnel clears gates", () => {
   const result = evaluateGrowthControl({
     run_date: "2026-07-30",
+    search_console: searchConsole("2026-07-30"),
     scorecard: scorecard(),
     authority: READY_AUTHORITY,
     provider: { public_health_ok: true, paid_flow_incident: false, rolling_3d_start_date: "2026-07-27", rolling_3d_end_date: "2026-07-29", rolling_3d_spend_usd: 0, rolling_3d_settled_revenue_usd: 139.86, max_acceptable_cac_usd: 8 },
@@ -267,6 +364,7 @@ test("falls back to a quantified traffic action when the measured funnel clears 
 test("stops an experiment after a 30 percent guardrail decline", () => {
   const result = evaluateGrowthControl({
     run_date: "2026-07-30",
+    search_console: searchConsole("2026-07-30"),
     scorecard: scorecard(),
     authority: READY_AUTHORITY,
     provider: { public_health_ok: true, paid_flow_incident: false, rolling_3d_start_date: "2026-07-27", rolling_3d_end_date: "2026-07-29", rolling_3d_spend_usd: 0, rolling_3d_settled_revenue_usd: 139.86, max_acceptable_cac_usd: 8 },
@@ -287,6 +385,7 @@ test("stops an experiment after a 30 percent guardrail decline", () => {
 test("promotes only after seven days, 200 sessions, lift, and a non-declining guardrail", () => {
   const result = evaluateGrowthControl({
     run_date: "2026-07-30",
+    search_console: searchConsole("2026-07-30"),
     scorecard: scorecard(),
     authority: READY_AUTHORITY,
     provider: { public_health_ok: true, paid_flow_incident: false, rolling_3d_start_date: "2026-07-27", rolling_3d_end_date: "2026-07-29", rolling_3d_spend_usd: 0, rolling_3d_settled_revenue_usd: 139.86, max_acceptable_cac_usd: 8 },
@@ -315,6 +414,7 @@ test("rejects customer-level keys before making a decision", () => {
 test("rejects monetary aggregates from a mismatched provider window", () => {
   assert.throws(() => evaluateGrowthControl({
     run_date: "2026-07-30",
+    search_console: searchConsole("2026-07-30"),
     scorecard: scorecard(),
     authority: READY_AUTHORITY,
     provider: {
@@ -351,6 +451,7 @@ test("rejects a stale scorecard that does not include the latest closed day", ()
 test("intersects claimed mutation access with the standing-authority contract", () => {
   const result = evaluateGrowthControl({
     run_date: "2026-07-30",
+    search_console: searchConsole("2026-07-30"),
     scorecard: scorecard(),
     authority: READY_AUTHORITY,
     provider: {

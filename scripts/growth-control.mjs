@@ -3,13 +3,33 @@
 import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
-export const GOAL = Object.freeze({
+export const TRAFFIC_GOAL = Object.freeze({
+  metric: "gsc_web_search_clicks",
+  property: "sc-domain:yourloveelement.com",
+  search_type: "web",
+  aggregation: "property",
+  data_state: "final",
+  timezone: "America/Los_Angeles",
+  daily_clicks_strictly_above: 1000,
+  minimum_qualifying_clicks: 1001,
+  consecutive_days: 30,
+  deadline: null,
+});
+
+export const PURCHASE_GOAL = Object.freeze({
+  metric: "verified_non_refunded_purchasers",
   timezone: "Asia/Taipei",
   daily_verified_purchasers: 10,
   consecutive_days: 30,
   streak_start_deadline: "2026-09-15",
   completion_deadline: "2026-10-14",
   hard_review_date: "2026-10-15",
+});
+
+export const GOAL = Object.freeze({
+  active_stage: "gsc_traffic",
+  stage_1: TRAFFIC_GOAL,
+  stage_2: PURCHASE_GOAL,
 });
 
 const COUNT_FIELDS = Object.freeze([
@@ -29,6 +49,7 @@ const COUNT_FIELDS = Object.freeze([
 ]);
 
 const CRITICAL_AUTHORITIES = Object.freeze([
+  "gsc_read",
   "lemon_read",
   "scorecard_read",
   "meta_read",
@@ -39,7 +60,11 @@ const CRITICAL_AUTHORITIES = Object.freeze([
   "paid_flow_e2e",
 ]);
 
-const REQUIRED_ACCESS_AUTHORITIES = Object.freeze([
+const GSC_ACCESS_AUTHORITIES = Object.freeze([
+  "gsc_read",
+]);
+
+const PURCHASE_ACCESS_AUTHORITIES = Object.freeze([
   "scorecard_read",
 ]);
 
@@ -53,6 +78,16 @@ const FUNNEL_STEPS = Object.freeze([
 ]);
 
 const ACTIONS = Object.freeze({
+  gsc_access: {
+    id: "complete_gsc_traffic_gate",
+    hypothesis: "Once final aggregate GSC web-click data is available for the exact domain property, the loop can measure progress toward the traffic-stage streak without relying on impressions or analytics proxies.",
+    primary_metric: "gsc_read_ready",
+    guardrails: ["exact property sc-domain:yourloveelement.com", "final aggregate data only", "no query or page detail required"],
+    sample_gate: "gsc_read has current exact-property evidence",
+    time_gate: "recheck on every run until ready",
+    stop_condition: "stop immediately for login, OTP, CAPTCHA, permission denial, or ambiguous property",
+    authority_required: GSC_ACCESS_AUTHORITIES,
+  },
   access: {
     id: "complete_authority_and_scorecard_gate",
     hypothesis: "Once one authorized aggregate scorecard path is available, the loop can choose and evaluate the actual bottleneck instead of optimizing from stale proxies.",
@@ -61,7 +96,7 @@ const ACTIONS = Object.freeze({
     sample_gate: "scorecard_read has current exact-project evidence",
     time_gate: "recheck on every daily run until ready",
     stop_condition: "stop immediately for OTP, CAPTCHA, permission denial, or ambiguous target account",
-    authority_required: REQUIRED_ACCESS_AUTHORITIES,
+    authority_required: PURCHASE_ACCESS_AUTHORITIES,
   },
   reliability: {
     id: "repair_paid_flow_reliability",
@@ -104,15 +139,14 @@ const ACTIONS = Object.freeze({
     authority_required: ["paid_media", "meta_read", "lemon_read"],
   },
   traffic: {
-    id: "increase_qualified_landing_sessions",
-    hypothesis: "Increasing message-matched qualified sessions while preserving conversion will move verified purchases toward 10 per day.",
-    primary_metric: "qualified_landing_sessions_per_day",
-    guardrails: ["landing-to-purchase conversion must not decline", "no spend without a cap", "fulfillment remains >= 98%"],
-    sample_gate: "seven closed days or at least 200 eligible landing sessions",
-    time_gate: "evaluate on rolling 3/7/14-day windows",
-    stop_condition: "stop the source after two target CACs without a purchase, a 30% guardrail decline, or a paid-flow incident",
-    authority_required: [],
-    authority_one_of: ["publish", "paid_media"],
+    id: "increase_final_gsc_web_clicks",
+    hypothesis: "Publishing and improving search-matched pages for the exact domain can raise daily organic Search clicks toward the 1,001-click qualifying threshold.",
+    primary_metric: "gsc_web_search_clicks_per_final_day",
+    guardrails: ["GSC impressions do not count as visits", "only final web-search click data qualifies", "paid media remains $0"],
+    sample_gate: "at least seven contiguous final GSC days",
+    time_gate: "evaluate on final 7/14/30-day windows",
+    stop_condition: "replace the active SEO action after its stated sample/time gate if final clicks do not improve, or stop for production breakage",
+    authority_required: ["deploy"],
   },
 });
 
@@ -193,7 +227,7 @@ function normalizeScorecard(scorecard) {
   if (
     scorecard.source !== "supabase_verified_lemon_state_and_first_party_funnel"
     || scorecard.privacy !== "aggregate_counts_only"
-    || scorecard.range?.timezone !== GOAL.timezone
+    || scorecard.range?.timezone !== PURCHASE_GOAL.timezone
     || !Array.isArray(scorecard.days)
   ) {
     throw new Error("Invalid aggregate scorecard contract");
@@ -218,7 +252,7 @@ function normalizeScorecard(scorecard) {
     throw new Error("Scorecard end date does not match its latest metric day");
   }
   const currentStreak = requireCount(scorecard.goal?.current_streak ?? 0, "scorecard.goal.current_streak");
-  if (scorecard.goal?.complete === true && currentStreak < GOAL.consecutive_days) {
+  if (scorecard.goal?.complete === true && currentStreak < PURCHASE_GOAL.consecutive_days) {
     throw new Error("Scorecard goal completion is inconsistent with its streak");
   }
   return {
@@ -228,6 +262,115 @@ function normalizeScorecard(scorecard) {
       complete: scorecard.goal?.complete === true,
     },
     end_date: endDate,
+  };
+}
+
+function normalizeSearchConsole(searchConsole, runDate) {
+  if (searchConsole === undefined || searchConsole === null) {
+    return null;
+  }
+  if (
+    searchConsole.property !== TRAFFIC_GOAL.property
+    || searchConsole.source !== "google_search_console_performance"
+    || searchConsole.search_type !== TRAFFIC_GOAL.search_type
+    || searchConsole.aggregation !== TRAFFIC_GOAL.aggregation
+    || searchConsole.data_state !== TRAFFIC_GOAL.data_state
+    || searchConsole.timezone !== TRAFFIC_GOAL.timezone
+    || searchConsole.privacy !== "aggregate_counts_only"
+    || !Array.isArray(searchConsole.days)
+  ) {
+    throw new Error("Invalid aggregate Search Console contract");
+  }
+  if (requireDate(searchConsole.fetched_on, "search_console.fetched_on") !== runDate) {
+    throw new Error("Search Console aggregate must be fetched on the run date");
+  }
+  const days = searchConsole.days.map((day, index) => ({
+    date: requireDate(day.date, `search_console.days[${index}].date`),
+    clicks: requireCount(day.clicks, `search_console.days[${index}].clicks`),
+    impressions: requireCount(day.impressions, `search_console.days[${index}].impressions`),
+  })).sort((left, right) => left.date.localeCompare(right.date));
+  if (days.length === 0) {
+    throw new Error("Search Console aggregate requires at least one final day");
+  }
+  if (new Set(days.map((day) => day.date)).size !== days.length) {
+    throw new Error("Search Console contains duplicate dates");
+  }
+  for (let index = 1; index < days.length; index += 1) {
+    if (days[index].date !== addDays(days[index - 1].date, 1)) {
+      throw new Error("Search Console dates must be contiguous final days");
+    }
+  }
+  const startDate = requireDate(searchConsole.start_date, "search_console.start_date");
+  const endDate = requireDate(searchConsole.end_date, "search_console.end_date");
+  if (days[0].date !== startDate || days.at(-1).date !== endDate) {
+    throw new Error("Search Console range must match its final metric days");
+  }
+  if (endDate >= runDate) {
+    throw new Error("Search Console final data must precede the run date");
+  }
+  return {
+    days,
+    start_date: startDate,
+    end_date: endDate,
+    fetched_on: runDate,
+  };
+}
+
+function aggregateTrafficWindow(days, requestedDays) {
+  const selected = days.slice(-requestedDays);
+  const clicks = selected.reduce((total, day) => total + day.clicks, 0);
+  const impressions = selected.reduce((total, day) => total + day.impressions, 0);
+  return {
+    final_days: selected.length,
+    start_date: selected[0]?.date || null,
+    end_date: selected.at(-1)?.date || null,
+    clicks: selected.length ? clicks : null,
+    impressions: selected.length ? impressions : null,
+    clicks_per_day: selected.length ? Number((clicks / selected.length).toFixed(2)) : null,
+    qualifying_days: selected.filter((day) => day.clicks > TRAFFIC_GOAL.daily_clicks_strictly_above).length,
+  };
+}
+
+function trafficStage(searchConsole, runDate) {
+  const emptyRolling = {
+    "1d": aggregateTrafficWindow([], 1),
+    "7d": aggregateTrafficWindow([], 7),
+    "14d": aggregateTrafficWindow([], 14),
+    "30d": aggregateTrafficWindow([], 30),
+  };
+  if (!searchConsole) {
+    return {
+      property: TRAFFIC_GOAL.property,
+      metric: TRAFFIC_GOAL.metric,
+      latest_final_date: null,
+      data_lag_days: null,
+      latest_daily_clicks: null,
+      current_streak: null,
+      complete: false,
+      rolling: emptyRolling,
+    };
+  }
+  let currentStreak = 0;
+  for (let index = searchConsole.days.length - 1; index >= 0; index -= 1) {
+    if (searchConsole.days[index].clicks <= TRAFFIC_GOAL.daily_clicks_strictly_above) {
+      break;
+    }
+    currentStreak += 1;
+  }
+  return {
+    property: TRAFFIC_GOAL.property,
+    metric: TRAFFIC_GOAL.metric,
+    latest_final_date: searchConsole.end_date,
+    data_lag_days: daysBetween(searchConsole.end_date, runDate),
+    latest_daily_clicks: searchConsole.days.at(-1).clicks,
+    current_streak: currentStreak,
+    complete: currentStreak >= TRAFFIC_GOAL.consecutive_days,
+    rolling: {
+      "1d": aggregateTrafficWindow(searchConsole.days, 1),
+      "7d": aggregateTrafficWindow(searchConsole.days, 7),
+      "14d": aggregateTrafficWindow(searchConsole.days, 14),
+      "30d": aggregateTrafficWindow(searchConsole.days, 30),
+    },
   };
 }
 
@@ -351,7 +494,17 @@ function evaluateExperiment(experiment, runDate) {
   return { decision: "continue", reason: "primary metric improved but promotion guardrails are not yet satisfied", elapsed_days: elapsedDays, eligible_sessions: eligible };
 }
 
-function nextMilestone(runDate, rolling7, scorecard, authorityReady) {
+function nextMilestone(runDate, traffic, rolling7, scorecard, authorityReady) {
+  if (!traffic.complete) {
+    return {
+      date: null,
+      metric: "consecutive_final_gsc_days_above_1000_clicks",
+      target: TRAFFIC_GOAL.consecutive_days,
+      actual: traffic.current_streak,
+      days_remaining: null,
+      gap: traffic.current_streak === null ? null : TRAFFIC_GOAL.consecutive_days - traffic.current_streak,
+    };
+  }
   const milestones = [
     { date: "2026-08-02", metric: "authority_gate", target: 1, actual: authorityReady ? 1 : 0 },
     { date: "2026-08-09", metric: "scorecard_operational", target: 1, actual: scorecard ? 1 : 0 },
@@ -391,7 +544,7 @@ function actionWithAuthority(action, authority) {
   if (!oneOfReady) {
     missing.push(action.authority_one_of.join("_or_"));
   }
-  const executionScope = action.id === "complete_authority_and_scorecard_gate"
+  const executionScope = ["complete_authority_and_scorecard_gate", "complete_gsc_traffic_gate"].includes(action.id)
     ? "one_time_user_bootstrap_required"
     : (missing.length ? "local_only_until_authorized" : "authorized_scope_only");
   return {
@@ -447,57 +600,109 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
   }
   assertAggregateOnly(input);
 
-  const scorecard = normalizeScorecard(input.scorecard);
   const taipeiToday = new Date(Date.now() + (8 * 60 * 60 * 1000)).toISOString().slice(0, 10);
-  const runDate = requireDate(input.run_date || (scorecard ? addDays(scorecard.end_date, 1) : taipeiToday), "run_date");
+  const runDate = requireDate(input.run_date || taipeiToday, "run_date");
+  const scorecard = normalizeScorecard(input.scorecard);
   if (scorecard && scorecard.end_date !== addDays(runDate, -1)) {
     throw new Error("Scorecard must end on the latest closed Asia/Taipei day");
   }
+  const searchConsole = normalizeSearchConsole(input.search_console, runDate);
+  const traffic = trafficStage(searchConsole, runDate);
   const authority = resolveAuthority(input.authority, standingAuthority);
   const authorityPolicy = authorityPolicySummary(standingAuthority);
   const missingAuthorities = CRITICAL_AUTHORITIES.filter((key) => !authority[key]);
-  const missingRequiredAccess = REQUIRED_ACCESS_AUTHORITIES.filter((key) => !authority[key]);
   const provider = input.provider || {};
   if (typeof provider.public_health_ok !== "boolean" || typeof provider.paid_flow_incident !== "boolean") {
     throw new Error("Provider health and paid-flow incident signals must be explicit booleans");
   }
   const publicHealthOk = provider.public_health_ok;
   const paidFlowIncident = provider.paid_flow_incident;
+  const rolling3 = aggregateWindow(scorecard?.days || [], 3);
+  const rolling7 = aggregateWindow(scorecard?.days || [], 7);
+  const rolling14 = aggregateWindow(scorecard?.days || [], 14);
+  const economics = providerMetrics(provider, rolling3);
+  const common = {
+    schema_version: 2,
+    run_date: runDate,
+    goal: GOAL,
+    deadline: {
+      traffic_stage_deadline: TRAFFIC_GOAL.deadline,
+      days_until_purchase_streak_start_deadline: daysBetween(runDate, PURCHASE_GOAL.streak_start_deadline),
+      days_until_purchase_completion_deadline: daysBetween(runDate, PURCHASE_GOAL.completion_deadline),
+    },
+    traffic,
+    traffic_streak: traffic.current_streak,
+    current_streak: scorecard?.goal.current_streak ?? null,
+    rolling: { "3d": rolling3, "7d": rolling7, "14d": rolling14 },
+    economics,
+    experiment: evaluateExperiment(input.active_experiment, runDate),
+    authority_policy: authorityPolicy,
+    missing_authorities: missingAuthorities,
+  };
 
-  if (!scorecard) {
-    const empty = aggregateWindow([], 7);
-    const accessAction = actionWithAuthority(ACTIONS.access, authority);
+  if (!searchConsole || authority.gsc_read !== true) {
+    const evidence = [];
+    if (!searchConsole) {
+      evidence.push("current final aggregate GSC web-click data is unavailable");
+    }
+    if (authority.gsc_read !== true) {
+      evidence.push("gsc_read is not currently available for sc-domain:yourloveelement.com");
+    }
     return {
-      schema_version: 1,
-      run_date: runDate,
-      status: "blocked_on_aggregate_truth",
-      goal: GOAL,
-      deadline: {
-        days_until_streak_start_deadline: daysBetween(runDate, GOAL.streak_start_deadline),
-        days_until_completion_deadline: daysBetween(runDate, GOAL.completion_deadline),
-      },
-      current_streak: null,
-      rolling: { "3d": aggregateWindow([], 3), "7d": empty, "14d": aggregateWindow([], 14) },
-      economics: providerMetrics(provider, aggregateWindow([], 3)),
-      next_milestone: nextMilestone(runDate, empty, null, missingRequiredAccess.length === 0),
+      ...common,
+      active_stage: "gsc_traffic",
+      status: "blocked_on_gsc_truth",
+      next_milestone: nextMilestone(runDate, traffic, rolling7, scorecard, false),
       primary_constraint: "access",
-      constraint_evidence: ["protected aggregate scorecard is unavailable"],
-      action: accessAction,
-      experiment: evaluateExperiment(input.active_experiment, runDate),
-      authority_policy: authorityPolicy,
-      missing_authorities: missingAuthorities,
+      constraint_evidence: evidence,
+      action: actionWithAuthority(ACTIONS.gsc_access, authority),
     };
   }
 
-  const rolling3 = aggregateWindow(scorecard.days, 3);
-  const rolling7 = aggregateWindow(scorecard.days, 7);
-  const rolling14 = aggregateWindow(scorecard.days, 14);
-  const economics = providerMetrics(provider, rolling3);
+  if (!traffic.complete) {
+    const constraint = !publicHealthOk || paidFlowIncident ? "reliability" : "traffic";
+    const action = constraint === "reliability" ? ACTIONS.reliability : ACTIONS.traffic;
+    const evidence = constraint === "reliability"
+      ? [!publicHealthOk ? "a production health signal is not healthy" : "a paid-flow incident is open"]
+      : [
+        `${traffic.latest_daily_clicks} final GSC web clicks on ${traffic.latest_final_date}; ${TRAFFIC_GOAL.minimum_qualifying_clicks} are required`,
+        `the current qualifying traffic streak is ${traffic.current_streak} of ${TRAFFIC_GOAL.consecutive_days} days`,
+      ];
+    return {
+      ...common,
+      active_stage: "gsc_traffic",
+      status: "actionable",
+      next_milestone: nextMilestone(runDate, traffic, rolling7, scorecard, true),
+      primary_constraint: constraint,
+      constraint_evidence: evidence,
+      action: actionWithAuthority(action, authority),
+    };
+  }
+
+  if (!scorecard || authority.scorecard_read !== true) {
+    const evidence = [];
+    if (!scorecard) {
+      evidence.push("traffic-stage evidence is complete but the protected purchase scorecard is unavailable");
+    }
+    if (authority.scorecard_read !== true) {
+      evidence.push("scorecard_read is not currently available for the purchase stage");
+    }
+    return {
+      ...common,
+      active_stage: "verified_purchases",
+      status: "blocked_on_aggregate_truth",
+      next_milestone: nextMilestone(runDate, traffic, rolling7, scorecard, false),
+      primary_constraint: "access",
+      constraint_evidence: evidence,
+      action: actionWithAuthority(ACTIONS.access, authority),
+    };
+  }
+
   const evidence = [];
   let constraint = "traffic";
   let action = ACTIONS.traffic;
 
-  if (scorecard.goal.complete && scorecard.goal.current_streak >= GOAL.consecutive_days) {
+  if (scorecard.goal.complete && scorecard.goal.current_streak >= PURCHASE_GOAL.consecutive_days) {
     constraint = null;
     action = {
       id: "audit_and_hold_qualifying_streak",
@@ -555,31 +760,30 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
     } else {
       const observedRate = rolling7.landing_to_purchase_rate;
       const planningRate = observedRate && observedRate > 0 ? observedRate : 0.01;
-      const requiredViewsPerDay = Math.ceil(GOAL.daily_verified_purchasers / planningRate);
+      const requiredViewsPerDay = Math.ceil(PURCHASE_GOAL.daily_verified_purchasers / planningRate);
       evidence.push(`${rolling7.landing_sessions_per_day ?? 0} landing sessions/day versus approximately ${requiredViewsPerDay} required at the observed/planning conversion rate`);
-      action = { ...ACTIONS.traffic, required_landing_sessions_per_day: requiredViewsPerDay };
+      action = {
+        id: "increase_qualified_landing_sessions",
+        hypothesis: "Increasing message-matched qualified sessions while preserving conversion will move verified purchases toward 10 per day.",
+        primary_metric: "qualified_landing_sessions_per_day",
+        guardrails: ["landing-to-purchase conversion must not decline", "paid media remains $0", "fulfillment remains >= 98%"],
+        sample_gate: "seven closed days or at least 200 eligible landing sessions",
+        time_gate: "evaluate on rolling 3/7/14-day windows",
+        stop_condition: "stop for a 30% guardrail decline or a paid-flow incident",
+        authority_required: ["deploy"],
+        required_landing_sessions_per_day: requiredViewsPerDay,
+      };
     }
   }
 
   return {
-    schema_version: 1,
-    run_date: runDate,
+    ...common,
+    active_stage: "verified_purchases",
     status: constraint === null ? "goal_evidence_ready_for_final_audit" : "actionable",
-    goal: GOAL,
-    deadline: {
-      days_until_streak_start_deadline: daysBetween(runDate, GOAL.streak_start_deadline),
-      days_until_completion_deadline: daysBetween(runDate, GOAL.completion_deadline),
-    },
-    current_streak: scorecard.goal.current_streak,
-    rolling: { "3d": rolling3, "7d": rolling7, "14d": rolling14 },
-    economics,
-    next_milestone: nextMilestone(runDate, rolling7, scorecard, missingRequiredAccess.length === 0),
+    next_milestone: nextMilestone(runDate, traffic, rolling7, scorecard, authority.scorecard_read === true),
     primary_constraint: constraint,
     constraint_evidence: evidence,
     action: actionWithAuthority(action, authority),
-    experiment: evaluateExperiment(input.active_experiment, runDate),
-    authority_policy: authorityPolicy,
-    missing_authorities: missingAuthorities,
   };
 }
 

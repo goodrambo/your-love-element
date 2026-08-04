@@ -4,6 +4,30 @@ import test from "node:test";
 import { evaluateGrowthControl } from "../growth-control.mjs";
 import { buildGrowthScorecard } from "../growth-scorecard-adapter.mjs";
 
+function completedTrafficStage(runDate) {
+  const end = new Date(`${runDate}T00:00:00.000Z`);
+  end.setUTCDate(end.getUTCDate() - 3);
+  const endDate = end.toISOString().slice(0, 10);
+  const days = Array.from({ length: 30 }, (_, index) => {
+    const date = new Date(`${endDate}T00:00:00.000Z`);
+    date.setUTCDate(date.getUTCDate() + index - 29);
+    return { date: date.toISOString().slice(0, 10), clicks: 1001, impressions: 5000 };
+  });
+  return {
+    property: "sc-domain:yourloveelement.com",
+    source: "google_search_console_performance",
+    search_type: "web",
+    aggregation: "property",
+    data_state: "final",
+    timezone: "America/Los_Angeles",
+    privacy: "aggregate_counts_only",
+    fetched_on: runDate,
+    start_date: days[0].date,
+    end_date: endDate,
+    days,
+  };
+}
+
 function commerceRow(date, overrides = {}) {
   return {
     metric_date: date,
@@ -104,8 +128,9 @@ test("merges commerce, landing, full-report, and sanitized attribution into eval
 
   const decision = evaluateGrowthControl({
     run_date: "2026-07-31",
+    search_console: completedTrafficStage("2026-07-31"),
     scorecard,
-    authority: {},
+    authority: { gsc_read: true, scorecard_read: true },
     provider: { public_health_ok: true, paid_flow_incident: false },
   });
   assert.equal(decision.primary_constraint, "observability");

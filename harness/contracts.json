@@ -28,6 +28,30 @@
     "resend_support_address": "support@yourloveelement.com",
     "deny_other_projects": true
   },
+  "growth_goal": {
+    "active_stage": "gsc_traffic",
+    "stage_1": {
+      "metric": "gsc_web_search_clicks",
+      "property": "sc-domain:yourloveelement.com",
+      "search_type": "web",
+      "aggregation": "property",
+      "data_state": "final",
+      "timezone": "America/Los_Angeles",
+      "daily_clicks_strictly_above": 1000,
+      "minimum_qualifying_clicks": 1001,
+      "consecutive_days": 30,
+      "deadline": null
+    },
+    "stage_2": {
+      "metric": "verified_non_refunded_purchasers",
+      "timezone": "Asia/Taipei",
+      "daily_verified_purchasers": 10,
+      "consecutive_days": 30,
+      "streak_start_deadline": "2026-09-15",
+      "completion_deadline": "2026-10-14",
+      "hard_review_date": "2026-10-15"
+    }
+  },
   "standing_authority": {
     "schema_version": 1,
     "grants": {
