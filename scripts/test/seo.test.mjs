@@ -86,6 +86,7 @@ function structuredItem(html, type, relativePath) {
 test("indexable pages have unique search metadata and sitemap entries", () => {
   const sitemap = read("sitemap.xml");
   const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
+  const indexableCanonicals = new Set();
   const titles = new Set();
   const descriptions = new Set();
 
@@ -107,9 +108,16 @@ test("indexable pages have unique search metadata and sitemap entries", () => {
     if (noindex) {
       assert.ok(!sitemapUrls.has(canonical), `${relativePath} is noindex and must stay out of the sitemap`);
     } else {
+      indexableCanonicals.add(canonical);
       assert.ok(sitemapUrls.has(canonical), `${relativePath} is indexable and must be in the sitemap`);
     }
   }
+
+  assert.deepEqual(
+    [...sitemapUrls].sort(),
+    [...indexableCanonicals].sort(),
+    "Sitemap must contain exactly the configured indexable canonical URLs",
+  );
 });
 
 test("every indexable page receives a crawlable internal link from another page", () => {
