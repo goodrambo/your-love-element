@@ -133,6 +133,10 @@ function robotsMetaDirectives(html, label) {
   );
 }
 
+function hasMetaRefreshRedirect(html) {
+  return /<meta\b(?=[^>]*\bhttp-equiv\s*=\s*["']refresh["'])[^>]*>/i.test(html);
+}
+
 function expectedCanonicalPath(relativePath) {
   if (relativePath === "index.html") return "/";
   assert.ok(relativePath.endsWith("/index.html"), `${relativePath} must use an index.html route`);
@@ -197,6 +201,35 @@ test("sitemap pages never opt out of indexing or link following", () => {
   }
 
   assert.equal(checkedPages, sitemapUrls.size, "Every sitemap URL must have an indexable local page contract");
+});
+
+test("sitemap pages never use meta refresh redirects", () => {
+  const sitemap = read("sitemap.xml");
+  const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
+  let checkedPages = 0;
+
+  assert.equal(hasMetaRefreshRedirect('<meta http-equiv="refresh" content="0; url=/other/">'), true);
+  assert.equal(hasMetaRefreshRedirect('<meta content="5; url=/other/" HTTP-EQUIV="REFRESH">'), true);
+  assert.equal(hasMetaRefreshRedirect('<meta http-equiv="content-security-policy" content="default-src self">'), false);
+
+  for (const relativePath of contracts.html_files) {
+    const html = read(relativePath);
+    const canonical = firstMatch(
+      html,
+      /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+      `${relativePath} canonical`,
+    );
+    if (!sitemapUrls.has(canonical)) continue;
+
+    checkedPages += 1;
+    assert.equal(
+      hasMetaRefreshRedirect(html),
+      false,
+      `${relativePath} is in the sitemap and must not emit a meta refresh redirect`,
+    );
+  }
+
+  assert.equal(checkedPages, sitemapUrls.size, "Every sitemap URL must be checked for meta refresh redirects");
 });
 
 test("canonicals stay normalized to their configured page routes", () => {
