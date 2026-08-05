@@ -133,6 +133,12 @@ function robotsMetaDirectives(html, label) {
   );
 }
 
+function expectedCanonicalPath(relativePath) {
+  if (relativePath === "index.html") return "/";
+  assert.ok(relativePath.endsWith("/index.html"), `${relativePath} must use an index.html route`);
+  return `/${relativePath.slice(0, -"/index.html".length)}/`;
+}
+
 test("indexable pages have unique search metadata and sitemap entries", () => {
   const sitemap = read("sitemap.xml");
   const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
@@ -191,6 +197,28 @@ test("sitemap pages never opt out of indexing or link following", () => {
   }
 
   assert.equal(checkedPages, sitemapUrls.size, "Every sitemap URL must have an indexable local page contract");
+});
+
+test("canonicals stay normalized to their configured page routes", () => {
+  for (const relativePath of contracts.html_files) {
+    const html = read(relativePath);
+    const canonicalValue = firstMatch(
+      html,
+      /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+      `${relativePath} canonical`,
+    );
+    const canonical = new URL(canonicalValue);
+    const expectedPath = expectedCanonicalPath(relativePath);
+
+    assert.equal(canonical.origin, origin, `${relativePath} canonical must use the production origin`);
+    assert.equal(canonical.username, "", `${relativePath} canonical must not include a username`);
+    assert.equal(canonical.password, "", `${relativePath} canonical must not include a password`);
+    assert.equal(canonical.port, "", `${relativePath} canonical must not include a port`);
+    assert.equal(canonical.search, "", `${relativePath} canonical must not include a query`);
+    assert.equal(canonical.hash, "", `${relativePath} canonical must not include a fragment`);
+    assert.equal(canonical.pathname, expectedPath, `${relativePath} canonical must match its configured route`);
+    assert.equal(canonical.href, `${origin}${expectedPath}`, `${relativePath} canonical must be fully normalized`);
+  }
 });
 
 test("every indexable page receives a crawlable internal link from another page", () => {
