@@ -83,6 +83,13 @@ function structuredItem(html, type, relativePath) {
   return matches[0];
 }
 
+function isFollowableAnchor(anchor) {
+  const rel = anchor.match(/\brel\s*=\s*["']([^"']*)["']/i)?.[1] || "";
+  const relTokens = new Set(rel.toLowerCase().split(/\s+/).filter(Boolean));
+  const downloads = /\bdownload(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?(?=\s|>)/i.test(anchor);
+  return !relTokens.has("nofollow") && !downloads;
+}
+
 test("indexable pages have unique search metadata and sitemap entries", () => {
   const sitemap = read("sitemap.xml");
   const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
@@ -142,6 +149,8 @@ test("every indexable page receives a crawlable internal link from another page"
 
   for (const [sourcePath, sourcePage] of indexablePages) {
     for (const match of sourcePage.html.matchAll(/<a\b[^>]*\bhref=["']([^"']+)["'][^>]*>/gi)) {
+      if (!isFollowableAnchor(match[0])) continue;
+
       const targetUrl = new URL(match[1], sourcePage.canonical);
       if (targetUrl.origin !== origin || targetUrl.pathname === sourcePath) continue;
 
@@ -155,6 +164,14 @@ test("every indexable page receives a crawlable internal link from another page"
       `${page.relativePath} must receive a crawlable internal link from another indexable page`,
     );
   }
+});
+
+test("crawlable internal-link coverage excludes nofollow and download anchors", () => {
+  assert.equal(isFollowableAnchor('<a href="/guide/">Guide</a>'), true);
+  assert.equal(isFollowableAnchor('<a href="/guide/" rel="ugc nofollow">Guide</a>'), false);
+  assert.equal(isFollowableAnchor('<a href="/guide/" rel="NOFOLLOW sponsored">Guide</a>'), false);
+  assert.equal(isFollowableAnchor('<a href="/guide/" download>Guide</a>'), false);
+  assert.equal(isFollowableAnchor('<a href="/guide/" download="guide.html">Guide</a>'), false);
 });
 
 test("same-origin fragment links resolve to one configured page target", () => {
