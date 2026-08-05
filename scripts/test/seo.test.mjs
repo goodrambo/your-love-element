@@ -133,6 +133,21 @@ function robotsMetaDirectives(html, label) {
   );
 }
 
+function googlebotMetaDirectives(html, label) {
+  const matches = [
+    ...html.matchAll(
+      /<meta\b(?=[^>]*\bname\s*=\s*["']googlebot["'])(?=[^>]*\bcontent\s*=\s*["']([^"']*)["'])[^>]*>/gi,
+    ),
+  ];
+  assert.ok(matches.length <= 1, `${label} must not expose duplicate Googlebot meta directives`);
+  return new Set(
+    (matches[0]?.[1] || "")
+      .toLowerCase()
+      .split(/[\s,]+/)
+      .filter(Boolean),
+  );
+}
+
 function hasMetaRefreshRedirect(html) {
   return /<meta\b(?=[^>]*\bhttp-equiv\s*=\s*["']refresh["'])[^>]*>/i.test(html);
 }
@@ -201,6 +216,37 @@ test("sitemap pages never opt out of indexing or link following", () => {
   }
 
   assert.equal(checkedPages, sitemapUrls.size, "Every sitemap URL must have an indexable local page contract");
+});
+
+test("sitemap pages never use Googlebot-specific blocking directives", () => {
+  const sitemap = read("sitemap.xml");
+  const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
+  let checkedPages = 0;
+
+  assert.equal(googlebotMetaDirectives('<meta name="googlebot" content="index, follow">', "fixture").size, 2);
+  assert.equal(googlebotMetaDirectives('<meta name="googlebot" content="noindex">', "fixture").has("noindex"), true);
+  assert.equal(
+    googlebotMetaDirectives('<META CONTENT="index, NOFOLLOW" NAME="GoogleBot">', "fixture").has("nofollow"),
+    true,
+  );
+  assert.equal(googlebotMetaDirectives('<meta name="googlebot-news" content="noindex">', "fixture").size, 0);
+
+  for (const relativePath of contracts.html_files) {
+    const html = read(relativePath);
+    const canonical = firstMatch(
+      html,
+      /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+      `${relativePath} canonical`,
+    );
+    if (!sitemapUrls.has(canonical)) continue;
+
+    checkedPages += 1;
+    const directives = googlebotMetaDirectives(html, relativePath);
+    assert.ok(!directives.has("noindex"), `${relativePath} is in the sitemap and must not emit Googlebot noindex`);
+    assert.ok(!directives.has("nofollow"), `${relativePath} is in the sitemap and must not emit Googlebot nofollow`);
+  }
+
+  assert.equal(checkedPages, sitemapUrls.size, "Every sitemap URL must be checked for Googlebot directives");
 });
 
 test("sitemap pages never use meta refresh redirects", () => {
