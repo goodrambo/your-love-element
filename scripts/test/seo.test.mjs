@@ -353,6 +353,52 @@ test("homepage exposes the entity, product, answer, and content-cluster signals"
   assert.match(html, /\$9\.99/);
 });
 
+test("core schema graphs keep canonical entity references connected", () => {
+  const homepage = read("index.html");
+  const homepageCanonical = firstMatch(
+    homepage,
+    /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+    "homepage canonical",
+  );
+  const organization = structuredItem(homepage, "Organization", "index.html");
+  const website = structuredItem(homepage, "WebSite", "index.html");
+  const webpage = structuredItem(homepage, "WebPage", "index.html");
+  const product = structuredItem(homepage, "Product", "index.html");
+  const faq = structuredItem(homepage, "FAQPage", "index.html");
+
+  assert.equal(organization["@id"], `${homepageCanonical}#organization`);
+  assert.equal(organization.url, homepageCanonical);
+  assert.equal(website["@id"], `${homepageCanonical}#website`);
+  assert.equal(website.url, homepageCanonical);
+  assert.equal(website.publisher?.["@id"], organization["@id"]);
+  assert.equal(webpage["@id"], `${homepageCanonical}#webpage`);
+  assert.equal(webpage.url, homepageCanonical);
+  assert.equal(webpage.isPartOf?.["@id"], website["@id"]);
+  assert.equal(product["@id"], `${homepageCanonical}#full-report`);
+  assert.equal(product.brand?.["@id"], organization["@id"]);
+  assert.equal(product.offers?.url, `${homepageCanonical}#preview`);
+  assert.equal(faq["@id"], `${homepageCanonical}#faq`);
+
+  for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
+    const html = read(relativePath);
+    const canonical = firstMatch(
+      html,
+      /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+      `${relativePath} canonical`,
+    );
+    const editorialPage = structuredItem(html, "WebPage", relativePath);
+    const article = structuredItem(html, "Article", relativePath);
+
+    assert.equal(editorialPage["@id"], `${canonical}#webpage`);
+    assert.equal(editorialPage.url, canonical);
+    assert.equal(editorialPage.isPartOf?.["@id"], website["@id"]);
+    assert.equal(article["@id"], `${canonical}#article`);
+    assert.equal(article.mainEntityOfPage?.["@id"], editorialPage["@id"]);
+    assert.equal(article.author?.["@id"], organization["@id"]);
+    assert.equal(article.publisher?.["@id"], organization["@id"]);
+  }
+});
+
 test("homepage keeps the preview-to-purchase path explicit and trustworthy", () => {
   const html = read("index.html");
   const styles = read("styles.css");
