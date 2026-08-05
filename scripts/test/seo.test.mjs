@@ -120,6 +120,19 @@ function wildcardRobotsDisallowsRoot(robots) {
   return false;
 }
 
+function robotsMetaDirectives(html, label) {
+  const matches = [
+    ...html.matchAll(/<meta\b(?=[^>]*\bname=["']robots["'])[^>]*\bcontent=["']([^"']*)["'][^>]*>/gi),
+  ];
+  assert.ok(matches.length <= 1, `${label} must not expose duplicate robots meta directives`);
+  return new Set(
+    (matches[0]?.[1] || "")
+      .toLowerCase()
+      .split(/[\s,]+/)
+      .filter(Boolean),
+  );
+}
+
 test("indexable pages have unique search metadata and sitemap entries", () => {
   const sitemap = read("sitemap.xml");
   const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
@@ -155,6 +168,29 @@ test("indexable pages have unique search metadata and sitemap entries", () => {
     [...indexableCanonicals].sort(),
     "Sitemap must contain exactly the configured indexable canonical URLs",
   );
+});
+
+test("sitemap pages never opt out of indexing or link following", () => {
+  const sitemap = read("sitemap.xml");
+  const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
+  let checkedPages = 0;
+
+  for (const relativePath of contracts.html_files) {
+    const html = read(relativePath);
+    const canonical = firstMatch(
+      html,
+      /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+      `${relativePath} canonical`,
+    );
+    if (!sitemapUrls.has(canonical)) continue;
+
+    checkedPages += 1;
+    const directives = robotsMetaDirectives(html, relativePath);
+    assert.ok(!directives.has("noindex"), `${relativePath} is in the sitemap and must not emit noindex`);
+    assert.ok(!directives.has("nofollow"), `${relativePath} is in the sitemap and must not emit nofollow`);
+  }
+
+  assert.equal(checkedPages, sitemapUrls.size, "Every sitemap URL must have an indexable local page contract");
 });
 
 test("every indexable page receives a crawlable internal link from another page", () => {
