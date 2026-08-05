@@ -1,8 +1,8 @@
 ---
 kind: backlog
 status: active
-last_reviewed: 2026-08-05
-review_after: 2026-08-06
+last_reviewed: 2026-08-06
+review_after: 2026-08-07
 ---
 
 # Active Backlog
@@ -32,6 +32,7 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 - [x] Release the sitemap meta-refresh regression through PR [#107](https://github.com/goodrambo/your-love-element/pull/107) and merge `e264060`. Hypothesis: rejecting client-side redirect directives on sitemap pages prevents crawler redirect signals from silently removing an intended acquisition URL while Stage 1 exposure is zero. Primary metric: the focused SEO suite passes 37/37 and detects case-insensitive directives in either attribute order across all seven sitemap pages. Guardrail: test-only; no HTML, sitemap, runtime, tracking, paid-flow, or active Copy link experiment change. Main Harness run `30998366333`, Pages run `30998365417`, and post-merge 5/5 public health gates passed.
 - [ ] Complete the test-only crawl-discovery safeguard release through draft PR [#109](https://github.com/goodrambo/your-love-element/pull/109) at head `99be67b`, which is clean and has both Harness checks successful. Hypothesis: rejecting Googlebot-specific indexing blocks and requiring at least two crawlable inbound sources per indexable page prevent a crawler-only directive or single-link removal from silently suppressing discovery while Stage 1 exposure is zero. Primary metric: the focused SEO suite passes 38/38 across both contracts and all seven sitemap pages. Guardrail: no HTML, sitemap, runtime, tracking, paid-flow, or active Copy link experiment change. Remaining gate: explicit authorization for the exact protected-main merge, then Pages and production smoke; stop on false positives, source-scope expansion, CI/deploy failure, or production breakage.
 - [ ] After the active Copy link experiment reaches its existing seven-day gate or a strategy review replaces it, prepare one unique compatibility-examples and relationship-repair section on `/five-elements-love-compatibility/`; do not start a second primary experiment meanwhile. Hypothesis: distinct, search-matched examples and repair guidance can generate final property-level web clicks from the current zero-impression baseline without near-duplicate element pages. Primary metric: final property-level GSC web clicks over the first seven post-release final days. Guardrails: one primary experiment, no paid-flow/tracking/legal-claim change, no duplicate content, and production health. Sample/time gate: 7/14 final post-release days; stop on breakage, replace after 14 final days without click improvement, or reclassify to indexing reliability when the aggregate Page indexing report finishes processing and exposes an indexability constraint. Completion ETA remains unknown.
+- [ ] After the active Copy link gate and draft PR #109 are resolved, prepare a typed Brand node for the homepage Product schema and update the canonical graph regression; do not combine it with the queued content experiment or current PR. Hypothesis: replacing the Product `brand` reference that resolves to Organization with a valid Brand node removes the exact-property Merchant listings brand-type warning while preserving one valid item. Primary metric: Merchant listings remains at one valid and zero invalid items after reprocessing, without the brand-type warning. Guardrails: no visible copy, tracking, paid flow, checkout, refund-policy, legal claim, `hasMerchantReturnPolicy`, or `shippingDetails` change. Sample/time gate: focused SEO regression, Harness, required offline browser/digest gates, reversible PR/CI/Pages, production smoke, then GSC aggregate reprocessing; stop on an invalid item, graph-reference drift, policy-scope expansion, or production breakage.
 
 ## Stage 2 later
 - [ ] Restore one exact-project purchase aggregate read path to the `yle` runtime before Stage 2. Prefer `JOB_RUNNER_SECRET` for the protected scorecard or restore only the allowlisted Supabase aggregate reader. Do not expose secrets or customer/session/order/reading identifiers, and do not substitute frontend/GSC events for purchase truth.
@@ -93,8 +94,7 @@ This is the only active task list. History files may contain old â€œnext tasksâ€
 
 ## Maintenance
 
-- [x] Commit and push the reviewed Harness files on draft PR #1.
-- [x] Merge PR #1 after review so the default branch, fresh clones, and remote `harness` workflow receive the Harness.
+- [x] Commit and push the reviewed Harness files on draft PR #1, then merge it so the default branch, fresh clones, and remote `harness` workflow receive the Harness.
 - [ ] After the final hook files are committed, review and trust their exact hash with `/hooks`; repeat whenever a hook changes.
 - [ ] After the active Codex capture lifecycle is finished, audit `.git` special refs and propose a safe, separately approved cleanup; do not prune automatically.
 - [ ] Enable the GitHub `harness` workflow as a required branch-protection check if repository policy should block direct merges.
