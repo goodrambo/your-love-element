@@ -90,6 +90,36 @@ function isFollowableAnchor(anchor) {
   return !relTokens.has("nofollow") && !downloads;
 }
 
+function wildcardRobotsDisallowsRoot(robots) {
+  let userAgents = [];
+  let groupHasRules = false;
+
+  for (const rawLine of robots.split(/\r?\n/)) {
+    const line = rawLine.split("#", 1)[0].trim();
+    if (!line) continue;
+
+    const directive = line.match(/^([^:]+):\s*(.*)$/);
+    if (!directive) continue;
+
+    const name = directive[1].trim().toLowerCase();
+    const value = directive[2].trim().toLowerCase();
+    if (name === "user-agent") {
+      if (groupHasRules) {
+        userAgents = [];
+        groupHasRules = false;
+      }
+      userAgents.push(value);
+      continue;
+    }
+
+    if (!userAgents.length) continue;
+    groupHasRules = true;
+    if (name === "disallow" && value === "/" && userAgents.includes("*")) return true;
+  }
+
+  return false;
+}
+
 test("indexable pages have unique search metadata and sitemap entries", () => {
   const sitemap = read("sitemap.xml");
   const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
@@ -322,6 +352,14 @@ test("sitemap dates and robots discovery instructions are valid", () => {
   assert.match(robots, /User-agent:\s*\*/i);
   assert.match(robots, /Allow:\s*\//i);
   assert.match(robots, new RegExp(`Sitemap:\\s*${origin.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\/sitemap\\.xml`, "i"));
+});
+
+test("wildcard robots rules never block the whole site", () => {
+  assert.equal(wildcardRobotsDisallowsRoot(read("robots.txt")), false);
+  assert.equal(wildcardRobotsDisallowsRoot("User-agent: *\nDisallow: /"), true);
+  assert.equal(wildcardRobotsDisallowsRoot("User-agent: Googlebot\nDisallow: /"), false);
+  assert.equal(wildcardRobotsDisallowsRoot("User-agent: *\nDisallow: /private/"), false);
+  assert.equal(wildcardRobotsDisallowsRoot("User-agent: *\nDisallow: / # block all"), true);
 });
 
 test("core acquisition freshness signals agree with sitemap", () => {
