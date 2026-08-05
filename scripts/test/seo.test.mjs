@@ -300,7 +300,7 @@ test("canonicals stay normalized to their configured page routes", () => {
   }
 });
 
-test("every indexable page receives a crawlable internal link from another page", () => {
+test("every indexable page receives crawlable internal links from at least two pages", () => {
   const indexablePages = new Map();
 
   for (const relativePath of contracts.html_files) {
@@ -333,8 +333,8 @@ test("every indexable page receives a crawlable internal link from another page"
 
   for (const page of indexablePages.values()) {
     assert.ok(
-      page.inboundSources.size > 0,
-      `${page.relativePath} must receive a crawlable internal link from another indexable page`,
+      page.inboundSources.size >= 2,
+      `${page.relativePath} must receive crawlable internal links from at least two indexable pages`,
     );
   }
 });
