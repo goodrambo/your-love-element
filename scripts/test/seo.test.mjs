@@ -857,6 +857,38 @@ test("editorial pages are answer-first, transparent, and structured", () => {
   }
 });
 
+test("editorial review ownership and dates agree with Article schema", () => {
+  const expectedOrganizationId = `${origin}/#organization`;
+
+  for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
+    const html = read(relativePath);
+    const page = structuredItem(html, "WebPage", relativePath);
+    const article = structuredItem(html, "Article", relativePath);
+    const visibleReviewLine = plainText(firstMatch(
+      html,
+      /<p\b[^>]*class=["'][^"']*\blegal-updated\b[^"']*["'][^>]*>([\s\S]*?)<\/p>/i,
+      `${relativePath} visible review line`,
+    ));
+
+    assert.equal(article.author?.["@id"], expectedOrganizationId, `${relativePath} Article author must use the brand organization`);
+    assert.equal(article.publisher?.["@id"], expectedOrganizationId, `${relativePath} Article publisher must use the brand organization`);
+    assert.equal(article.datePublished, page.datePublished, `${relativePath} published dates must agree`);
+    assert.equal(article.dateModified, page.dateModified, `${relativePath} modified dates must agree`);
+
+    const visibleDate = new Intl.DateTimeFormat("en-US", {
+      day: "numeric",
+      month: "long",
+      timeZone: "UTC",
+      year: "numeric",
+    }).format(new Date(`${article.dateModified}T00:00:00Z`));
+    assert.equal(
+      visibleReviewLine,
+      `Published and reviewed by Your Love Element · ${visibleDate}`,
+      `${relativePath} visible review ownership and date must match Article schema`,
+    );
+  }
+});
+
 test("editorial breadcrumbs form one canonical two-level hierarchy", () => {
   for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
     const html = read(relativePath);
