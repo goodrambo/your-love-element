@@ -988,6 +988,23 @@ test("editorial FAQ schema exactly matches the visible questions and answers", (
   }
 });
 
+test("compatibility guide covers every regulating pair with one repair prompt", () => {
+  const html = read("five-elements-love-compatibility/index.html");
+  const section = firstMatch(
+    html,
+    /<section[^>]+aria-labelledby=["']compatibility-title["'][^>]*>([\s\S]*?)<\/section>/i,
+    "compatibility section",
+  );
+  const text = plainText(section);
+  const generatingPairs = ["Water + Wood", "Wood + Fire", "Fire + Earth", "Earth + Metal", "Metal + Water"];
+  const regulatingPairs = ["Wood + Earth", "Wood + Metal", "Fire + Metal", "Fire + Water", "Earth + Water"];
+
+  for (const pair of [...generatingPairs, ...regulatingPairs]) {
+    assert.equal(text.split(`${pair}:`).length - 1, 1, `${pair} must appear exactly once in the compatibility section`);
+  }
+  assert.equal((text.match(/Repair prompt:/g) || []).length, 5, "each regulating pair must include one repair prompt");
+});
+
 test("methodology states the AI and traditional-chart boundaries", () => {
   const html = read("how-it-works/index.html");
   const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
