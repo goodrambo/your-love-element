@@ -148,6 +148,14 @@ function googlebotMetaDirectives(html, label) {
   );
 }
 
+function blocksIndexing(directives) {
+  return directives.has("noindex") || directives.has("none");
+}
+
+function blocksFollowing(directives) {
+  return directives.has("nofollow") || directives.has("none");
+}
+
 function hasMetaRefreshRedirect(html) {
   return /<meta\b(?=[^>]*\bhttp-equiv\s*=\s*["']refresh["'])[^>]*>/i.test(html);
 }
@@ -171,7 +179,7 @@ test("indexable pages have unique search metadata and sitemap entries", () => {
     const description = firstMatch(html, /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i, `${relativePath} description`);
     const canonical = firstMatch(html, /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i, `${relativePath} canonical`);
     const h1Count = (html.match(/<h1\b/gi) || []).length;
-    const noindex = /<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html);
+    const noindex = blocksIndexing(robotsMetaDirectives(html, relativePath));
 
     assert.equal(h1Count, 1, `${relativePath} must have exactly one h1`);
     assert.ok(canonical.startsWith(`${origin}/`), `${relativePath} canonical must use the production origin`);
@@ -198,7 +206,7 @@ test("indexable pages have unique search metadata and sitemap entries", () => {
 test("indexable pages keep one coherent main heading outline", () => {
   for (const relativePath of contracts.html_files) {
     const html = read(relativePath);
-    if (/<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html)) continue;
+    if (blocksIndexing(robotsMetaDirectives(html, relativePath))) continue;
 
     const mainMatches = [...html.matchAll(/<main\b[^>]*>([\s\S]*?)<\/main>/gi)];
     assert.equal(mainMatches.length, 1, `${relativePath} must expose exactly one main landmark`);
@@ -243,8 +251,8 @@ test("sitemap pages never opt out of indexing or link following", () => {
 
     checkedPages += 1;
     const directives = robotsMetaDirectives(html, relativePath);
-    assert.ok(!directives.has("noindex"), `${relativePath} is in the sitemap and must not emit noindex`);
-    assert.ok(!directives.has("nofollow"), `${relativePath} is in the sitemap and must not emit nofollow`);
+    assert.ok(!blocksIndexing(directives), `${relativePath} is in the sitemap and must not block indexing`);
+    assert.ok(!blocksFollowing(directives), `${relativePath} is in the sitemap and must not block link following`);
   }
 
   assert.equal(checkedPages, sitemapUrls.size, "Every sitemap URL must have an indexable local page contract");
@@ -274,11 +282,23 @@ test("sitemap pages never use Googlebot-specific blocking directives", () => {
 
     checkedPages += 1;
     const directives = googlebotMetaDirectives(html, relativePath);
-    assert.ok(!directives.has("noindex"), `${relativePath} is in the sitemap and must not emit Googlebot noindex`);
-    assert.ok(!directives.has("nofollow"), `${relativePath} is in the sitemap and must not emit Googlebot nofollow`);
+    assert.ok(!blocksIndexing(directives), `${relativePath} is in the sitemap and must not block Googlebot indexing`);
+    assert.ok(!blocksFollowing(directives), `${relativePath} is in the sitemap and must not block Googlebot link following`);
   }
 
   assert.equal(checkedPages, sitemapUrls.size, "Every sitemap URL must be checked for Googlebot directives");
+});
+
+test("robots none shorthand is treated as noindex and nofollow", () => {
+  const generalDirectives = robotsMetaDirectives('<meta name="robots" content="none">', "fixture");
+  const googlebotDirectives = googlebotMetaDirectives('<meta name="googlebot" content="none">', "fixture");
+
+  assert.equal(blocksIndexing(generalDirectives), true);
+  assert.equal(blocksFollowing(generalDirectives), true);
+  assert.equal(blocksIndexing(googlebotDirectives), true);
+  assert.equal(blocksFollowing(googlebotDirectives), true);
+  assert.equal(blocksIndexing(new Set(["index", "follow"])), false);
+  assert.equal(blocksFollowing(new Set(["index", "follow"])), false);
 });
 
 test("sitemap pages never use meta refresh redirects", () => {
@@ -337,7 +357,7 @@ test("every indexable page receives crawlable internal links from at least two p
 
   for (const relativePath of contracts.html_files) {
     const html = read(relativePath);
-    if (/<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html)) continue;
+    if (blocksIndexing(robotsMetaDirectives(html, relativePath))) continue;
 
     const canonical = firstMatch(
       html,
@@ -425,7 +445,7 @@ test("same-origin fragment links resolve to one configured page target", () => {
 test("every indexable page exposes one valid keyboard skip target", () => {
   for (const relativePath of contracts.html_files) {
     const html = read(relativePath);
-    if (/<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html)) continue;
+    if (blocksIndexing(robotsMetaDirectives(html, relativePath))) continue;
 
     const skipLinks = [...html.matchAll(/<a[^>]+class=["'][^"']*\bskip-link\b[^"']*["'][^>]+href=["']#([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)];
     assert.equal(skipLinks.length, 1, `${relativePath} must expose exactly one skip link`);
