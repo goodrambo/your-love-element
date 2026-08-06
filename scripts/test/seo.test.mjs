@@ -156,6 +156,10 @@ function blocksFollowing(directives) {
   return directives.has("nofollow") || directives.has("none");
 }
 
+function blocksTextSnippets(directives) {
+  return directives.has("nosnippet") || directives.has("max-snippet:0");
+}
+
 function hasMetaRefreshRedirect(html) {
   return /<meta\b(?=[^>]*\bhttp-equiv\s*=\s*["']refresh["'])[^>]*>/i.test(html);
 }
@@ -299,6 +303,45 @@ test("robots none shorthand is treated as noindex and nofollow", () => {
   assert.equal(blocksFollowing(googlebotDirectives), true);
   assert.equal(blocksIndexing(new Set(["index", "follow"])), false);
   assert.equal(blocksFollowing(new Set(["index", "follow"])), false);
+});
+
+test("sitemap pages remain eligible for search text snippets", () => {
+  const sitemap = read("sitemap.xml");
+  const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
+  let checkedPages = 0;
+
+  assert.equal(blocksTextSnippets(robotsMetaDirectives('<meta name="robots" content="nosnippet">', "fixture")), true);
+  assert.equal(
+    blocksTextSnippets(robotsMetaDirectives('<meta content="index, max-snippet:0" name="robots">', "fixture")),
+    true,
+  );
+  assert.equal(
+    blocksTextSnippets(googlebotMetaDirectives('<meta name="googlebot" content="max-snippet:0">', "fixture")),
+    true,
+  );
+  assert.equal(blocksTextSnippets(new Set(["index", "follow", "max-snippet:-1"])), false);
+
+  for (const relativePath of contracts.html_files) {
+    const html = read(relativePath);
+    const canonical = firstMatch(
+      html,
+      /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+      `${relativePath} canonical`,
+    );
+    if (!sitemapUrls.has(canonical)) continue;
+
+    checkedPages += 1;
+    assert.ok(
+      !blocksTextSnippets(robotsMetaDirectives(html, relativePath)),
+      `${relativePath} is in the sitemap and must not block search text snippets`,
+    );
+    assert.ok(
+      !blocksTextSnippets(googlebotMetaDirectives(html, relativePath)),
+      `${relativePath} is in the sitemap and must not block Googlebot text snippets`,
+    );
+  }
+
+  assert.equal(checkedPages, sitemapUrls.size, "Every sitemap URL must be checked for text snippet eligibility");
 });
 
 test("sitemap pages never use meta refresh redirects", () => {
