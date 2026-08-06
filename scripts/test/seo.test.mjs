@@ -195,6 +195,38 @@ test("indexable pages have unique search metadata and sitemap entries", () => {
   );
 });
 
+test("indexable pages keep one coherent main heading outline", () => {
+  for (const relativePath of contracts.html_files) {
+    const html = read(relativePath);
+    if (/<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html)) continue;
+
+    const mainMatches = [...html.matchAll(/<main\b[^>]*>([\s\S]*?)<\/main>/gi)];
+    assert.equal(mainMatches.length, 1, `${relativePath} must expose exactly one main landmark`);
+
+    const headings = [...mainMatches[0][1].matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi)].map((match) => ({
+      level: Number(match[1]),
+      text: plainText(match[2]),
+    }));
+
+    assert.ok(headings.length > 0, `${relativePath} main landmark must contain headings`);
+    assert.equal(headings[0].level, 1, `${relativePath} main heading outline must start with h1`);
+    assert.equal(
+      headings.filter((heading) => heading.level === 1).length,
+      1,
+      `${relativePath} main landmark must contain exactly one h1`,
+    );
+
+    for (const [index, heading] of headings.entries()) {
+      assert.ok(heading.text, `${relativePath} heading ${index + 1} must have visible text`);
+      if (index === 0) continue;
+      assert.ok(
+        heading.level <= headings[index - 1].level + 1,
+        `${relativePath} heading ${index + 1} must not skip a level`,
+      );
+    }
+  }
+});
+
 test("sitemap pages never opt out of indexing or link following", () => {
   const sitemap = read("sitemap.xml");
   const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
