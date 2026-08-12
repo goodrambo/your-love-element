@@ -2,9 +2,9 @@
   "schema_version": 1,
   "frontend_smoke": {
     "status": "pass",
-    "verified_at": "2026-08-02",
-    "source_digest": "099e1c47f8bff16bf3ae4e0925e7dafaa94b6be800a1ce606fe581543232fe6d",
-    "evidence": "In-app Browser offline homepage smoke at desktop 1280x720 and mobile 390x844. Baseline measurement found that a keyboard-focused Question 1 radio exposed a 3px outline only on the 18px input while its 48px option-card label had no outline or shadow. After the CSS-only change, the same input remained focus-visible while the full label exposed a 3px gold outline, 3px offset, and non-empty two-layer shadow in both viewports; the inner input outline was removed to avoid a duplicate ring. Desktop and mobile had no horizontal overflow, the production API base stayed blank, and the console had no warnings/errors. A pointer selection still saved the chosen status, advanced from Question 1 to Question 2 after the existing delay, and focused the next question's first answer. The 26/26 SEO suite locks the card-level focus selector. Cache revision 20260802-quiz-option-focus-ring-1 was synchronized; answers, auto-advance logic/timing, validation, preview, share/referral experiment, tracking, API, checkout, and paid-flow behavior were unchanged. This digest invalidates the evidence on later frontend changes."
+    "verified_at": "2026-08-07",
+    "source_digest": "c11f7f90c00a6b523018aff0aa2bc96f7868cbae45a218f481d1942a1d3d35ea",
+    "evidence": "In-app Browser offline smoke of the Five Elements compatibility guide at desktop 1280px and a same-origin 390x844 mobile frame. Both layouts exposed the new regulating-cycle heading and exactly five visible Repair prompt labels. Desktop client/scroll widths were 1280/1280 and mobile client/scroll widths were 390/390, so neither layout had horizontal overflow. Both ran in local-preview mode with API access disabled. On the isolated exact PR #109 remote lineage, the focused SEO suite passed 43/43, including exact coverage of the five existing generating pairs and five new regulating pairs, one repair prompt per new pair, aligned Article/WebPage/visible review dates, and matching sitemap freshness. Only the guide HTML, its sitemap lastmod, and deterministic SEO coverage changed; CSS, JavaScript, tracking, API, checkout, paid flow, report, email, and production remained unchanged. This digest invalidates the evidence on later frontend changes."
   },
   "paid_flow_e2e": {
     "status": "waived",

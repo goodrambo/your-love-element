@@ -133,6 +133,33 @@ function robotsMetaDirectives(html, label) {
   );
 }
 
+function googlebotMetaDirectives(html, label) {
+  const matches = [
+    ...html.matchAll(
+      /<meta\b(?=[^>]*\bname\s*=\s*["']googlebot["'])(?=[^>]*\bcontent\s*=\s*["']([^"']*)["'])[^>]*>/gi,
+    ),
+  ];
+  assert.ok(matches.length <= 1, `${label} must not expose duplicate Googlebot meta directives`);
+  return new Set(
+    (matches[0]?.[1] || "")
+      .toLowerCase()
+      .split(/[\s,]+/)
+      .filter(Boolean),
+  );
+}
+
+function blocksIndexing(directives) {
+  return directives.has("noindex") || directives.has("none");
+}
+
+function blocksFollowing(directives) {
+  return directives.has("nofollow") || directives.has("none");
+}
+
+function blocksTextSnippets(directives) {
+  return directives.has("nosnippet") || directives.has("max-snippet:0");
+}
+
 function hasMetaRefreshRedirect(html) {
   return /<meta\b(?=[^>]*\bhttp-equiv\s*=\s*["']refresh["'])[^>]*>/i.test(html);
 }
@@ -156,7 +183,7 @@ test("indexable pages have unique search metadata and sitemap entries", () => {
     const description = firstMatch(html, /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i, `${relativePath} description`);
     const canonical = firstMatch(html, /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i, `${relativePath} canonical`);
     const h1Count = (html.match(/<h1\b/gi) || []).length;
-    const noindex = /<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html);
+    const noindex = blocksIndexing(robotsMetaDirectives(html, relativePath));
 
     assert.equal(h1Count, 1, `${relativePath} must have exactly one h1`);
     assert.ok(canonical.startsWith(`${origin}/`), `${relativePath} canonical must use the production origin`);
@@ -180,6 +207,38 @@ test("indexable pages have unique search metadata and sitemap entries", () => {
   );
 });
 
+test("indexable pages keep one coherent main heading outline", () => {
+  for (const relativePath of contracts.html_files) {
+    const html = read(relativePath);
+    if (blocksIndexing(robotsMetaDirectives(html, relativePath))) continue;
+
+    const mainMatches = [...html.matchAll(/<main\b[^>]*>([\s\S]*?)<\/main>/gi)];
+    assert.equal(mainMatches.length, 1, `${relativePath} must expose exactly one main landmark`);
+
+    const headings = [...mainMatches[0][1].matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi)].map((match) => ({
+      level: Number(match[1]),
+      text: plainText(match[2]),
+    }));
+
+    assert.ok(headings.length > 0, `${relativePath} main landmark must contain headings`);
+    assert.equal(headings[0].level, 1, `${relativePath} main heading outline must start with h1`);
+    assert.equal(
+      headings.filter((heading) => heading.level === 1).length,
+      1,
+      `${relativePath} main landmark must contain exactly one h1`,
+    );
+
+    for (const [index, heading] of headings.entries()) {
+      assert.ok(heading.text, `${relativePath} heading ${index + 1} must have visible text`);
+      if (index === 0) continue;
+      assert.ok(
+        heading.level <= headings[index - 1].level + 1,
+        `${relativePath} heading ${index + 1} must not skip a level`,
+      );
+    }
+  }
+});
+
 test("sitemap pages never opt out of indexing or link following", () => {
   const sitemap = read("sitemap.xml");
   const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
@@ -196,11 +255,93 @@ test("sitemap pages never opt out of indexing or link following", () => {
 
     checkedPages += 1;
     const directives = robotsMetaDirectives(html, relativePath);
-    assert.ok(!directives.has("noindex"), `${relativePath} is in the sitemap and must not emit noindex`);
-    assert.ok(!directives.has("nofollow"), `${relativePath} is in the sitemap and must not emit nofollow`);
+    assert.ok(!blocksIndexing(directives), `${relativePath} is in the sitemap and must not block indexing`);
+    assert.ok(!blocksFollowing(directives), `${relativePath} is in the sitemap and must not block link following`);
   }
 
   assert.equal(checkedPages, sitemapUrls.size, "Every sitemap URL must have an indexable local page contract");
+});
+
+test("sitemap pages never use Googlebot-specific blocking directives", () => {
+  const sitemap = read("sitemap.xml");
+  const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
+  let checkedPages = 0;
+
+  assert.equal(googlebotMetaDirectives('<meta name="googlebot" content="index, follow">', "fixture").size, 2);
+  assert.equal(googlebotMetaDirectives('<meta name="googlebot" content="noindex">', "fixture").has("noindex"), true);
+  assert.equal(
+    googlebotMetaDirectives('<META CONTENT="index, NOFOLLOW" NAME="GoogleBot">', "fixture").has("nofollow"),
+    true,
+  );
+  assert.equal(googlebotMetaDirectives('<meta name="googlebot-news" content="noindex">', "fixture").size, 0);
+
+  for (const relativePath of contracts.html_files) {
+    const html = read(relativePath);
+    const canonical = firstMatch(
+      html,
+      /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+      `${relativePath} canonical`,
+    );
+    if (!sitemapUrls.has(canonical)) continue;
+
+    checkedPages += 1;
+    const directives = googlebotMetaDirectives(html, relativePath);
+    assert.ok(!blocksIndexing(directives), `${relativePath} is in the sitemap and must not block Googlebot indexing`);
+    assert.ok(!blocksFollowing(directives), `${relativePath} is in the sitemap and must not block Googlebot link following`);
+  }
+
+  assert.equal(checkedPages, sitemapUrls.size, "Every sitemap URL must be checked for Googlebot directives");
+});
+
+test("robots none shorthand is treated as noindex and nofollow", () => {
+  const generalDirectives = robotsMetaDirectives('<meta name="robots" content="none">', "fixture");
+  const googlebotDirectives = googlebotMetaDirectives('<meta name="googlebot" content="none">', "fixture");
+
+  assert.equal(blocksIndexing(generalDirectives), true);
+  assert.equal(blocksFollowing(generalDirectives), true);
+  assert.equal(blocksIndexing(googlebotDirectives), true);
+  assert.equal(blocksFollowing(googlebotDirectives), true);
+  assert.equal(blocksIndexing(new Set(["index", "follow"])), false);
+  assert.equal(blocksFollowing(new Set(["index", "follow"])), false);
+});
+
+test("sitemap pages remain eligible for search text snippets", () => {
+  const sitemap = read("sitemap.xml");
+  const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
+  let checkedPages = 0;
+
+  assert.equal(blocksTextSnippets(robotsMetaDirectives('<meta name="robots" content="nosnippet">', "fixture")), true);
+  assert.equal(
+    blocksTextSnippets(robotsMetaDirectives('<meta content="index, max-snippet:0" name="robots">', "fixture")),
+    true,
+  );
+  assert.equal(
+    blocksTextSnippets(googlebotMetaDirectives('<meta name="googlebot" content="max-snippet:0">', "fixture")),
+    true,
+  );
+  assert.equal(blocksTextSnippets(new Set(["index", "follow", "max-snippet:-1"])), false);
+
+  for (const relativePath of contracts.html_files) {
+    const html = read(relativePath);
+    const canonical = firstMatch(
+      html,
+      /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+      `${relativePath} canonical`,
+    );
+    if (!sitemapUrls.has(canonical)) continue;
+
+    checkedPages += 1;
+    assert.ok(
+      !blocksTextSnippets(robotsMetaDirectives(html, relativePath)),
+      `${relativePath} is in the sitemap and must not block search text snippets`,
+    );
+    assert.ok(
+      !blocksTextSnippets(googlebotMetaDirectives(html, relativePath)),
+      `${relativePath} is in the sitemap and must not block Googlebot text snippets`,
+    );
+  }
+
+  assert.equal(checkedPages, sitemapUrls.size, "Every sitemap URL must be checked for text snippet eligibility");
 });
 
 test("sitemap pages never use meta refresh redirects", () => {
@@ -254,12 +395,12 @@ test("canonicals stay normalized to their configured page routes", () => {
   }
 });
 
-test("every indexable page receives a crawlable internal link from another page", () => {
+test("every indexable page receives crawlable internal links from at least two pages", () => {
   const indexablePages = new Map();
 
   for (const relativePath of contracts.html_files) {
     const html = read(relativePath);
-    if (/<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html)) continue;
+    if (blocksIndexing(robotsMetaDirectives(html, relativePath))) continue;
 
     const canonical = firstMatch(
       html,
@@ -287,8 +428,8 @@ test("every indexable page receives a crawlable internal link from another page"
 
   for (const page of indexablePages.values()) {
     assert.ok(
-      page.inboundSources.size > 0,
-      `${page.relativePath} must receive a crawlable internal link from another indexable page`,
+      page.inboundSources.size >= 2,
+      `${page.relativePath} must receive crawlable internal links from at least two indexable pages`,
     );
   }
 });
@@ -347,7 +488,7 @@ test("same-origin fragment links resolve to one configured page target", () => {
 test("every indexable page exposes one valid keyboard skip target", () => {
   for (const relativePath of contracts.html_files) {
     const html = read(relativePath);
-    if (/<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html)) continue;
+    if (blocksIndexing(robotsMetaDirectives(html, relativePath))) continue;
 
     const skipLinks = [...html.matchAll(/<a[^>]+class=["'][^"']*\bskip-link\b[^"']*["'][^>]+href=["']#([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)];
     assert.equal(skipLinks.length, 1, `${relativePath} must expose exactly one skip link`);
@@ -779,6 +920,38 @@ test("editorial pages are answer-first, transparent, and structured", () => {
   }
 });
 
+test("editorial review ownership and dates agree with Article schema", () => {
+  const expectedOrganizationId = `${origin}/#organization`;
+
+  for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
+    const html = read(relativePath);
+    const page = structuredItem(html, "WebPage", relativePath);
+    const article = structuredItem(html, "Article", relativePath);
+    const visibleReviewLine = plainText(firstMatch(
+      html,
+      /<p\b[^>]*class=["'][^"']*\blegal-updated\b[^"']*["'][^>]*>([\s\S]*?)<\/p>/i,
+      `${relativePath} visible review line`,
+    ));
+
+    assert.equal(article.author?.["@id"], expectedOrganizationId, `${relativePath} Article author must use the brand organization`);
+    assert.equal(article.publisher?.["@id"], expectedOrganizationId, `${relativePath} Article publisher must use the brand organization`);
+    assert.equal(article.datePublished, page.datePublished, `${relativePath} published dates must agree`);
+    assert.equal(article.dateModified, page.dateModified, `${relativePath} modified dates must agree`);
+
+    const visibleDate = new Intl.DateTimeFormat("en-US", {
+      day: "numeric",
+      month: "long",
+      timeZone: "UTC",
+      year: "numeric",
+    }).format(new Date(`${article.dateModified}T00:00:00Z`));
+    assert.equal(
+      visibleReviewLine,
+      `Published and reviewed by Your Love Element · ${visibleDate}`,
+      `${relativePath} visible review ownership and date must match Article schema`,
+    );
+  }
+});
+
 test("editorial breadcrumbs form one canonical two-level hierarchy", () => {
   for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
     const html = read(relativePath);
@@ -813,6 +986,23 @@ test("editorial FAQ schema exactly matches the visible questions and answers", (
     assert.ok(visible.length >= 3, `${relativePath} must expose a useful visible FAQ`);
     assert.deepEqual(structured, visible, `${relativePath} FAQ schema must not drift from visible content`);
   }
+});
+
+test("compatibility guide covers every regulating pair with one repair prompt", () => {
+  const html = read("five-elements-love-compatibility/index.html");
+  const section = firstMatch(
+    html,
+    /<section[^>]+aria-labelledby=["']compatibility-title["'][^>]*>([\s\S]*?)<\/section>/i,
+    "compatibility section",
+  );
+  const text = plainText(section);
+  const generatingPairs = ["Water + Wood", "Wood + Fire", "Fire + Earth", "Earth + Metal", "Metal + Water"];
+  const regulatingPairs = ["Wood + Earth", "Wood + Metal", "Fire + Metal", "Fire + Water", "Earth + Water"];
+
+  for (const pair of [...generatingPairs, ...regulatingPairs]) {
+    assert.equal(text.split(`${pair}:`).length - 1, 1, `${pair} must appear exactly once in the compatibility section`);
+  }
+  assert.equal((text.match(/Repair prompt:/g) || []).length, 5, "each regulating pair must include one repair prompt");
 });
 
 test("methodology states the AI and traditional-chart boundaries", () => {
