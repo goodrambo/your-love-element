@@ -1,8 +1,8 @@
 ---
 kind: current
 status: active
-last_verified: 2026-08-06
-review_after: 2026-08-07
+last_verified: 2026-08-12
+review_after: 2026-08-13
 evidence: local source inspection and automated checks; desktop/mobile offline browser smoke; GitHub releases through dd6277d with successful required workflows; read-only production HTTP/browser probes; Search Console sitemap submission and URL inspection; project-scoped Supabase aggregate queries
 ---
 
