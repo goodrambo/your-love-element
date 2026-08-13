@@ -637,7 +637,7 @@ test("homepage exposes the entity, product, answer, and content-cluster signals"
   const html = read("index.html");
   const types = graphTypes(html);
 
-  for (const type of ["Organization", "WebSite", "WebPage", "Product", "FAQPage"]) {
+  for (const type of ["Organization", "Brand", "WebSite", "WebPage", "Product", "FAQPage"]) {
     assert.ok(types.has(type), `Homepage JSON-LD must include ${type}`);
   }
   assert.match(html, /<h2[^>]*>What are the five love elements\?<\/h2>/i);
@@ -654,6 +654,7 @@ test("core schema graphs keep canonical entity references connected", () => {
     "homepage canonical",
   );
   const organization = structuredItem(homepage, "Organization", "index.html");
+  const brand = structuredItem(homepage, "Brand", "index.html");
   const website = structuredItem(homepage, "WebSite", "index.html");
   const webpage = structuredItem(homepage, "WebPage", "index.html");
   const product = structuredItem(homepage, "Product", "index.html");
@@ -661,6 +662,10 @@ test("core schema graphs keep canonical entity references connected", () => {
 
   assert.equal(organization["@id"], `${homepageCanonical}#organization`);
   assert.equal(organization.url, homepageCanonical);
+  assert.equal(brand["@id"], `${homepageCanonical}#brand`);
+  assert.equal(brand.name, organization.name);
+  assert.equal(brand.url, homepageCanonical);
+  assert.equal(brand.logo, organization.logo);
   assert.equal(website["@id"], `${homepageCanonical}#website`);
   assert.equal(website.url, homepageCanonical);
   assert.equal(website.publisher?.["@id"], organization["@id"]);
@@ -668,7 +673,7 @@ test("core schema graphs keep canonical entity references connected", () => {
   assert.equal(webpage.url, homepageCanonical);
   assert.equal(webpage.isPartOf?.["@id"], website["@id"]);
   assert.equal(product["@id"], `${homepageCanonical}#full-report`);
-  assert.equal(product.brand?.["@id"], organization["@id"]);
+  assert.equal(product.brand?.["@id"], brand["@id"]);
   assert.equal(product.offers?.url, `${homepageCanonical}#preview`);
   assert.equal(faq["@id"], `${homepageCanonical}#faq`);
 
