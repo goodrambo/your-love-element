@@ -2,9 +2,9 @@
   "schema_version": 1,
   "frontend_smoke": {
     "status": "pass",
-    "verified_at": "2026-08-07",
-    "source_digest": "c11f7f90c00a6b523018aff0aa2bc96f7868cbae45a218f481d1942a1d3d35ea",
-    "evidence": "In-app Browser offline smoke of the Five Elements compatibility guide at desktop 1280px and a same-origin 390x844 mobile frame. Both layouts exposed the new regulating-cycle heading and exactly five visible Repair prompt labels. Desktop client/scroll widths were 1280/1280 and mobile client/scroll widths were 390/390, so neither layout had horizontal overflow. Both ran in local-preview mode with API access disabled. On the isolated exact PR #109 remote lineage, the focused SEO suite passed 43/43, including exact coverage of the five existing generating pairs and five new regulating pairs, one repair prompt per new pair, aligned Article/WebPage/visible review dates, and matching sitemap freshness. Only the guide HTML, its sitemap lastmod, and deterministic SEO coverage changed; CSS, JavaScript, tracking, API, checkout, paid flow, report, email, and production remained unchanged. This digest invalidates the evidence on later frontend changes."
+    "verified_at": "2026-08-13",
+    "source_digest": "45fb7da22273c781dc92a263eb68c679ed3821e354d310f33e52d584292467c2",
+    "evidence": "In-app Browser offline smoke of the homepage at desktop and 390x844 mobile sizes after adding a typed Brand entity to the existing canonical JSON-LD graph. Both layouts rendered without horizontal overflow or console errors, with production API access disabled. The isolated focused SEO suite passed 43/43, including Brand identity, canonical URL and logo parity with the Organization entity, and Product.brand linkage to the typed Brand node. Only homepage structured data, homepage sitemap freshness, deterministic SEO coverage, and this evidence changed; CSS, JavaScript, tracking, API, checkout, paid flow, report, email, and production remained unchanged. This digest invalidates the evidence on later frontend changes."
   },
   "paid_flow_e2e": {
     "status": "waived",
