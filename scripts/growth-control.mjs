@@ -159,7 +159,20 @@ const CONVERSION_ACTIONS = Object.freeze({
   purchase_to_paid_signals: ["repair_post_purchase_handoff", "purchase_to_paid_signals_rate", "Improve receipt, return link, and post-purchase instructions."],
 });
 
-const SENSITIVE_KEY_PATTERN = /(^|_)(email|customer|reading_id|order_id|session_hash|answers?|webhook|report_json|token|secret)($|_)/i;
+const SENSITIVE_KEY_PATTERN = /(^|_)(email|customer|session|order|reading|answers?|webhook|report|quer(?:y|ies)|pages?|token|secret)($|_)/i;
+const ALLOWED_AGGREGATE_COUNT_KEYS = new Set([
+  "full_report_sessions",
+  "page_view_sessions",
+]);
+
+function isAllowedAggregateKey(key, value, path) {
+  if (ALLOWED_AGGREGATE_COUNT_KEYS.has(key)) {
+    return true;
+  }
+  return key === "page"
+    && /^input\.scorecard\.attribution\[\d+\]$/.test(path)
+    && (value === "landing" || value === "full_report");
+}
 
 function assertAggregateOnly(value, path = "input") {
   if (!value || typeof value !== "object") {
@@ -170,7 +183,7 @@ function assertAggregateOnly(value, path = "input") {
     return;
   }
   for (const [key, child] of Object.entries(value)) {
-    if (SENSITIVE_KEY_PATTERN.test(key)) {
+    if (SENSITIVE_KEY_PATTERN.test(key) && !isAllowedAggregateKey(key, child, path)) {
       throw new Error(`Aggregate input rejected sensitive key at ${path}.${key}`);
     }
     assertAggregateOnly(child, `${path}.${key}`);
@@ -424,12 +437,39 @@ function providerMetrics(provider, rolling3) {
   };
 }
 
-function evaluateExperiment(experiment, runDate) {
+function experimentSampleClock(traffic, scorecard) {
+  if (!traffic.complete) {
+    return {
+      basis: "final_gsc_days",
+      end_date: traffic.latest_final_date,
+    };
+  }
+  return {
+    basis: "closed_scorecard_days",
+    end_date: scorecard?.end_date ?? null,
+  };
+}
+
+function evaluateExperiment(experiment, runDate, sampleClock) {
   if (!experiment) {
     return { decision: "none", reason: "no active experiment" };
   }
   const startedOn = requireDate(experiment.started_on, "active_experiment.started_on");
-  const elapsedDays = Math.max(0, daysBetween(startedOn, runDate));
+  if (startedOn > runDate) {
+    throw new Error("Active experiment cannot start after the run date");
+  }
+  const elapsedDays = daysBetween(startedOn, runDate);
+  const sampleEndDate = sampleClock.end_date === null
+    ? null
+    : requireDate(sampleClock.end_date, "experiment_sample_clock.end_date");
+  const sampleDays = sampleEndDate !== null && sampleEndDate >= startedOn
+    ? daysBetween(startedOn, sampleEndDate) + 1
+    : 0;
+  const sample = {
+    sample_days: sampleDays,
+    sample_basis: sampleClock.basis,
+    sample_end_date: sampleEndDate,
+  };
   const measurementValues = [
     experiment.eligible_sessions,
     experiment.baseline_primary_rate,
@@ -445,6 +485,7 @@ function evaluateExperiment(experiment, runDate) {
         reason: "breakage reported",
         measurement_status: "unavailable",
         elapsed_days: elapsedDays,
+        ...sample,
         eligible_sessions: null,
       };
     }
@@ -453,6 +494,7 @@ function evaluateExperiment(experiment, runDate) {
       reason: "active experiment is awaiting aggregate measurement",
       measurement_status: "unavailable",
       elapsed_days: elapsedDays,
+      ...sample,
       eligible_sessions: null,
     };
   }
@@ -477,21 +519,21 @@ function evaluateExperiment(experiment, runDate) {
   }
 
   if (experiment.has_breakage === true) {
-    return { decision: "stop", reason: "breakage reported", elapsed_days: elapsedDays, eligible_sessions: eligible };
+    return { decision: "stop", reason: "breakage reported", elapsed_days: elapsedDays, ...sample, eligible_sessions: eligible };
   }
   if (eligible >= 100 && guardrailDecline >= 0.30) {
-    return { decision: "stop", reason: "guardrail declined at least 30% after 100 eligible sessions", elapsed_days: elapsedDays, eligible_sessions: eligible };
+    return { decision: "stop", reason: "guardrail declined at least 30% after 100 eligible sessions", elapsed_days: elapsedDays, ...sample, eligible_sessions: eligible };
   }
-  if (elapsedDays < 7 || eligible < 200) {
-    return { decision: "continue", reason: "seven-day and 200-session decision gate not reached", elapsed_days: elapsedDays, eligible_sessions: eligible };
+  if (sampleDays < 7 || eligible < 200) {
+    return { decision: "continue", reason: "seven-day and 200-session decision gate not reached", elapsed_days: elapsedDays, ...sample, eligible_sessions: eligible };
   }
   if (relativeLift !== null && relativeLift >= minimumLift && guardrailDecline <= 0) {
-    return { decision: "promote", reason: "primary metric improved beyond the configured lift and the guardrail did not decline", elapsed_days: elapsedDays, eligible_sessions: eligible };
+    return { decision: "promote", reason: "primary metric improved beyond the configured lift and the guardrail did not decline", elapsed_days: elapsedDays, ...sample, eligible_sessions: eligible };
   }
   if (relativeLift === null || relativeLift <= 0) {
-    return { decision: "stop", reason: "primary metric did not improve after the full decision gate", elapsed_days: elapsedDays, eligible_sessions: eligible };
+    return { decision: "stop", reason: "primary metric did not improve after the full decision gate", elapsed_days: elapsedDays, ...sample, eligible_sessions: eligible };
   }
-  return { decision: "continue", reason: "primary metric improved but promotion guardrails are not yet satisfied", elapsed_days: elapsedDays, eligible_sessions: eligible };
+  return { decision: "continue", reason: "primary metric improved but promotion guardrails are not yet satisfied", elapsed_days: elapsedDays, ...sample, eligible_sessions: eligible };
 }
 
 function nextMilestone(runDate, traffic, rolling7, scorecard, authorityReady) {
@@ -635,7 +677,7 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
     current_streak: scorecard?.goal.current_streak ?? null,
     rolling: { "3d": rolling3, "7d": rolling7, "14d": rolling14 },
     economics,
-    experiment: evaluateExperiment(input.active_experiment, runDate),
+    experiment: evaluateExperiment(input.active_experiment, runDate, experimentSampleClock(traffic, scorecard)),
     authority_policy: authorityPolicy,
     missing_authorities: missingAuthorities,
   };

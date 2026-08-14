@@ -153,6 +153,99 @@ test("retains an active experiment while aggregate experiment metrics are unavai
   assert.match(result.experiment.reason, /awaiting aggregate measurement/);
 });
 
+test("uses complete final GSC days for the Stage 1 experiment sample clock", () => {
+  const result = evaluateGrowthControl({
+    run_date: "2026-08-15",
+    search_console: searchConsole("2026-08-15", { clicks: 0 }, 16),
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+    active_experiment: {
+      started_on: "2026-08-13",
+      eligible_sessions: null,
+      baseline_primary_rate: null,
+      current_primary_rate: null,
+      baseline_guardrail_rate: null,
+      current_guardrail_rate: null,
+      has_breakage: false,
+    },
+  });
+
+  assert.equal(result.experiment.elapsed_days, 2);
+  assert.equal(result.experiment.sample_days, 0);
+  assert.equal(result.experiment.sample_basis, "final_gsc_days");
+  assert.equal(result.experiment.sample_end_date, "2026-08-12");
+  assert.equal(result.experiment.decision, "continue");
+});
+
+test("counts the experiment start date as one final GSC sample day", () => {
+  const result = evaluateGrowthControl({
+    run_date: "2026-08-16",
+    search_console: searchConsole("2026-08-16", { clicks: 0, impressions: 1000000 }, 17),
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+    active_experiment: {
+      started_on: "2026-08-13",
+      eligible_sessions: null,
+      baseline_primary_rate: null,
+      current_primary_rate: null,
+      baseline_guardrail_rate: null,
+      current_guardrail_rate: null,
+      has_breakage: false,
+    },
+  });
+
+  assert.equal(result.experiment.elapsed_days, 3);
+  assert.equal(result.experiment.sample_days, 1);
+  assert.equal(result.experiment.sample_basis, "final_gsc_days");
+  assert.equal(result.experiment.sample_end_date, "2026-08-13");
+  assert.equal(result.experiment.decision, "continue");
+  assert.equal(result.traffic.current_streak, 0);
+});
+
+test("rejects an active experiment that starts after the run date", () => {
+  assert.throws(() => evaluateGrowthControl({
+    run_date: "2026-08-15",
+    search_console: searchConsole("2026-08-15", { clicks: 0 }, 16),
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+    active_experiment: {
+      started_on: "2026-08-16",
+      eligible_sessions: null,
+      baseline_primary_rate: null,
+      current_primary_rate: null,
+      baseline_guardrail_rate: null,
+      current_guardrail_rate: null,
+      has_breakage: false,
+    },
+  }), /cannot start after the run date/);
+});
+
+test("opens the Stage 1 decision gate after seven complete final GSC days", () => {
+  const result = evaluateGrowthControl({
+    run_date: "2026-08-22",
+    search_console: searchConsole("2026-08-22", { clicks: 0 }),
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+    active_experiment: {
+      started_on: "2026-08-13",
+      eligible_sessions: 250,
+      baseline_primary_rate: 0.25,
+      current_primary_rate: 0.28,
+      baseline_guardrail_rate: 0.10,
+      current_guardrail_rate: 0.11,
+      has_breakage: false,
+    },
+  });
+
+  assert.equal(result.experiment.sample_days, 7);
+  assert.equal(result.experiment.sample_end_date, "2026-08-19");
+  assert.equal(result.experiment.decision, "promote");
+});
+
 test("CLI preserves unavailable totals and the active unmeasured experiment", () => {
   const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
     encoding: "utf8",
@@ -399,6 +492,9 @@ test("promotes only after seven days, 200 sessions, lift, and a non-declining gu
     },
   });
 
+  assert.equal(result.experiment.sample_days, 10);
+  assert.equal(result.experiment.sample_basis, "closed_scorecard_days");
+  assert.equal(result.experiment.sample_end_date, "2026-07-29");
   assert.equal(result.experiment.decision, "promote");
 });
 
@@ -409,6 +505,25 @@ test("rejects customer-level keys before making a decision", () => {
     customer_email: "not-allowed@example.test",
     provider: { public_health_ok: true, paid_flow_incident: false },
   }), /sensitive key/);
+});
+
+test("rejects forbidden session, order, reading, report, query, and page detail keys", () => {
+  for (const detailKey of ["session", "order", "reading", "report"]) {
+    assert.throws(() => evaluateGrowthControl({
+      run_date: "2026-07-30",
+      search_console: searchConsole("2026-07-30"),
+      [detailKey]: {},
+    }), /sensitive key/);
+  }
+
+  for (const detailKey of ["query", "queries", "page", "pages"]) {
+    const input = {
+      run_date: "2026-07-30",
+      search_console: searchConsole("2026-07-30"),
+    };
+    input.search_console[detailKey] = [];
+    assert.throws(() => evaluateGrowthControl(input), /sensitive key/);
+  }
 });
 
 test("rejects monetary aggregates from a mismatched provider window", () => {
