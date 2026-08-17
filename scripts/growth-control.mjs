@@ -159,7 +159,66 @@ const CONVERSION_ACTIONS = Object.freeze({
   purchase_to_paid_signals: ["repair_post_purchase_handoff", "purchase_to_paid_signals_rate", "Improve receipt, return link, and post-purchase instructions."],
 });
 
-const SENSITIVE_KEY_PATTERN = /(^|_)(email|customer|reading_id|order_id|session_hash|answers?|webhook|report_json|token|secret)($|_)/i;
+const SENSITIVE_KEY_PATTERN = /(^|_)(email|customer|session|order|reading|answers?|webhook|report|quer(?:y|ies)|pages?|token|secret)($|_)/i;
+const ALLOWED_AGGREGATE_COUNT_KEYS = new Set([
+  "full_report_sessions",
+  "page_view_sessions",
+]);
+const GROWTH_CONTROL_INPUT_KEYS = new Set([
+  "run_date",
+  "search_console",
+  "scorecard",
+  "authority",
+  "provider",
+  "active_experiment",
+]);
+const AUTHORITY_KEYS = new Set(CRITICAL_AUTHORITIES);
+const PROVIDER_KEYS = new Set([
+  "public_health_ok",
+  "paid_flow_incident",
+  "rolling_3d_start_date",
+  "rolling_3d_end_date",
+  "rolling_3d_spend_usd",
+  "rolling_3d_settled_revenue_usd",
+  "max_acceptable_cac_usd",
+]);
+const ACTIVE_EXPERIMENT_KEYS = new Set([
+  "started_on",
+  "eligible_sessions",
+  "baseline_primary_rate",
+  "current_primary_rate",
+  "baseline_guardrail_rate",
+  "current_guardrail_rate",
+  "has_breakage",
+  "minimum_relative_lift",
+]);
+const SEARCH_CONSOLE_AGGREGATE_KEYS = new Set([
+  "property",
+  "source",
+  "search_type",
+  "aggregation",
+  "data_state",
+  "timezone",
+  "privacy",
+  "fetched_on",
+  "start_date",
+  "end_date",
+  "days",
+]);
+const SEARCH_CONSOLE_DAY_KEYS = new Set([
+  "date",
+  "clicks",
+  "impressions",
+]);
+
+function isAllowedAggregateKey(key, value, path) {
+  if (ALLOWED_AGGREGATE_COUNT_KEYS.has(key)) {
+    return true;
+  }
+  return key === "page"
+    && /^input\.scorecard\.attribution\[\d+\]$/.test(path)
+    && (value === "landing" || value === "full_report");
+}
 
 function assertAggregateOnly(value, path = "input") {
   if (!value || typeof value !== "object") {
@@ -170,10 +229,20 @@ function assertAggregateOnly(value, path = "input") {
     return;
   }
   for (const [key, child] of Object.entries(value)) {
-    if (SENSITIVE_KEY_PATTERN.test(key)) {
+    if (SENSITIVE_KEY_PATTERN.test(key) && !isAllowedAggregateKey(key, child, path)) {
       throw new Error(`Aggregate input rejected sensitive key at ${path}.${key}`);
     }
     assertAggregateOnly(child, `${path}.${key}`);
+  }
+}
+
+function assertKnownKeys(value, allowedKeys, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Invalid ${label}`);
+  }
+  const unknownKey = Object.keys(value).find((key) => !allowedKeys.has(key));
+  if (unknownKey) {
+    throw new Error(`${label} contains unknown field: ${unknownKey}`);
   }
 }
 
@@ -269,6 +338,7 @@ function normalizeSearchConsole(searchConsole, runDate) {
   if (searchConsole === undefined || searchConsole === null) {
     return null;
   }
+  assertKnownKeys(searchConsole, SEARCH_CONSOLE_AGGREGATE_KEYS, "Search Console aggregate");
   if (
     searchConsole.property !== TRAFFIC_GOAL.property
     || searchConsole.source !== "google_search_console_performance"
@@ -284,11 +354,14 @@ function normalizeSearchConsole(searchConsole, runDate) {
   if (requireDate(searchConsole.fetched_on, "search_console.fetched_on") !== runDate) {
     throw new Error("Search Console aggregate must be fetched on the run date");
   }
-  const days = searchConsole.days.map((day, index) => ({
-    date: requireDate(day.date, `search_console.days[${index}].date`),
-    clicks: requireCount(day.clicks, `search_console.days[${index}].clicks`),
-    impressions: requireCount(day.impressions, `search_console.days[${index}].impressions`),
-  })).sort((left, right) => left.date.localeCompare(right.date));
+  const days = searchConsole.days.map((day, index) => {
+    assertKnownKeys(day, SEARCH_CONSOLE_DAY_KEYS, `Search Console day ${index}`);
+    return {
+      date: requireDate(day.date, `search_console.days[${index}].date`),
+      clicks: requireCount(day.clicks, `search_console.days[${index}].clicks`),
+      impressions: requireCount(day.impressions, `search_console.days[${index}].impressions`),
+    };
+  }).sort((left, right) => left.date.localeCompare(right.date));
   if (days.length === 0) {
     throw new Error("Search Console aggregate requires at least one final day");
   }
@@ -424,12 +497,47 @@ function providerMetrics(provider, rolling3) {
   };
 }
 
-function evaluateExperiment(experiment, runDate) {
+function experimentSampleClock(traffic, scorecard) {
+  if (!traffic.complete) {
+    return {
+      basis: "final_gsc_days",
+      end_date: traffic.latest_final_date,
+    };
+  }
+  return {
+    basis: "closed_scorecard_days",
+    end_date: scorecard?.end_date ?? null,
+  };
+}
+
+function evaluateExperiment(experiment, runDate, sampleClock) {
   if (!experiment) {
     return { decision: "none", reason: "no active experiment" };
   }
+  assertKnownKeys(experiment, ACTIVE_EXPERIMENT_KEYS, "Active experiment");
+  if (experiment.has_breakage !== undefined && typeof experiment.has_breakage !== "boolean") {
+    throw new Error("Invalid active experiment has_breakage");
+  }
+  const minimumLift = experiment.minimum_relative_lift ?? 0.05;
+  if (!Number.isFinite(minimumLift) || minimumLift < 0) {
+    throw new Error("Invalid active experiment minimum relative lift");
+  }
   const startedOn = requireDate(experiment.started_on, "active_experiment.started_on");
-  const elapsedDays = Math.max(0, daysBetween(startedOn, runDate));
+  if (startedOn > runDate) {
+    throw new Error("Active experiment cannot start after the run date");
+  }
+  const elapsedDays = daysBetween(startedOn, runDate);
+  const sampleEndDate = sampleClock.end_date === null
+    ? null
+    : requireDate(sampleClock.end_date, "experiment_sample_clock.end_date");
+  const sampleDays = sampleEndDate !== null && sampleEndDate >= startedOn
+    ? daysBetween(startedOn, sampleEndDate) + 1
+    : 0;
+  const sample = {
+    sample_days: sampleDays,
+    sample_basis: sampleClock.basis,
+    sample_end_date: sampleEndDate,
+  };
   const measurementValues = [
     experiment.eligible_sessions,
     experiment.baseline_primary_rate,
@@ -445,6 +553,7 @@ function evaluateExperiment(experiment, runDate) {
         reason: "breakage reported",
         measurement_status: "unavailable",
         elapsed_days: elapsedDays,
+        ...sample,
         eligible_sessions: null,
       };
     }
@@ -453,6 +562,7 @@ function evaluateExperiment(experiment, runDate) {
       reason: "active experiment is awaiting aggregate measurement",
       measurement_status: "unavailable",
       elapsed_days: elapsedDays,
+      ...sample,
       eligible_sessions: null,
     };
   }
@@ -460,38 +570,32 @@ function evaluateExperiment(experiment, runDate) {
     throw new Error("Active experiment aggregate measurements must be all available or all null");
   }
   const eligible = requireCount(experiment.eligible_sessions, "active_experiment.eligible_sessions");
-  const baseline = Number(experiment.baseline_primary_rate);
-  const current = Number(experiment.current_primary_rate);
-  const baselineGuardrail = Number(experiment.baseline_guardrail_rate);
-  const currentGuardrail = Number(experiment.current_guardrail_rate);
+  const baseline = experiment.baseline_primary_rate;
+  const current = experiment.current_primary_rate;
+  const baselineGuardrail = experiment.baseline_guardrail_rate;
+  const currentGuardrail = experiment.current_guardrail_rate;
   if (![baseline, current, baselineGuardrail, currentGuardrail].every((value) => Number.isFinite(value) && value >= 0 && value <= 1)) {
     throw new Error("Invalid active experiment rate");
   }
   const relativeLift = baseline > 0 ? (current - baseline) / baseline : null;
   const guardrailDecline = baselineGuardrail > 0 ? (baselineGuardrail - currentGuardrail) / baselineGuardrail : 0;
-  const minimumLift = Number.isFinite(experiment.minimum_relative_lift)
-    ? Number(experiment.minimum_relative_lift)
-    : 0.05;
-  if (minimumLift < 0) {
-    throw new Error("Invalid active experiment minimum relative lift");
-  }
 
   if (experiment.has_breakage === true) {
-    return { decision: "stop", reason: "breakage reported", elapsed_days: elapsedDays, eligible_sessions: eligible };
+    return { decision: "stop", reason: "breakage reported", elapsed_days: elapsedDays, ...sample, eligible_sessions: eligible };
   }
   if (eligible >= 100 && guardrailDecline >= 0.30) {
-    return { decision: "stop", reason: "guardrail declined at least 30% after 100 eligible sessions", elapsed_days: elapsedDays, eligible_sessions: eligible };
+    return { decision: "stop", reason: "guardrail declined at least 30% after 100 eligible sessions", elapsed_days: elapsedDays, ...sample, eligible_sessions: eligible };
   }
-  if (elapsedDays < 7 || eligible < 200) {
-    return { decision: "continue", reason: "seven-day and 200-session decision gate not reached", elapsed_days: elapsedDays, eligible_sessions: eligible };
+  if (sampleDays < 7 || eligible < 200) {
+    return { decision: "continue", reason: "seven-day and 200-session decision gate not reached", elapsed_days: elapsedDays, ...sample, eligible_sessions: eligible };
   }
   if (relativeLift !== null && relativeLift >= minimumLift && guardrailDecline <= 0) {
-    return { decision: "promote", reason: "primary metric improved beyond the configured lift and the guardrail did not decline", elapsed_days: elapsedDays, eligible_sessions: eligible };
+    return { decision: "promote", reason: "primary metric improved beyond the configured lift and the guardrail did not decline", elapsed_days: elapsedDays, ...sample, eligible_sessions: eligible };
   }
   if (relativeLift === null || relativeLift <= 0) {
-    return { decision: "stop", reason: "primary metric did not improve after the full decision gate", elapsed_days: elapsedDays, eligible_sessions: eligible };
+    return { decision: "stop", reason: "primary metric did not improve after the full decision gate", elapsed_days: elapsedDays, ...sample, eligible_sessions: eligible };
   }
-  return { decision: "continue", reason: "primary metric improved but promotion guardrails are not yet satisfied", elapsed_days: elapsedDays, eligible_sessions: eligible };
+  return { decision: "continue", reason: "primary metric improved but promotion guardrails are not yet satisfied", elapsed_days: elapsedDays, ...sample, eligible_sessions: eligible };
 }
 
 function nextMilestone(runDate, traffic, rolling7, scorecard, authorityReady) {
@@ -599,19 +703,22 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
     throw new Error("Input must be an aggregate JSON object");
   }
   assertAggregateOnly(input);
+  assertKnownKeys(input, GROWTH_CONTROL_INPUT_KEYS, "Growth control input");
 
-  const taipeiToday = new Date(Date.now() + (8 * 60 * 60 * 1000)).toISOString().slice(0, 10);
-  const runDate = requireDate(input.run_date || taipeiToday, "run_date");
+  const runDate = requireDate(input.run_date, "run_date");
   const scorecard = normalizeScorecard(input.scorecard);
   if (scorecard && scorecard.end_date !== addDays(runDate, -1)) {
     throw new Error("Scorecard must end on the latest closed Asia/Taipei day");
   }
   const searchConsole = normalizeSearchConsole(input.search_console, runDate);
   const traffic = trafficStage(searchConsole, runDate);
-  const authority = resolveAuthority(input.authority, standingAuthority);
+  const inputAuthority = input.authority ?? {};
+  assertKnownKeys(inputAuthority, AUTHORITY_KEYS, "Authority");
+  const authority = resolveAuthority(inputAuthority, standingAuthority);
   const authorityPolicy = authorityPolicySummary(standingAuthority);
   const missingAuthorities = CRITICAL_AUTHORITIES.filter((key) => !authority[key]);
   const provider = input.provider || {};
+  assertKnownKeys(provider, PROVIDER_KEYS, "Provider");
   if (typeof provider.public_health_ok !== "boolean" || typeof provider.paid_flow_incident !== "boolean") {
     throw new Error("Provider health and paid-flow incident signals must be explicit booleans");
   }
@@ -621,6 +728,16 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
   const rolling7 = aggregateWindow(scorecard?.days || [], 7);
   const rolling14 = aggregateWindow(scorecard?.days || [], 14);
   const economics = providerMetrics(provider, rolling3);
+  const evaluatedExperiment = evaluateExperiment(input.active_experiment, runDate, experimentSampleClock(traffic, scorecard));
+  const experiment = paidFlowIncident && evaluatedExperiment.decision !== "none"
+    ? { ...evaluatedExperiment, decision: "stop", reason: "paid-flow incident reported" }
+    : evaluatedExperiment;
+  const experimentBreakage = experiment.decision === "stop" && experiment.reason === "breakage reported";
+  const reliabilityEvidence = !publicHealthOk
+    ? "a production health signal is not healthy"
+    : paidFlowIncident
+      ? "a paid-flow incident is open"
+      : "the active experiment reports production breakage";
   const common = {
     schema_version: 2,
     run_date: runDate,
@@ -635,7 +752,7 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
     current_streak: scorecard?.goal.current_streak ?? null,
     rolling: { "3d": rolling3, "7d": rolling7, "14d": rolling14 },
     economics,
-    experiment: evaluateExperiment(input.active_experiment, runDate),
+    experiment,
     authority_policy: authorityPolicy,
     missing_authorities: missingAuthorities,
   };
@@ -660,10 +777,10 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
   }
 
   if (!traffic.complete) {
-    const constraint = !publicHealthOk || paidFlowIncident ? "reliability" : "traffic";
+    const constraint = !publicHealthOk || paidFlowIncident || experimentBreakage ? "reliability" : "traffic";
     const action = constraint === "reliability" ? ACTIONS.reliability : ACTIONS.traffic;
     const evidence = constraint === "reliability"
-      ? [!publicHealthOk ? "a production health signal is not healthy" : "a paid-flow incident is open"]
+      ? [reliabilityEvidence]
       : [
         `${traffic.latest_daily_clicks} final GSC web clicks on ${traffic.latest_final_date}; ${TRAFFIC_GOAL.minimum_qualifying_clicks} are required`,
         `the current qualifying traffic streak is ${traffic.current_streak} of ${TRAFFIC_GOAL.consecutive_days} days`,
@@ -715,10 +832,10 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
       authority_required: ["scorecard_read", "lemon_read"],
     };
     evidence.push(`authoritative scorecard reports a ${scorecard.goal.current_streak}-day streak`);
-  } else if (!publicHealthOk || paidFlowIncident) {
+  } else if (!publicHealthOk || paidFlowIncident || experimentBreakage) {
     constraint = "reliability";
     action = ACTIONS.reliability;
-    evidence.push(!publicHealthOk ? "a production health signal is not healthy" : "a paid-flow incident is open");
+    evidence.push(reliabilityEvidence);
   } else if (
     rolling7.failed_readings > 0
     || (rolling7.paid_signals_submitted > 0 && (rolling7.paid_signals_to_delivery_within_15m_rate ?? 0) < 0.98)
