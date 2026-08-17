@@ -491,6 +491,33 @@ test("retains an active experiment while aggregate experiment metrics are unavai
   assert.match(result.experiment.reason, /awaiting aggregate measurement/);
 });
 
+test("stops an unmeasured experiment immediately when production breakage is reported", () => {
+  const result = evaluateGrowthControl({
+    run_date: "2026-08-18",
+    search_console: searchConsole("2026-08-18", { clicks: 0 }, 19),
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: false, paid_flow_incident: false },
+    active_experiment: {
+      started_on: "2026-08-13",
+      eligible_sessions: null,
+      baseline_primary_rate: null,
+      current_primary_rate: null,
+      baseline_guardrail_rate: null,
+      current_guardrail_rate: null,
+      has_breakage: true,
+    },
+  });
+
+  assert.equal(result.experiment.decision, "stop");
+  assert.equal(result.experiment.reason, "breakage reported");
+  assert.equal(result.experiment.measurement_status, "unavailable");
+  assert.equal(result.experiment.sample_days, 3);
+  assert.equal(result.experiment.sample_basis, "final_gsc_days");
+  assert.equal(result.experiment.sample_end_date, "2026-08-15");
+  assert.equal(result.experiment.eligible_sessions, null);
+});
+
 test("uses complete final GSC days for the Stage 1 experiment sample clock", () => {
   const result = evaluateGrowthControl({
     run_date: "2026-08-15",
