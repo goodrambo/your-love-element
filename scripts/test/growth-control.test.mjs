@@ -516,6 +516,9 @@ test("stops an unmeasured experiment immediately when production breakage is rep
   assert.equal(result.experiment.sample_basis, "final_gsc_days");
   assert.equal(result.experiment.sample_end_date, "2026-08-15");
   assert.equal(result.experiment.eligible_sessions, null);
+  assert.equal(result.primary_constraint, "reliability");
+  assert.equal(result.action.id, "repair_paid_flow_reliability");
+  assert.match(result.constraint_evidence.join(" "), /production health signal is not healthy/);
 });
 
 test("uses complete final GSC days for the Stage 1 experiment sample clock", () => {
