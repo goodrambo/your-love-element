@@ -2,9 +2,9 @@
   "schema_version": 1,
   "frontend_smoke": {
     "status": "pass",
-    "verified_at": "2026-08-13",
-    "source_digest": "45fb7da22273c781dc92a263eb68c679ed3821e354d310f33e52d584292467c2",
-    "evidence": "In-app Browser offline smoke of the homepage at desktop 1280x720 and mobile 390x844. Both layouts parsed exactly one canonical Brand node, resolved Product.brand to https://yourloveelement.com/#brand, kept the production API base disabled, and had no warning/error console entries. Desktop client/scroll widths were 1280/1280 and mobile client/scroll widths were 390/390, so neither layout had horizontal overflow. The focused SEO suite passed 66/66, including the Brand/Organization name, URL, and logo parity plus homepage WebPage/sitemap freshness. No visible copy, CSS, JavaScript, tracking, API, checkout, paid flow, report, email, refund-policy, return-policy, or shipping behavior changed. This digest invalidates the evidence on later frontend changes."
+    "verified_at": "2026-08-18",
+    "source_digest": "6fb7d13207c1cb713a27336d05d20a3514542a1e3ecdc180f83b12d69fcd9ddf",
+    "evidence": "In-app Browser offline smoke of /how-it-works/ at desktop 1280x720 and mobile 390x844 after the love-element-quiz search-intent expansion. Both layouts exposed the exact production canonical, one H1, the answer-first What is a love element quiz heading, matching visible FAQ content, and no warning/error console entries. Desktop client/scroll widths were 1265/1265 and mobile client/scroll widths were 375/375, so neither layout had horizontal overflow. The focused SEO suite passed 78/78, including title/description bounds, Article-to-visible-heading parity, FAQ schema-to-visible-answer parity, and sitemap/schema freshness. The prepared scope changes only editorial how-it-works content/search metadata and its sitemap lastmod; no CSS, JavaScript, tracking, API, checkout, payment, webhook, report, email, refund-policy, legal-claim, customer message, paid media, or spend behavior changed. This digest invalidates the evidence on later frontend changes."
   },
   "paid_flow_e2e": {
     "status": "waived",
