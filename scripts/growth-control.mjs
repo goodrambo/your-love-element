@@ -728,6 +728,16 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
   const rolling7 = aggregateWindow(scorecard?.days || [], 7);
   const rolling14 = aggregateWindow(scorecard?.days || [], 14);
   const economics = providerMetrics(provider, rolling3);
+  const evaluatedExperiment = evaluateExperiment(input.active_experiment, runDate, experimentSampleClock(traffic, scorecard));
+  const experiment = paidFlowIncident && evaluatedExperiment.decision !== "none"
+    ? { ...evaluatedExperiment, decision: "stop", reason: "paid-flow incident reported" }
+    : evaluatedExperiment;
+  const experimentBreakage = experiment.decision === "stop" && experiment.reason === "breakage reported";
+  const reliabilityEvidence = !publicHealthOk
+    ? "a production health signal is not healthy"
+    : paidFlowIncident
+      ? "a paid-flow incident is open"
+      : "the active experiment reports production breakage";
   const common = {
     schema_version: 2,
     run_date: runDate,
@@ -742,7 +752,7 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
     current_streak: scorecard?.goal.current_streak ?? null,
     rolling: { "3d": rolling3, "7d": rolling7, "14d": rolling14 },
     economics,
-    experiment: evaluateExperiment(input.active_experiment, runDate, experimentSampleClock(traffic, scorecard)),
+    experiment,
     authority_policy: authorityPolicy,
     missing_authorities: missingAuthorities,
   };
@@ -767,10 +777,10 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
   }
 
   if (!traffic.complete) {
-    const constraint = !publicHealthOk || paidFlowIncident ? "reliability" : "traffic";
+    const constraint = !publicHealthOk || paidFlowIncident || experimentBreakage ? "reliability" : "traffic";
     const action = constraint === "reliability" ? ACTIONS.reliability : ACTIONS.traffic;
     const evidence = constraint === "reliability"
-      ? [!publicHealthOk ? "a production health signal is not healthy" : "a paid-flow incident is open"]
+      ? [reliabilityEvidence]
       : [
         `${traffic.latest_daily_clicks} final GSC web clicks on ${traffic.latest_final_date}; ${TRAFFIC_GOAL.minimum_qualifying_clicks} are required`,
         `the current qualifying traffic streak is ${traffic.current_streak} of ${TRAFFIC_GOAL.consecutive_days} days`,
@@ -822,10 +832,10 @@ export function evaluateGrowthControl(input, standingAuthority = null) {
       authority_required: ["scorecard_read", "lemon_read"],
     };
     evidence.push(`authoritative scorecard reports a ${scorecard.goal.current_streak}-day streak`);
-  } else if (!publicHealthOk || paidFlowIncident) {
+  } else if (!publicHealthOk || paidFlowIncident || experimentBreakage) {
     constraint = "reliability";
     action = ACTIONS.reliability;
-    evidence.push(!publicHealthOk ? "a production health signal is not healthy" : "a paid-flow incident is open");
+    evidence.push(reliabilityEvidence);
   } else if (
     rolling7.failed_readings > 0
     || (rolling7.paid_signals_submitted > 0 && (rolling7.paid_signals_to_delivery_within_15m_rate ?? 0) < 0.98)

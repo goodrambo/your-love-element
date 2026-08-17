@@ -521,6 +521,174 @@ test("stops an unmeasured experiment immediately when production breakage is rep
   assert.match(result.constraint_evidence.join(" "), /production health signal is not healthy/);
 });
 
+test("reclassifies experiment breakage as reliability while health probes remain green", () => {
+  const result = evaluateGrowthControl({
+    run_date: "2026-08-18",
+    search_console: searchConsole("2026-08-18", { clicks: 0 }, 19),
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+    active_experiment: {
+      started_on: "2026-08-13",
+      eligible_sessions: null,
+      baseline_primary_rate: null,
+      current_primary_rate: null,
+      baseline_guardrail_rate: null,
+      current_guardrail_rate: null,
+      has_breakage: true,
+    },
+  });
+
+  assert.equal(result.experiment.decision, "stop");
+  assert.equal(result.experiment.reason, "breakage reported");
+  assert.equal(result.primary_constraint, "reliability");
+  assert.equal(result.action.id, "repair_paid_flow_reliability");
+  assert.match(result.constraint_evidence.join(" "), /active experiment reports production breakage/);
+
+  const purchaseStageResult = evaluateGrowthControl({
+    run_date: "2026-07-30",
+    search_console: searchConsole("2026-07-30", { clicks: 1001 }, 30),
+    scorecard: scorecard(),
+    authority: READY_AUTHORITY,
+    provider: { public_health_ok: true, paid_flow_incident: false },
+    active_experiment: {
+      started_on: "2026-07-20",
+      eligible_sessions: null,
+      baseline_primary_rate: null,
+      current_primary_rate: null,
+      baseline_guardrail_rate: null,
+      current_guardrail_rate: null,
+      has_breakage: true,
+    },
+  });
+
+  assert.equal(purchaseStageResult.active_stage, "verified_purchases");
+  assert.equal(purchaseStageResult.experiment.decision, "stop");
+  assert.equal(purchaseStageResult.primary_constraint, "reliability");
+  assert.equal(purchaseStageResult.action.id, "repair_paid_flow_reliability");
+  assert.match(purchaseStageResult.constraint_evidence.join(" "), /active experiment reports production breakage/);
+});
+
+test("CLI reclassifies experiment breakage as reliability while health probes remain green", () => {
+  const runDate = "2026-08-18";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: searchConsole(runDate, { clicks: 0 }, 19),
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+      active_experiment: {
+        started_on: "2026-08-13",
+        eligible_sessions: null,
+        baseline_primary_rate: null,
+        current_primary_rate: null,
+        baseline_guardrail_rate: null,
+        current_guardrail_rate: null,
+        has_breakage: true,
+      },
+    }),
+  });
+
+  assert.equal(completed.status, 0);
+  assert.equal(completed.stderr, "");
+  const result = JSON.parse(completed.stdout);
+  assert.equal(result.experiment.decision, "stop");
+  assert.equal(result.experiment.reason, "breakage reported");
+  assert.equal(result.primary_constraint, "reliability");
+  assert.equal(result.action.id, "repair_paid_flow_reliability");
+  assert.match(result.constraint_evidence.join(" "), /active experiment reports production breakage/);
+});
+
+test("CLI prioritizes failed public health over Stage 1 traffic", () => {
+  const runDate = "2026-08-18";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: searchConsole(runDate, { clicks: 0 }, 19),
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: false, paid_flow_incident: false },
+      active_experiment: {
+        started_on: "2026-08-13",
+        eligible_sessions: null,
+        baseline_primary_rate: null,
+        current_primary_rate: null,
+        baseline_guardrail_rate: null,
+        current_guardrail_rate: null,
+        has_breakage: false,
+      },
+    }),
+  });
+
+  assert.equal(completed.status, 0);
+  assert.equal(completed.stderr, "");
+  const result = JSON.parse(completed.stdout);
+  assert.equal(result.experiment.decision, "continue");
+  assert.equal(result.primary_constraint, "reliability");
+  assert.equal(result.action.id, "repair_paid_flow_reliability");
+  assert.match(result.constraint_evidence.join(" "), /production health signal is not healthy/);
+});
+
+test("prioritizes an open paid-flow incident even when public health probes pass", () => {
+  const result = evaluateGrowthControl({
+    run_date: "2026-08-18",
+    search_console: searchConsole("2026-08-18", { clicks: 0 }, 19),
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: true },
+    active_experiment: {
+      started_on: "2026-08-13",
+      eligible_sessions: null,
+      baseline_primary_rate: null,
+      current_primary_rate: null,
+      baseline_guardrail_rate: null,
+      current_guardrail_rate: null,
+      has_breakage: false,
+    },
+  });
+
+  assert.equal(result.experiment.decision, "stop");
+  assert.equal(result.experiment.reason, "paid-flow incident reported");
+  assert.equal(result.primary_constraint, "reliability");
+  assert.equal(result.action.id, "repair_paid_flow_reliability");
+  assert.match(result.constraint_evidence.join(" "), /paid-flow incident is open/);
+});
+
+test("CLI prioritizes an open paid-flow incident over Stage 1 traffic", () => {
+  const runDate = "2026-08-18";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: searchConsole(runDate, { clicks: 0 }, 19),
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: true },
+      active_experiment: {
+        started_on: "2026-08-13",
+        eligible_sessions: null,
+        baseline_primary_rate: null,
+        current_primary_rate: null,
+        baseline_guardrail_rate: null,
+        current_guardrail_rate: null,
+        has_breakage: false,
+      },
+    }),
+  });
+
+  assert.equal(completed.status, 0);
+  assert.equal(completed.stderr, "");
+  const result = JSON.parse(completed.stdout);
+  assert.equal(result.experiment.decision, "stop");
+  assert.equal(result.experiment.reason, "paid-flow incident reported");
+  assert.equal(result.primary_constraint, "reliability");
+  assert.equal(result.action.id, "repair_paid_flow_reliability");
+  assert.match(result.constraint_evidence.join(" "), /paid-flow incident is open/);
+});
+
 test("uses complete final GSC days for the Stage 1 experiment sample clock", () => {
   const result = evaluateGrowthControl({
     run_date: "2026-08-15",
@@ -1269,6 +1437,38 @@ test("CLI emits no decision for undeclared provider or authority fields", () => 
     assert.equal(completed.status, 2);
     assert.equal(completed.stdout, "");
     assert.match(completed.stderr, expected);
+  }
+});
+
+test("CLI emits no decision for non-boolean or missing provider safety signals", () => {
+  const runDate = "2026-07-30";
+  const cases = [
+    (provider) => { provider.public_health_ok = "false"; },
+    (provider) => { provider.paid_flow_incident = "false"; },
+    (provider) => { delete provider.public_health_ok; },
+  ];
+
+  for (const mutate of cases) {
+    const provider = { public_health_ok: true, paid_flow_incident: false };
+    mutate(provider);
+    const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+      encoding: "utf8",
+      input: JSON.stringify({
+        run_date: runDate,
+        search_console: searchConsole(runDate, { clicks: 1001 }),
+        scorecard: null,
+        authority: { gsc_read: true },
+        provider,
+        active_experiment: null,
+      }),
+    });
+
+    assert.equal(completed.status, 2);
+    assert.equal(completed.stdout, "");
+    assert.match(
+      completed.stderr,
+      /Provider health and paid-flow incident signals must be explicit booleans/,
+    );
   }
 });
 
