@@ -130,6 +130,344 @@ test("classifies missing GSC truth as access and keeps traffic values unknown", 
   assert.equal(result.missing_authorities.length, 9);
 });
 
+test("keeps exact GSC evidence access-blocked when live gsc_read is false", () => {
+  const result = evaluateGrowthControl({
+    run_date: "2026-08-15",
+    search_console: searchConsole("2026-08-15", { clicks: 1001 }, 30),
+    scorecard: null,
+    authority: { gsc_read: false },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+  });
+
+  assert.equal(result.traffic.complete, true);
+  assert.equal(result.active_stage, "gsc_traffic");
+  assert.equal(result.status, "blocked_on_gsc_truth");
+  assert.equal(result.primary_constraint, "access");
+  assert.match(result.constraint_evidence.join(" "), /gsc_read is not currently available/);
+  assert.deepEqual(result.action.missing_authority, ["gsc_read"]);
+  assert.equal(result.action.execution_scope, "one_time_user_bootstrap_required");
+});
+
+test("CLI preserves the live GSC read gate despite a qualifying aggregate snapshot", () => {
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: "2026-08-15",
+      search_console: searchConsole("2026-08-15", { clicks: 1001 }, 30),
+      scorecard: null,
+      authority: { gsc_read: false },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 0, completed.stderr);
+  const result = JSON.parse(completed.stdout);
+  assert.equal(result.traffic.complete, true);
+  assert.equal(result.active_stage, "gsc_traffic");
+  assert.equal(result.status, "blocked_on_gsc_truth");
+  assert.equal(result.primary_constraint, "access");
+  assert.deepEqual(result.action.missing_authority, ["gsc_read"]);
+  assert.equal(result.action.execution_scope, "one_time_user_bootstrap_required");
+});
+
+test("rejects undeclared Search Console aggregate and daily fields", () => {
+  const withAggregateDetail = searchConsole("2026-08-15");
+  withAggregateDetail.average_position = 6.3;
+  assert.throws(() => evaluateGrowthControl({
+    run_date: "2026-08-15",
+    search_console: withAggregateDetail,
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+  }), /Search Console aggregate contains unknown field: average_position/);
+
+  const withDailyDetail = searchConsole("2026-08-15");
+  withDailyDetail.days[0].ctr = 0.2;
+  assert.throws(() => evaluateGrowthControl({
+    run_date: "2026-08-15",
+    search_console: withDailyDetail,
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+  }), /Search Console day 0 contains unknown field: ctr/);
+});
+
+test("CLI emits no decision for undeclared Search Console daily fields", () => {
+  const invalidSearchConsole = searchConsole("2026-08-15");
+  invalidSearchConsole.days[0].ctr = 0.2;
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: "2026-08-15",
+      search_console: invalidSearchConsole,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Search Console day 0 contains unknown field: ctr/);
+});
+
+test("CLI emits no decision for a non-allowlisted GSC property", () => {
+  const runDate = "2026-07-30";
+  const wrongProperty = searchConsole(runDate, { clicks: 1001 });
+  wrongProperty.property = "sc-domain:not-yourloveelement.invalid";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: wrongProperty,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Invalid aggregate Search Console contract/);
+});
+
+test("CLI emits no decision for a non-web GSC search type", () => {
+  const runDate = "2026-07-30";
+  const wrongSearchType = searchConsole(runDate, { clicks: 1001 });
+  wrongSearchType.search_type = "discover";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: wrongSearchType,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Invalid aggregate Search Console contract/);
+});
+
+test("CLI emits no decision for GSC News clicks", () => {
+  const runDate = "2026-07-30";
+  const newsSearch = searchConsole(runDate, { clicks: 1001 });
+  newsSearch.search_type = "news";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: newsSearch,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Invalid aggregate Search Console contract/);
+});
+
+test("CLI emits no decision for a non-property GSC aggregation", () => {
+  const runDate = "2026-07-30";
+  const wrongAggregation = searchConsole(runDate, { clicks: 1001 });
+  wrongAggregation.aggregation = "country";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: wrongAggregation,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Invalid aggregate Search Console contract/);
+});
+
+test("CLI emits no decision for a non-GSC traffic timezone", () => {
+  const runDate = "2026-07-30";
+  const wrongTimezone = searchConsole(runDate, { clicks: 1001 });
+  wrongTimezone.timezone = "Asia/Taipei";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: wrongTimezone,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Invalid aggregate Search Console contract/);
+});
+
+test("CLI emits no decision for a non-GSC traffic source", () => {
+  const runDate = "2026-07-30";
+  const wrongSource = searchConsole(runDate, { clicks: 1001 });
+  wrongSource.source = "browser_analytics";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: wrongSource,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Invalid aggregate Search Console contract/);
+});
+
+test("CLI emits no decision when the GSC traffic source is missing", () => {
+  const runDate = "2026-07-30";
+  const missingSource = searchConsole(runDate, { clicks: 1001 });
+  delete missingSource.source;
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: missingSource,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Invalid aggregate Search Console contract/);
+});
+
+test("CLI emits no decision when a remaining required GSC identity field is missing", () => {
+  const runDate = "2026-07-30";
+  for (const field of [
+    "property",
+    "search_type",
+    "aggregation",
+    "data_state",
+    "timezone",
+    "privacy",
+  ]) {
+    const missingField = searchConsole(runDate, { clicks: 1001 });
+    delete missingField[field];
+    const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+      encoding: "utf8",
+      input: JSON.stringify({
+        run_date: runDate,
+        search_console: missingField,
+        scorecard: null,
+        authority: { gsc_read: true },
+        provider: { public_health_ok: true, paid_flow_incident: false },
+      }),
+    });
+
+    assert.equal(completed.status, 2, field);
+    assert.equal(completed.stdout, "", field);
+    assert.match(
+      completed.stderr,
+      /Invalid aggregate Search Console contract/,
+      field,
+    );
+  }
+});
+
+test("CLI emits no decision for Meta clicks", () => {
+  const runDate = "2026-07-30";
+  const metaClicks = searchConsole(runDate, { clicks: 1001 });
+  metaClicks.source = "meta_clicks";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: metaClicks,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Invalid aggregate Search Console contract/);
+});
+
+test("CLI emits no decision for non-aggregate GSC privacy", () => {
+  const runDate = "2026-07-30";
+  const detailedSearch = searchConsole(runDate, { clicks: 1001 });
+  detailedSearch.privacy = "query_rows";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: detailedSearch,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Invalid aggregate Search Console contract/);
+});
+
+test("CLI emits no decision for GSC query or page detail fields", () => {
+  const runDate = "2026-07-30";
+  for (const field of ["query", "page"]) {
+    const detailedSearch = searchConsole(runDate, { clicks: 1001 });
+    detailedSearch[field] = "synthetic-placeholder";
+    const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+      encoding: "utf8",
+      input: JSON.stringify({
+        run_date: runDate,
+        search_console: detailedSearch,
+        scorecard: null,
+        authority: { gsc_read: true },
+        provider: { public_health_ok: true, paid_flow_incident: false },
+      }),
+    });
+
+    assert.equal(completed.status, 2);
+    assert.equal(completed.stdout, "");
+    assert.match(completed.stderr, /Aggregate input rejected sensitive key/);
+  }
+});
+
+test("CLI emits no decision for GSC daily query or page detail fields", () => {
+  const runDate = "2026-07-30";
+  for (const field of ["query", "page"]) {
+    const detailedSearch = searchConsole(runDate, { clicks: 1001 });
+    detailedSearch.days[0][field] = "synthetic-placeholder";
+    const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+      encoding: "utf8",
+      input: JSON.stringify({
+        run_date: runDate,
+        search_console: detailedSearch,
+        scorecard: null,
+        authority: { gsc_read: true },
+        provider: { public_health_ok: true, paid_flow_incident: false },
+      }),
+    });
+
+    assert.equal(completed.status, 2);
+    assert.equal(completed.stdout, "");
+    assert.match(completed.stderr, /Aggregate input rejected sensitive key/);
+  }
+});
+
 test("retains an active experiment while aggregate experiment metrics are unavailable", () => {
   const result = evaluateGrowthControl({
     run_date: "2026-08-03",
@@ -151,6 +489,99 @@ test("retains an active experiment while aggregate experiment metrics are unavai
   assert.equal(result.experiment.measurement_status, "unavailable");
   assert.equal(result.experiment.eligible_sessions, null);
   assert.match(result.experiment.reason, /awaiting aggregate measurement/);
+});
+
+test("uses complete final GSC days for the Stage 1 experiment sample clock", () => {
+  const result = evaluateGrowthControl({
+    run_date: "2026-08-15",
+    search_console: searchConsole("2026-08-15", { clicks: 0 }, 16),
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+    active_experiment: {
+      started_on: "2026-08-13",
+      eligible_sessions: null,
+      baseline_primary_rate: null,
+      current_primary_rate: null,
+      baseline_guardrail_rate: null,
+      current_guardrail_rate: null,
+      has_breakage: false,
+    },
+  });
+
+  assert.equal(result.experiment.elapsed_days, 2);
+  assert.equal(result.experiment.sample_days, 0);
+  assert.equal(result.experiment.sample_basis, "final_gsc_days");
+  assert.equal(result.experiment.sample_end_date, "2026-08-12");
+  assert.equal(result.experiment.decision, "continue");
+});
+
+test("counts the experiment start date as one final GSC sample day", () => {
+  const result = evaluateGrowthControl({
+    run_date: "2026-08-16",
+    search_console: searchConsole("2026-08-16", { clicks: 0, impressions: 1000000 }, 17),
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+    active_experiment: {
+      started_on: "2026-08-13",
+      eligible_sessions: null,
+      baseline_primary_rate: null,
+      current_primary_rate: null,
+      baseline_guardrail_rate: null,
+      current_guardrail_rate: null,
+      has_breakage: false,
+    },
+  });
+
+  assert.equal(result.experiment.elapsed_days, 3);
+  assert.equal(result.experiment.sample_days, 1);
+  assert.equal(result.experiment.sample_basis, "final_gsc_days");
+  assert.equal(result.experiment.sample_end_date, "2026-08-13");
+  assert.equal(result.experiment.decision, "continue");
+  assert.equal(result.traffic.current_streak, 0);
+});
+
+test("rejects an active experiment that starts after the run date", () => {
+  assert.throws(() => evaluateGrowthControl({
+    run_date: "2026-08-15",
+    search_console: searchConsole("2026-08-15", { clicks: 0 }, 16),
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+    active_experiment: {
+      started_on: "2026-08-16",
+      eligible_sessions: null,
+      baseline_primary_rate: null,
+      current_primary_rate: null,
+      baseline_guardrail_rate: null,
+      current_guardrail_rate: null,
+      has_breakage: false,
+    },
+  }), /cannot start after the run date/);
+});
+
+test("opens the Stage 1 decision gate after seven complete final GSC days", () => {
+  const result = evaluateGrowthControl({
+    run_date: "2026-08-22",
+    search_console: searchConsole("2026-08-22", { clicks: 0 }),
+    scorecard: null,
+    authority: { gsc_read: true },
+    provider: { public_health_ok: true, paid_flow_incident: false },
+    active_experiment: {
+      started_on: "2026-08-13",
+      eligible_sessions: 250,
+      baseline_primary_rate: 0.25,
+      current_primary_rate: 0.28,
+      baseline_guardrail_rate: 0.10,
+      current_guardrail_rate: 0.11,
+      has_breakage: false,
+    },
+  });
+
+  assert.equal(result.experiment.sample_days, 7);
+  assert.equal(result.experiment.sample_end_date, "2026-08-19");
+  assert.equal(result.experiment.decision, "promote");
 });
 
 test("CLI preserves unavailable totals and the active unmeasured experiment", () => {
@@ -228,6 +659,104 @@ test("treats exactly 1000 GSC clicks as non-qualifying even with high impression
   assert.equal(result.action.id, "increase_final_gsc_web_clicks");
 });
 
+test("CLI keeps thirty exactly-1000-click days in Stage 1", () => {
+  const runDate = "2026-07-30";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: searchConsole(runDate, { clicks: 1000, impressions: 100000 }),
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 0, completed.stderr);
+  const result = JSON.parse(completed.stdout);
+  assert.equal(result.active_stage, "gsc_traffic");
+  assert.equal(result.traffic.complete, false);
+  assert.equal(result.traffic_streak, 0);
+  assert.equal(result.traffic.rolling["30d"].clicks, 30000);
+  assert.equal(result.traffic.rolling["30d"].qualifying_days, 0);
+  assert.equal(result.action.id, "increase_final_gsc_web_clicks");
+});
+
+test("CLI advances only after thirty final days reach 1001 clicks", () => {
+  const runDate = "2026-07-30";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: searchConsole(runDate, { clicks: 1001, impressions: 100000 }),
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 0, completed.stderr);
+  const result = JSON.parse(completed.stdout);
+  assert.equal(result.traffic.complete, true);
+  assert.equal(result.traffic_streak, 30);
+  assert.equal(result.traffic.rolling["30d"].clicks, 30030);
+  assert.equal(result.traffic.rolling["30d"].qualifying_days, 30);
+  assert.equal(result.active_stage, "verified_purchases");
+  assert.equal(result.primary_constraint, "access");
+  assert.equal(result.action.id, "complete_authority_and_scorecard_gate");
+  assert.deepEqual(result.action.missing_authority, ["scorecard_read"]);
+});
+
+test("CLI resets a 29-day qualifying streak when the latest final day has 1000 clicks", () => {
+  const runDate = "2026-07-30";
+  const snapshot = searchConsole(runDate, { clicks: 1001, impressions: 100000 });
+  snapshot.days.at(-1).clicks = 1000;
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: snapshot,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 0, completed.stderr);
+  const result = JSON.parse(completed.stdout);
+  assert.equal(result.traffic.latest_daily_clicks, 1000);
+  assert.equal(result.traffic.rolling["30d"].qualifying_days, 29);
+  assert.equal(result.traffic_streak, 0);
+  assert.equal(result.traffic.complete, false);
+  assert.equal(result.active_stage, "gsc_traffic");
+  assert.equal(result.action.id, "increase_final_gsc_web_clicks");
+});
+
+test("CLI restarts the streak after a 1000-click interruption", () => {
+  const runDate = "2026-07-30";
+  const snapshot = searchConsole(runDate, { clicks: 1001, impressions: 100000 });
+  snapshot.days.at(-2).clicks = 1000;
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: snapshot,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 0, completed.stderr);
+  const result = JSON.parse(completed.stdout);
+  assert.equal(result.traffic.latest_daily_clicks, 1001);
+  assert.equal(result.traffic.rolling["30d"].qualifying_days, 29);
+  assert.equal(result.traffic_streak, 1);
+  assert.equal(result.traffic.complete, false);
+  assert.equal(result.active_stage, "gsc_traffic");
+  assert.equal(result.action.id, "increase_final_gsc_web_clicks");
+});
+
 test("qualifies 1001 GSC clicks for 30 contiguous final days and advances to purchase stage", () => {
   const runDate = "2026-07-30";
   const result = evaluateGrowthControl({
@@ -269,6 +798,563 @@ test("rejects a gap or preliminary state in GSC traffic evidence", () => {
     authority: { gsc_read: true },
     provider: { public_health_ok: true, paid_flow_incident: false },
   }), /Invalid aggregate Search Console contract/);
+});
+
+test("CLI emits no decision when final GSC traffic evidence has a missing day", () => {
+  const runDate = "2026-07-30";
+  const gapped = searchConsole(runDate);
+  gapped.days.splice(5, 1);
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: gapped,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Search Console dates must be contiguous final days/);
+});
+
+test("CLI emits no decision when final GSC traffic evidence repeats a date", () => {
+  const runDate = "2026-07-30";
+  const duplicated = searchConsole(runDate);
+  duplicated.days[5] = { ...duplicated.days[4] };
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: duplicated,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Search Console contains duplicate dates/);
+});
+
+test("CLI emits no decision for preliminary GSC traffic evidence", () => {
+  const runDate = "2026-07-30";
+  const preliminary = searchConsole(runDate, { clicks: 1001 });
+  preliminary.data_state = "preliminary";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: preliminary,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Invalid aggregate Search Console contract/);
+});
+
+test("CLI emits no decision for a negative GSC click count", () => {
+  const runDate = "2026-07-30";
+  const invalidCounts = searchConsole(runDate, { clicks: -1 });
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: invalidCounts,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Invalid aggregate count: search_console\.days\[0\]\.clicks/);
+});
+
+test("CLI emits no decision for a fractional GSC click count above the threshold", () => {
+  const runDate = "2026-07-30";
+  const invalidCounts = searchConsole(runDate, { clicks: 1000.5 });
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: invalidCounts,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Invalid aggregate count: search_console\.days\[0\]\.clicks/);
+});
+
+test("CLI emits no decision for a string GSC click count equal to 1001", () => {
+  const runDate = "2026-07-30";
+  const invalidCounts = searchConsole(runDate, { clicks: "1001" });
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: invalidCounts,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Invalid aggregate count: search_console\.days\[0\]\.clicks/);
+});
+
+test("CLI emits no decision for invalid GSC impression counts", () => {
+  const runDate = "2026-07-30";
+  for (const impressions of [-1, 0.5, "1"]) {
+    const invalidCounts = searchConsole(runDate, { clicks: 1001 });
+    invalidCounts.days[0].impressions = impressions;
+    const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+      encoding: "utf8",
+      input: JSON.stringify({
+        run_date: runDate,
+        search_console: invalidCounts,
+        scorecard: null,
+        authority: { gsc_read: true },
+        provider: { public_health_ok: true, paid_flow_incident: false },
+      }),
+    });
+
+    assert.equal(completed.status, 2, String(impressions));
+    assert.equal(completed.stdout, "", String(impressions));
+    assert.match(
+      completed.stderr,
+      /Invalid aggregate count: search_console\.days\[0\]\.impressions/,
+      String(impressions),
+    );
+  }
+});
+
+test("CLI emits no decision when a required GSC daily field is missing", () => {
+  const runDate = "2026-07-30";
+  for (const [field, expectedError] of [
+    ["date", /Invalid search_console\.days\[0\]\.date/],
+    ["clicks", /Invalid aggregate count: search_console\.days\[0\]\.clicks/],
+    ["impressions", /Invalid aggregate count: search_console\.days\[0\]\.impressions/],
+  ]) {
+    const missingField = searchConsole(runDate, { clicks: 1001 });
+    delete missingField.days[0][field];
+    const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+      encoding: "utf8",
+      input: JSON.stringify({
+        run_date: runDate,
+        search_console: missingField,
+        scorecard: null,
+        authority: { gsc_read: true },
+        provider: { public_health_ok: true, paid_flow_incident: false },
+      }),
+    });
+
+    assert.equal(completed.status, 2, field);
+    assert.equal(completed.stdout, "", field);
+    assert.match(completed.stderr, expectedError, field);
+  }
+});
+
+test("CLI emits no decision when a required GSC aggregate envelope field is missing", () => {
+  const runDate = "2026-07-30";
+  for (const [field, expectedError] of [
+    ["fetched_on", /Invalid search_console\.fetched_on/],
+    ["start_date", /Invalid search_console\.start_date/],
+    ["end_date", /Invalid search_console\.end_date/],
+    ["days", /Invalid aggregate Search Console contract/],
+  ]) {
+    const missingField = searchConsole(runDate, { clicks: 1001 });
+    delete missingField[field];
+    const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+      encoding: "utf8",
+      input: JSON.stringify({
+        run_date: runDate,
+        search_console: missingField,
+        scorecard: null,
+        authority: { gsc_read: true },
+        provider: { public_health_ok: true, paid_flow_incident: false },
+      }),
+    });
+
+    assert.equal(completed.status, 2, field);
+    assert.equal(completed.stdout, "", field);
+    assert.match(completed.stderr, expectedError, field);
+  }
+});
+
+test("CLI emits no decision when search_console is not an object", () => {
+  const runDate = "2026-07-30";
+  for (const searchConsoleValue of ["not-gsc", 1001, []]) {
+    const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+      encoding: "utf8",
+      input: JSON.stringify({
+        run_date: runDate,
+        search_console: searchConsoleValue,
+        scorecard: null,
+        authority: { gsc_read: true },
+        provider: { public_health_ok: true, paid_flow_incident: false },
+      }),
+    });
+
+    assert.equal(completed.status, 2);
+    assert.equal(completed.stdout, "");
+    assert.match(completed.stderr, /Invalid Search Console aggregate/);
+  }
+});
+
+test("CLI emits no decision when the GSC aggregate has no final days", () => {
+  const runDate = "2026-07-30";
+  const emptyAggregate = searchConsole(runDate, { clicks: 1001 });
+  emptyAggregate.days = [];
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: emptyAggregate,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Search Console aggregate requires at least one final day/);
+});
+
+test("CLI emits no decision when GSC days is not an array", () => {
+  const runDate = "2026-07-30";
+  for (const days of [null, {}, "2026-07-01"]) {
+    const malformedAggregate = searchConsole(runDate, { clicks: 1001 });
+    malformedAggregate.days = days;
+    const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+      encoding: "utf8",
+      input: JSON.stringify({
+        run_date: runDate,
+        search_console: malformedAggregate,
+        scorecard: null,
+        authority: { gsc_read: true },
+        provider: { public_health_ok: true, paid_flow_incident: false },
+      }),
+    });
+
+    assert.equal(completed.status, 2);
+    assert.equal(completed.stdout, "");
+    assert.match(completed.stderr, /Invalid aggregate Search Console contract/);
+  }
+});
+
+test("CLI emits no decision when a GSC day is not an object", () => {
+  const runDate = "2026-07-30";
+  for (const day of [null, "2026-07-01", 1001]) {
+    const malformedAggregate = searchConsole(runDate, { clicks: 1001 });
+    malformedAggregate.days = [day];
+    const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+      encoding: "utf8",
+      input: JSON.stringify({
+        run_date: runDate,
+        search_console: malformedAggregate,
+        scorecard: null,
+        authority: { gsc_read: true },
+        provider: { public_health_ok: true, paid_flow_incident: false },
+      }),
+    });
+
+    assert.equal(completed.status, 2);
+    assert.equal(completed.stdout, "");
+    assert.match(completed.stderr, /Invalid Search Console day 0/);
+  }
+});
+
+test("CLI emits no decision when the GSC range start does not match its first final day", () => {
+  const runDate = "2026-07-30";
+  const mismatchedRange = searchConsole(runDate, { clicks: 1001 });
+  mismatchedRange.start_date = addDays(mismatchedRange.start_date, -1);
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: mismatchedRange,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Search Console range must match its final metric days/);
+});
+
+test("CLI emits no decision when the GSC range end does not match its last final day", () => {
+  const runDate = "2026-07-30";
+  const mismatchedRange = searchConsole(runDate, { clicks: 1001 });
+  mismatchedRange.end_date = addDays(mismatchedRange.end_date, 1);
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: mismatchedRange,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Search Console range must match its final metric days/);
+});
+
+test("CLI emits no decision when GSC marks the run date as final", () => {
+  const runDate = "2026-07-30";
+  const sameDayFinal = searchConsole(runDate, { clicks: 1001 });
+  sameDayFinal.days = sameDayFinal.days.map((day) => ({
+    ...day,
+    date: addDays(day.date, 3),
+  }));
+  sameDayFinal.start_date = sameDayFinal.days[0].date;
+  sameDayFinal.end_date = runDate;
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: sameDayFinal,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Search Console final data must precede the run date/);
+});
+
+test("CLI emits no decision when the GSC aggregate was not fetched on the run date", () => {
+  const runDate = "2026-07-30";
+  const staleSnapshot = searchConsole(runDate, { clicks: 1001 });
+  staleSnapshot.fetched_on = addDays(runDate, -1);
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: staleSnapshot,
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Search Console aggregate must be fetched on the run date/);
+});
+
+test("CLI emits no decision when run_date is missing or invalid", () => {
+  const validRunDate = "2026-07-30";
+  for (const runDate of [undefined, "2026-02-30", "2026-07-30T00:00:00Z"]) {
+    const input = {
+      search_console: searchConsole(validRunDate, { clicks: 1001 }),
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+    };
+    if (runDate !== undefined) {
+      input.run_date = runDate;
+    }
+    const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+      encoding: "utf8",
+      input: JSON.stringify(input),
+    });
+
+    assert.equal(completed.status, 2);
+    assert.equal(completed.stdout, "");
+    assert.match(completed.stderr, /Invalid run_date/);
+  }
+});
+
+test("CLI emits no decision for undeclared top-level input fields", () => {
+  const runDate = "2026-07-30";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: searchConsole(runDate, { clicks: 1001 }),
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+      active_experiment: null,
+      browser_analytics: { visits: 5000 },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Growth control input contains unknown field: browser_analytics/);
+});
+
+test("CLI emits no decision for undeclared provider or authority fields", () => {
+  const runDate = "2026-07-30";
+  const cases = [
+    {
+      mutate: (input) => { input.provider.browser_analytics = { visits: 5000 }; },
+      expected: /Provider contains unknown field: browser_analytics/,
+    },
+    {
+      mutate: (input) => { input.authority.admin = true; },
+      expected: /Authority contains unknown field: admin/,
+    },
+  ];
+
+  for (const { mutate, expected } of cases) {
+    const input = {
+      run_date: runDate,
+      search_console: searchConsole(runDate, { clicks: 1001 }),
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+      active_experiment: null,
+    };
+    mutate(input);
+    const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+      encoding: "utf8",
+      input: JSON.stringify(input),
+    });
+
+    assert.equal(completed.status, 2);
+    assert.equal(completed.stdout, "");
+    assert.match(completed.stderr, expected);
+  }
+});
+
+test("CLI emits no decision for undeclared active experiment fields", () => {
+  const runDate = "2026-07-30";
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: runDate,
+      search_console: searchConsole(runDate, { clicks: 1001 }),
+      scorecard: null,
+      authority: { gsc_read: true },
+      provider: { public_health_ok: true, paid_flow_incident: false },
+      active_experiment: {
+        started_on: "2026-07-28",
+        eligible_sessions: null,
+        baseline_primary_rate: null,
+        current_primary_rate: null,
+        baseline_guardrail_rate: null,
+        current_guardrail_rate: null,
+        has_breakage: false,
+        projected_lift: 1,
+      },
+    }),
+  });
+
+  assert.equal(completed.status, 2);
+  assert.equal(completed.stdout, "");
+  assert.match(completed.stderr, /Active experiment contains unknown field: projected_lift/);
+});
+
+test("CLI emits no decision for invalid active experiment value types", () => {
+  const runDate = "2026-07-30";
+  const cases = [
+    {
+      mutate: (experiment) => { experiment.baseline_primary_rate = "0.25"; },
+      expected: /Invalid active experiment rate/,
+    },
+    {
+      mutate: (experiment) => { experiment.has_breakage = "false"; },
+      expected: /Invalid active experiment has_breakage/,
+    },
+    {
+      mutate: (experiment) => { experiment.minimum_relative_lift = "0.05"; },
+      expected: /Invalid active experiment minimum relative lift/,
+    },
+  ];
+
+  for (const { mutate, expected } of cases) {
+    const activeExperiment = {
+      started_on: "2026-07-20",
+      eligible_sessions: 250,
+      baseline_primary_rate: 0.25,
+      current_primary_rate: 0.28,
+      baseline_guardrail_rate: 0.10,
+      current_guardrail_rate: 0.11,
+      has_breakage: false,
+    };
+    mutate(activeExperiment);
+    const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+      encoding: "utf8",
+      input: JSON.stringify({
+        run_date: runDate,
+        search_console: searchConsole(runDate, { clicks: 1001 }),
+        scorecard: null,
+        authority: { gsc_read: true },
+        provider: { public_health_ok: true, paid_flow_incident: false },
+        active_experiment: activeExperiment,
+      }),
+    });
+
+    assert.equal(completed.status, 2);
+    assert.equal(completed.stdout, "");
+    assert.match(completed.stderr, expected);
+  }
+});
+
+test("CLI emits no decision for invalid GSC calendar dates", () => {
+  const runDate = "2026-07-30";
+  const cases = [
+    {
+      mutate: (aggregate) => { aggregate.days[0].date = "2026-02-30"; },
+      expected: /Invalid search_console\.days\[0\]\.date/,
+    },
+    {
+      mutate: (aggregate) => { aggregate.start_date = "2026-02-30"; },
+      expected: /Invalid search_console\.start_date/,
+    },
+    {
+      mutate: (aggregate) => { aggregate.end_date = "2026-02-30"; },
+      expected: /Invalid search_console\.end_date/,
+    },
+    {
+      mutate: (aggregate) => { aggregate.fetched_on = "2026-07-30T00:00:00Z"; },
+      expected: /Invalid search_console\.fetched_on/,
+    },
+  ];
+
+  for (const { mutate, expected } of cases) {
+    const invalidDateAggregate = searchConsole(runDate, { clicks: 1001 });
+    mutate(invalidDateAggregate);
+    const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+      encoding: "utf8",
+      input: JSON.stringify({
+        run_date: runDate,
+        search_console: invalidDateAggregate,
+        scorecard: null,
+        authority: { gsc_read: true },
+        provider: { public_health_ok: true, paid_flow_incident: false },
+      }),
+    });
+
+    assert.equal(completed.status, 2);
+    assert.equal(completed.stdout, "");
+    assert.match(completed.stderr, expected);
+  }
 });
 
 test("keeps optional and deliberately excluded channels out of the organic authority gate", () => {
@@ -399,6 +1485,9 @@ test("promotes only after seven days, 200 sessions, lift, and a non-declining gu
     },
   });
 
+  assert.equal(result.experiment.sample_days, 10);
+  assert.equal(result.experiment.sample_basis, "closed_scorecard_days");
+  assert.equal(result.experiment.sample_end_date, "2026-07-29");
   assert.equal(result.experiment.decision, "promote");
 });
 
@@ -409,6 +1498,25 @@ test("rejects customer-level keys before making a decision", () => {
     customer_email: "not-allowed@example.test",
     provider: { public_health_ok: true, paid_flow_incident: false },
   }), /sensitive key/);
+});
+
+test("rejects forbidden session, order, reading, report, query, and page detail keys", () => {
+  for (const detailKey of ["session", "order", "reading", "report"]) {
+    assert.throws(() => evaluateGrowthControl({
+      run_date: "2026-07-30",
+      search_console: searchConsole("2026-07-30"),
+      [detailKey]: {},
+    }), /sensitive key/);
+  }
+
+  for (const detailKey of ["query", "queries", "page", "pages"]) {
+    const input = {
+      run_date: "2026-07-30",
+      search_console: searchConsole("2026-07-30"),
+    };
+    input.search_console[detailKey] = [];
+    assert.throws(() => evaluateGrowthControl(input), /sensitive key/);
+  }
 });
 
 test("rejects monetary aggregates from a mismatched provider window", () => {
@@ -472,5 +1580,58 @@ test("intersects claimed mutation access with the standing-authority contract", 
   assert.equal(result.missing_authorities.includes("publish"), true);
   assert.equal(result.missing_authorities.includes("paid_media"), true);
   assert.equal(result.missing_authorities.includes("paid_flow_e2e"), true);
+  assert.equal(result.action.execution_scope, "local_only_until_authorized");
+});
+
+test("keeps deploy unavailable when live access is false despite a standing grant", () => {
+  const contracts = JSON.parse(readFileSync(new URL("../../harness/contracts.json", import.meta.url), "utf8"));
+  const result = evaluateGrowthControl({
+    run_date: "2026-08-15",
+    search_console: searchConsole("2026-08-15", { clicks: 0, impressions: 0 }, 16),
+    scorecard: null,
+    authority: { gsc_read: true, deploy: false },
+    provider: {
+      public_health_ok: true,
+      paid_flow_incident: false,
+      rolling_3d_start_date: "2026-08-12",
+      rolling_3d_end_date: "2026-08-14",
+      rolling_3d_spend_usd: null,
+      rolling_3d_settled_revenue_usd: null,
+      max_acceptable_cac_usd: null,
+    },
+  }, contracts.standing_authority);
+
+  assert.equal(result.authority_policy.authorized_grants.includes("deploy_frontend"), true);
+  assert.equal(result.primary_constraint, "traffic");
+  assert.equal(result.missing_authorities.includes("deploy"), true);
+  assert.deepEqual(result.action.missing_authority, ["deploy"]);
+  assert.equal(result.action.execution_scope, "local_only_until_authorized");
+});
+
+test("CLI preserves live deploy denial while applying the standing-authority contract", () => {
+  const completed = spawnSync(process.execPath, [CLI_PATH, "--input", "-"], {
+    encoding: "utf8",
+    input: JSON.stringify({
+      run_date: "2026-08-15",
+      search_console: searchConsole("2026-08-15", { clicks: 0, impressions: 0 }, 16),
+      scorecard: null,
+      authority: { gsc_read: true, deploy: false },
+      provider: {
+        public_health_ok: true,
+        paid_flow_incident: false,
+        rolling_3d_start_date: "2026-08-12",
+        rolling_3d_end_date: "2026-08-14",
+        rolling_3d_spend_usd: null,
+        rolling_3d_settled_revenue_usd: null,
+        max_acceptable_cac_usd: null,
+      },
+    }),
+  });
+
+  assert.equal(completed.status, 0, completed.stderr);
+  const result = JSON.parse(completed.stdout);
+  assert.equal(result.authority_policy.applied, true);
+  assert.equal(result.authority_policy.authorized_grants.includes("deploy_frontend"), true);
+  assert.deepEqual(result.action.missing_authority, ["deploy"]);
   assert.equal(result.action.execution_scope, "local_only_until_authorized");
 });
