@@ -2342,6 +2342,42 @@ test("sitewide schema graph keeps unique canonical ids with no dangling internal
   );
 });
 
+test("contact schema stays canonical and matches visible metadata", () => {
+  const relativePath = "contact/index.html";
+  const html = read(relativePath);
+  const canonical = uniqueLinkHref(html, "canonical", `${relativePath} canonical`);
+  const title = uniqueElementText(html, "title", `${relativePath} title`);
+  const description = uniqueMetaContent(html, "name", "description", `${relativePath} description`);
+  const language = englishDocumentLanguage(html, relativePath);
+  const contactPage = structuredItem(html, "ContactPage", relativePath);
+  const breadcrumb = structuredItem(html, "BreadcrumbList", relativePath);
+
+  assert.equal(canonical, `${origin}/contact/`);
+  assert.equal(contactPage["@id"], `${canonical}#webpage`);
+  assert.equal(contactPage.url, canonical);
+  assert.equal(contactPage.name, title);
+  assert.equal(contactPage.description, description);
+  assert.equal(contactPage.isPartOf?.["@id"], `${origin}/#website`);
+  assert.equal(contactPage.about?.["@id"], `${origin}/#organization`);
+  assert.equal(contactPage.breadcrumb?.["@id"], `${canonical}#breadcrumb`);
+  assert.equal(contactPage.inLanguage?.toLowerCase(), language);
+  assert.equal(breadcrumb["@id"], contactPage.breadcrumb["@id"]);
+  assert.deepEqual(breadcrumb.itemListElement, [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Your Love Element",
+      item: `${origin}/`,
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Contact",
+      item: canonical,
+    },
+  ]);
+});
+
 test("JSON-LD discovery fails closed on unquoted and encoded MIME types", () => {
   const payload = JSON.stringify({
     "@context": "https://schema.org",

@@ -1,12 +1,13 @@
 ---
 kind: backlog
 status: active
-last_reviewed: 2026-08-17
-review_after: 2026-08-18
+last_reviewed: 2026-08-19
+review_after: 2026-08-19
 ---
 # Active Backlog
 This is the only active task list. History files may contain old “next tasks”; those are not actionable unless copied here after revalidation.
 ## Sequential growth objective
+- [x] Prepare one isolated, reversible contact-schema release candidate from exact `origin/main`. Its intended scope is `contact/index.html`, the focused SEO regression, digest-bound manual evidence, and current memory only; it changes no rendered copy, navigation, JavaScript, paid flow, or active experiment. Next gate is exact candidate verification, then draft-only publication if live exact-repository access is available; merge and deployment remain separate gates.
 - [x] Restore the phased growth-control heartbeat to its required EARLY cadence: every 30 minutes while bootstrap/high-impact work remains, every four hours only after seven complete aggregate days and a 24-hour empty ready queue, and daily after Stage 1 completes and the first qualifying Stage 2 streak day. On 2026-08-14 the recovered exact-id update path changed only the existing `yle` rrule from four hours to 30 minutes because ready PR #111 resets the empty-queue gate; exact-file readback confirmed its full prompt, name, ACTIVE status, failed-runs-only notification policy, and original thread target stayed identical, with no duplicate automation. Continue requiring one non-repetitive verified result per run, early-stage strategy review every six runs, and the non-extendable hard review date.
 - [x] Enforce exact `your-love-element` isolation in the repository contract, Harness, runbook, and sole `yle` heartbeat; allowlist only this filesystem/Git root, Supabase project, GitHub repository, Cloudflare Worker/zone, and Resend domain/addresses while denying every sibling asset in the same accounts.
 - [x] Change the active Stage 1 objective to `30` consecutive final GSC `web` days for exact property `sc-domain:yourloveelement.com`, each strictly above `1,000` clicks (`>= 1,001`). Keep impressions diagnostic-only, use GSC's `America/Los_Angeles` daily boundary, leave the unspecified Stage 1 deadline `null`, and gate the original purchase objective behind Stage 1. The evaluator passes 20/20 contract, boundary, and transition tests; the Stage 1-to-2 bootstrap now explicitly requires `scorecard_read`, not the completed `gsc_read` gate, and the combined focused evaluator/fetcher/adapter suite passes 31/31. PR [#88](https://github.com/goodrambo/your-love-element/pull/88) merged as `d977ca6`; main Harness run `30939472162`, Pages run `30939470638`, and post-merge production health passed.
