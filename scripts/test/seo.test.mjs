@@ -885,7 +885,7 @@ test("sitemap documents stay within the compressed HTML crawl budget", () => {
     return relativePath;
   });
 
-  assert.equal(documentPaths.length, 7, "Every submitted search document must have a transfer budget");
+  assert.equal(documentPaths.length, 8, "Every submitted search document must have a transfer budget");
   for (const relativePath of documentPaths) {
     assertCompressedHtmlBudget(read(relativePath), relativePath, maximumBytes);
   }
@@ -900,7 +900,7 @@ test("sitemap documents keep first-party CSS and JavaScript within a transfer bu
   const maximumBytes = 32 * 1024;
   const entries = sitemapUrlEntries(read("sitemap.xml"), "production sitemap");
 
-  assert.equal(entries.length, 7, "Every submitted search document must have a resource budget");
+  assert.equal(entries.length, 8, "Every submitted search document must have a resource budget");
   for (const { loc } of entries) {
     const documentUrl = new URL(loc);
     assert.equal(documentUrl.origin, origin, `${loc} must use the production origin`);
@@ -1943,6 +1943,7 @@ test("core navigation identifies the current page exactly once", () => {
   const corePages = [
     ["index.html", "/"],
     ["five-elements-love-compatibility/index.html", "/five-elements-love-compatibility/"],
+    ["five-elements-relationship-questions/index.html", "/five-elements-relationship-questions/"],
     ["how-it-works/index.html", "/how-it-works/"],
   ];
 
@@ -1992,6 +1993,7 @@ test("core acquisition pages keep complete social preview metadata", () => {
   const corePages = [
     ["index.html", "website"],
     ["five-elements-love-compatibility/index.html", "article"],
+    ["five-elements-relationship-questions/index.html", "article"],
     ["how-it-works/index.html", "article"],
   ];
 
@@ -2097,7 +2099,7 @@ test("robots exposes one canonical sitemap discovery URL", () => {
 test("sitemap entries preserve one crawl target and bounded freshness metadata", () => {
   const entries = sitemapUrlEntries(read("sitemap.xml"), "production sitemap");
 
-  assert.equal(entries.length, 7, "production sitemap must expose all seven indexable pages");
+  assert.equal(entries.length, 8, "production sitemap must expose all eight indexable pages");
   assert.ok(entries.every((entry) => entry.loc.startsWith(`${origin}/`)));
   assert.throws(
     () => sitemapUrlEntries(
@@ -2150,7 +2152,7 @@ test("robots permits search and answer-engine crawlers to reach every sitemap pa
 
   assert.equal(
     assertSitemapPathsAllowed(read("robots.txt"), sitemap, discoveryCrawlers, "production robots.txt"),
-    28,
+    32,
   );
   assert.throws(
     () => assertSitemapPathsAllowed(
@@ -2196,6 +2198,7 @@ test("core acquisition freshness signals agree with sitemap", () => {
   const pages = [
     ["index.html", ["WebPage"]],
     ["five-elements-love-compatibility/index.html", ["WebPage", "Article"]],
+    ["five-elements-relationship-questions/index.html", ["WebPage", "Article"]],
     ["how-it-works/index.html", ["WebPage", "Article"]],
   ];
 
@@ -2288,7 +2291,7 @@ test("core schema graphs keep canonical entity references connected", () => {
   assert.equal(product.offers?.url, `${homepageCanonical}#preview`);
   assert.equal(faq["@id"], `${homepageCanonical}#faq`);
 
-  for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
+  for (const relativePath of ["five-elements-love-compatibility/index.html", "five-elements-relationship-questions/index.html", "how-it-works/index.html"]) {
     const html = read(relativePath);
     const canonical = firstMatch(
       html,
@@ -2312,6 +2315,7 @@ test("sitewide schema graph keeps unique canonical ids with no dangling internal
   const pages = [
     "index.html",
     "five-elements-love-compatibility/index.html",
+    "five-elements-relationship-questions/index.html",
     "how-it-works/index.html",
   ].map((relativePath) => [relativePath, jsonLdBlocks(read(relativePath))]);
   const result = auditSiteEntityGraph(pages, "Core acquisition schema graph");
@@ -2366,6 +2370,7 @@ test("structured-data site URLs stay on the canonical origin without crawl varia
   const payloads = [
     "index.html",
     "five-elements-love-compatibility/index.html",
+    "five-elements-relationship-questions/index.html",
     "how-it-works/index.html",
   ].flatMap((relativePath) => jsonLdBlocks(read(relativePath)));
 
@@ -2637,7 +2642,7 @@ test("informational cookie UI does not claim to offer preferences", () => {
 });
 
 test("editorial pages are answer-first, transparent, and structured", () => {
-  for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
+  for (const relativePath of ["five-elements-love-compatibility/index.html", "five-elements-relationship-questions/index.html", "how-it-works/index.html"]) {
     const html = read(relativePath);
     const types = graphTypes(html);
 
@@ -2652,7 +2657,7 @@ test("editorial pages are answer-first, transparent, and structured", () => {
 });
 
 test("editorial Article discovery signals agree with visible pages", () => {
-  for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
+  for (const relativePath of ["five-elements-love-compatibility/index.html", "five-elements-relationship-questions/index.html", "how-it-works/index.html"]) {
     const html = read(relativePath);
     const page = structuredItem(html, "WebPage", relativePath);
     const article = structuredItem(html, "Article", relativePath);
@@ -2673,7 +2678,7 @@ test("editorial Article discovery signals agree with visible pages", () => {
 });
 
 test("editorial freshness dates form valid non-regressing timelines", () => {
-  for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
+  for (const relativePath of ["five-elements-love-compatibility/index.html", "five-elements-relationship-questions/index.html", "how-it-works/index.html"]) {
     const article = structuredItem(read(relativePath), "Article", relativePath);
     const published = validIsoCalendarDay(article.datePublished, `${relativePath} Article datePublished`);
     const modified = validIsoCalendarDay(article.dateModified, `${relativePath} Article dateModified`);
@@ -2690,7 +2695,7 @@ test("editorial freshness dates form valid non-regressing timelines", () => {
 test("editorial review ownership and dates agree with Article schema", () => {
   const expectedOrganizationId = `${origin}/#organization`;
 
-  for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
+  for (const relativePath of ["five-elements-love-compatibility/index.html", "five-elements-relationship-questions/index.html", "how-it-works/index.html"]) {
     const html = read(relativePath);
     const page = structuredItem(html, "WebPage", relativePath);
     const article = structuredItem(html, "Article", relativePath);
@@ -2720,7 +2725,7 @@ test("editorial review ownership and dates agree with Article schema", () => {
 });
 
 test("editorial breadcrumbs form one canonical two-level hierarchy", () => {
-  for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
+  for (const relativePath of ["five-elements-love-compatibility/index.html", "five-elements-relationship-questions/index.html", "how-it-works/index.html"]) {
     const html = read(relativePath);
     const canonical = firstMatch(
       html,
@@ -2745,7 +2750,7 @@ test("editorial breadcrumbs form one canonical two-level hierarchy", () => {
 });
 
 test("editorial FAQ schema exactly matches the visible questions and answers", () => {
-  for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
+  for (const relativePath of ["five-elements-love-compatibility/index.html", "five-elements-relationship-questions/index.html", "how-it-works/index.html"]) {
     const html = read(relativePath);
     const visible = visibleFaqEntries(html, relativePath);
     const structured = structuredFaqEntries(html, relativePath);
@@ -2797,6 +2802,15 @@ test("compatibility guide covers every regulating pair with one repair prompt", 
     assert.equal(text.split(`${pair}:`).length - 1, 1, `${pair} must appear exactly once in the compatibility section`);
   }
   assert.equal((text.match(/Repair prompt:/g) || []).length, 5, "each regulating pair must include one repair prompt");
+});
+
+test("relationship question guide keeps five complete five-question sets", () => {
+  const html = read("five-elements-relationship-questions/index.html");
+  const questionLists = [...html.matchAll(/<ol>([\s\S]*?)<\/ol>/gi)];
+  const questionCounts = questionLists.map(([, list]) => (list.match(/<li>/gi) || []).length);
+
+  assert.equal(questionLists.length, 5, "relationship question guide must keep one ordered list per element");
+  assert.deepEqual(questionCounts, [5, 5, 5, 5, 5], "each element must keep five usable relationship questions");
 });
 
 test("methodology states the AI and traditional-chart boundaries", () => {
