@@ -2672,6 +2672,23 @@ test("editorial Article discovery signals agree with visible pages", () => {
   }
 });
 
+test("methodology Article topics stay grounded in its visible quiz and reflection answers", () => {
+  const relativePath = "how-it-works/index.html";
+  const html = read(relativePath);
+  const article = structuredItem(html, "Article", relativePath);
+  const topics = Array.isArray(article.about) ? article.about : [];
+
+  assert.deepEqual(
+    topics.map((topic) => [topic?.["@type"], topic?.name]),
+    [
+      ["Thing", "Love element quiz"],
+      ["Thing", "Relationship self-reflection"],
+    ],
+  );
+  assert.match(html, /<h2\b[^>]*>What is a love element quiz\?<\/h2>/i);
+  assert.match(html, /Use this quiz for relationship reflection/i);
+});
+
 test("editorial freshness dates form valid non-regressing timelines", () => {
   for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
     const article = structuredItem(read(relativePath), "Article", relativePath);
