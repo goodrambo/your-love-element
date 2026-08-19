@@ -2,9 +2,9 @@
   "schema_version": 1,
   "frontend_smoke": {
     "status": "pass",
-    "verified_at": "2026-08-19",
-    "source_digest": "4519a97d0fa9841852faa72edbb27388dee6993e71a3ac198b37649ec13d3582",
-    "evidence": "Digest-bound localhost smoke covers the exact eight-page PR #122 candidate plus one responsive homepage hero source. The new 836x471 WebP is 26,032 bytes versus 112,840 bytes for the 1672x941 fallback, a 76.9% reduction. Fresh headless Chrome origins prove that a 1280x900 first load requests only the full hero and an exact 390x844 first load requests only the 836w candidate; the responsive preload and both visible uses share the same source set, preventing the below-fold duplicate from restoring the large mobile transfer. The unchanged eight-route Browser baseline retains one H1, exact production canonicals, loaded Fraunces 700 plus Manrope 400/700/800, zero horizontal overflow, blank production API config, and no console entries. Focused SEO passes 78/78 and git diff --check passes. Visible copy, schema, CSS, JavaScript, navigation, tracking, API, checkout, payment, webhook, report, email, refund-policy behavior, customer messaging, paid media, and spend are unchanged. This digest invalidates the evidence on any later configured-page or frontend source change."
+    "verified_at": "2026-08-20",
+    "source_digest": "e6f8f9113e80ddd6f5884be765df57e6e1d6bb4645a838ae7f9d13c7679ed112",
+    "evidence": "Digest-bound localhost smoke covers the exact eight-page responsive-hero candidate plus the isolated below-fold Earth report source. The existing 836x471 hero WebP remains 26,032 bytes versus its 112,840-byte fallback. The new 720x405 Earth report WebP is 34,470 bytes versus its 314,296-byte JPEG fallback, an 89.0% reduction. In-app Browser at 1280x720 and DPR 2 selects the original Earth JPEG after it enters view, retains one H1, the exact production canonical, and zero horizontal overflow. Fresh exact 390x844 localhost Chrome selects only the 720w Earth WebP, reports naturalWidth 720 and decodedBodySize 34,470, and has zero horizontal overflow. The source retains the same visible image, aspect ratio, alt, lazy loading, and async decoding. Focused SEO passes and git diff --check passes. Copy, schema, CSS, JavaScript, navigation, tracking, API, checkout, payment, webhook, report, email, refund-policy behavior, customer messaging, paid media, and spend are unchanged. This digest invalidates the evidence on any later configured-page or frontend source change."
   },
   "paid_flow_e2e": {
     "status": "waived",
