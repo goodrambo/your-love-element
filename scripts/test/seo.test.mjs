@@ -2672,6 +2672,40 @@ test("editorial Article discovery signals agree with visible pages", () => {
   }
 });
 
+test("compatibility Article grounds its Wuxing topic in the visible scholarly source", () => {
+  const relativePath = "five-elements-love-compatibility/index.html";
+  const html = read(relativePath);
+  const article = structuredItem(html, "Article", relativePath);
+  const topics = Array.isArray(article.about) ? article.about : [];
+  const wuxing = topics.find((topic) => topic?.name === "Wuxing");
+
+  assert.equal(wuxing?.["@type"], "Thing");
+  assert.equal(wuxing?.sameAs, "https://iep.utm.edu/?p=12533");
+  assert.equal(article.citation, wuxing.sameAs, "Article citation and Wuxing identity source must agree");
+  assert.match(
+    html,
+    /<a\b[^>]*href=["']https:\/\/iep\.utm\.edu\/\?p=12533["'][^>]*>\s*<strong>Internet Encyclopedia of Philosophy overview of Wuxing<\/strong>\s*<\/a>/i,
+    "the machine-readable Wuxing source must remain visible to readers",
+  );
+});
+
+test("methodology Article topics stay grounded in its visible quiz and reflection answers", () => {
+  const relativePath = "how-it-works/index.html";
+  const html = read(relativePath);
+  const article = structuredItem(html, "Article", relativePath);
+  const topics = Array.isArray(article.about) ? article.about : [];
+
+  assert.deepEqual(
+    topics.map((topic) => [topic?.["@type"], topic?.name]),
+    [
+      ["Thing", "Love element determination"],
+      ["Thing", "Relationship reflection"],
+    ],
+  );
+  assert.match(html, /<h2\b[^>]*>How is a love element determined\?<\/h2>/i);
+  assert.match(html, /The result is a reflection of the answers given in that session/i);
+});
+
 test("editorial freshness dates form valid non-regressing timelines", () => {
   for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
     const article = structuredItem(read(relativePath), "Article", relativePath);
