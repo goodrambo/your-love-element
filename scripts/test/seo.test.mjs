@@ -2627,8 +2627,10 @@ test("homepage serves an optimized, layout-stable hero image", () => {
 
 test("below-fold report artwork is lazy and layout-stable", () => {
   const html = read("index.html");
+  const mobileAsset = resolve(root, "assets/elements/earth-banner-720.webp");
 
-  assert.match(html, /<img[^>]+src=["']assets\/elements\/earth-banner\.jpg["'][^>]+width=["']1440["'][^>]+height=["']810["'][^>]+loading=["']lazy["'][^>]+decoding=["']async["'][^>]+alt=["']Earth element relationship report banner sample["']/i);
+  assert.ok(statSync(mobileAsset).size < 50_000, "Responsive report sample must stay below 50 KB");
+  assert.match(html, /<picture>\s*<source[^>]+media=["']\(max-width: 760px\)["'][^>]+srcset=["']assets\/elements\/earth-banner-720\.webp["'][^>]+type=["']image\/webp["'][^>]*>\s*<img[^>]+src=["']assets\/elements\/earth-banner\.jpg["'][^>]+width=["']1440["'][^>]+height=["']810["'][^>]+loading=["']lazy["'][^>]+decoding=["']async["'][^>]+alt=["']Earth element relationship report banner sample["'][^>]*>\s*<\/picture>/i);
 });
 
 test("informational cookie UI does not claim to offer preferences", () => {
