@@ -2609,13 +2609,15 @@ test("homepage serves an optimized, layout-stable hero image", () => {
   const html = read("index.html");
   const sitemap = read("sitemap.xml");
   const optimizedAsset = resolve(root, "assets/hero-soulmate-report.webp");
+  const responsiveAsset = resolve(root, "assets/hero-soulmate-report-836.webp");
   const structuredData = JSON.stringify(jsonLdBlocks(html));
-  const heroPreloads = html.match(/<link[^>]+rel=["']preload["'][^>]+as=["']image["'][^>]+href=["']assets\/hero-soulmate-report\.webp["'][^>]+type=["']image\/webp["'][^>]+fetchpriority=["']high["'][^>]*>/gi) ?? [];
+  const responsiveHeroPreloads = html.match(/<link[^>]+rel=["']preload["'][^>]+as=["']image["'][^>]+href=["']assets\/hero-soulmate-report\.webp["'][^>]+imagesrcset=["']assets\/hero-soulmate-report-836\.webp 836w, assets\/hero-soulmate-report\.webp 1672w["'][^>]+imagesizes=["']100vw["'][^>]+type=["']image\/webp["'][^>]+fetchpriority=["']high["'][^>]*>/gi) ?? [];
 
   assert.ok(statSync(optimizedAsset).size < 200_000, "Optimized hero image must stay below 200 KB");
-  assert.equal(heroPreloads.length, 1, "Homepage must preload the hero WebP exactly once");
-  assert.match(html, /<img[^>]+class=["']hero-image["'][^>]+src=["']assets\/hero-soulmate-report\.webp["'][^>]+width=["']1672["'][^>]+height=["']941["'][^>]+fetchpriority=["']high["'][^>]+decoding=["']async["']/i);
-  assert.match(html, /<img[^>]+src=["']assets\/hero-soulmate-report\.webp["'][^>]+width=["']1672["'][^>]+height=["']941["'][^>]+loading=["']lazy["'][^>]+decoding=["']async["'][^>]+alt=["']A sample future partner portrait["']/i);
+  assert.ok(statSync(responsiveAsset).size < 40_000, "Responsive hero image must stay below 40 KB");
+  assert.equal(responsiveHeroPreloads.length, 1, "Homepage must declare one responsive hero preload");
+  assert.match(html, /<img[^>]+class=["']hero-image["'][^>]+src=["']assets\/hero-soulmate-report\.webp["'][^>]+srcset=["']assets\/hero-soulmate-report-836\.webp 836w, assets\/hero-soulmate-report\.webp 1672w["'][^>]+sizes=["']100vw["'][^>]+width=["']1672["'][^>]+height=["']941["'][^>]+fetchpriority=["']high["'][^>]+decoding=["']async["']/i);
+  assert.match(html, /<img[^>]+src=["']assets\/hero-soulmate-report\.webp["'][^>]+srcset=["']assets\/hero-soulmate-report-836\.webp 836w, assets\/hero-soulmate-report\.webp 1672w["'][^>]+sizes=["']100vw["'][^>]+width=["']1672["'][^>]+height=["']941["'][^>]+loading=["']lazy["'][^>]+decoding=["']async["'][^>]+alt=["']A sample future partner portrait["']/i);
   assert.doesNotMatch(html, /src=["']assets\/hero-soulmate-report\.png["']/i);
   assert.match(structuredData, /https:\/\/yourloveelement\.com\/assets\/hero-soulmate-report\.webp/);
   assert.doesNotMatch(structuredData, /hero-soulmate-report\.png/);
