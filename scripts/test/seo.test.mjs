@@ -2672,6 +2672,37 @@ test("editorial Article discovery signals agree with visible pages", () => {
   }
 });
 
+test("compatibility Article exposes five visible element sections as canonical parts", () => {
+  const relativePath = "five-elements-love-compatibility/index.html";
+  const html = read(relativePath);
+  const article = structuredItem(html, "Article", relativePath);
+  const expectedSections = [
+    ["wood", "Wood love: growth, direction, and becoming"],
+    ["fire", "Fire love: expression, warmth, and chemistry"],
+    ["earth", "Earth love: stability, care, and reliability"],
+    ["metal", "Metal love: clarity, standards, and devotion"],
+    ["water", "Water love: depth, intuition, and emotional nuance"],
+  ];
+
+  assert.deepEqual(
+    article.hasPart?.map((part) => [part?.["@type"], part?.["@id"], part?.name, part?.url]),
+    expectedSections.map(([fragment, name]) => [
+      "WebPageElement",
+      `${origin}/five-elements-love-compatibility/#${fragment}`,
+      name,
+      `${origin}/five-elements-love-compatibility/#${fragment}`,
+    ]),
+  );
+
+  for (const [fragment, name] of expectedSections) {
+    assert.match(
+      html,
+      new RegExp(`<section\\b[^>]*id=["']${fragment}["'][^>]*aria-labelledby=["']${fragment}-title["'][^>]*>[\\s\\S]*?<h2\\b[^>]*id=["']${fragment}-title["'][^>]*>${name}<\\/h2>`, "i"),
+      `${fragment} structured part must retain its visible section heading`,
+    );
+  }
+});
+
 test("methodology Article topics stay grounded in its visible quiz and reflection answers", () => {
   const relativePath = "how-it-works/index.html";
   const html = read(relativePath);
