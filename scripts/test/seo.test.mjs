@@ -2284,8 +2284,12 @@ test("core schema graphs keep canonical entity references connected", () => {
   assert.equal(webpage.url, homepageCanonical);
   assert.equal(webpage.isPartOf?.["@id"], website["@id"]);
   assert.equal(product["@id"], `${homepageCanonical}#full-report`);
+  assert.equal(webpage.mainEntity?.["@id"], product["@id"]);
+  assert.equal(product.mainEntityOfPage?.["@id"], webpage["@id"]);
   assert.equal(product.brand?.["@id"], brand["@id"]);
   assert.equal(product.offers?.url, `${homepageCanonical}#preview`);
+  assert.equal(product.url, product.offers?.url);
+  assert.equal(product.offers?.seller?.["@id"], organization["@id"]);
   assert.equal(faq["@id"], `${homepageCanonical}#faq`);
 
   for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
