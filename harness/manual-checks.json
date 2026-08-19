@@ -2,9 +2,9 @@
   "schema_version": 1,
   "frontend_smoke": {
     "status": "pass",
-    "verified_at": "2026-08-13",
-    "source_digest": "45fb7da22273c781dc92a263eb68c679ed3821e354d310f33e52d584292467c2",
-    "evidence": "In-app Browser offline smoke of the homepage at desktop 1280x720 and mobile 390x844. Both layouts parsed exactly one canonical Brand node, resolved Product.brand to https://yourloveelement.com/#brand, kept the production API base disabled, and had no warning/error console entries. Desktop client/scroll widths were 1280/1280 and mobile client/scroll widths were 390/390, so neither layout had horizontal overflow. The focused SEO suite passed 66/66, including the Brand/Organization name, URL, and logo parity plus homepage WebPage/sitemap freshness. No visible copy, CSS, JavaScript, tracking, API, checkout, paid flow, report, email, refund-policy, return-policy, or shipping behavior changed. This digest invalidates the evidence on later frontend changes."
+    "verified_at": "2026-08-19",
+    "source_digest": "e3533513dbd9a9d30a145885c5071c12212b6449f426c500d18be2b903d16920",
+    "evidence": "Digest-bound offline Browser evidence for the isolated exact-origin contact-schema candidate. The only frontend source change is one non-rendered application/ld+json graph on /contact/: a canonical ContactPage and two-item BreadcrumbList linked to the existing WebSite and Organization IDs. A fresh 1280x720 localhost read parsed both nodes, found one H1, the exact production canonical, a blank local API base, zero horizontal overflow, and zero browser logs. Visible copy, styles, JavaScript, navigation, tracking, API, checkout, payment, webhook, report, email, refund-policy, and the active experiment remain unchanged; same-day true 390x844 evidence remains applicable because rendered source is byte-unchanged. The isolated focused SEO suite passes 79/79, and any later configured-page or frontend-source change invalidates this evidence."
   },
   "paid_flow_e2e": {
     "status": "waived",
