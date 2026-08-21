@@ -2745,7 +2745,7 @@ test("editorial breadcrumbs form one canonical two-level hierarchy", () => {
 });
 
 test("editorial FAQ schema exactly matches the visible questions and answers", () => {
-  for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
+  for (const relativePath of ["five-elements-love-compatibility/index.html", "five-elements-compatibility-chart/index.html", "how-it-works/index.html"]) {
     const html = read(relativePath);
     const visible = visibleFaqEntries(html, relativePath);
     const structured = structuredFaqEntries(html, relativePath);
@@ -2822,6 +2822,19 @@ test("compatibility chart covers every ordered Five Element pairing", () => {
     visiblePairs.map((pair) => `${origin}/five-elements-compatibility-chart/#${pair.fragment}`),
     "chart ItemList URLs must resolve to the visible pairing fragments",
   );
+  assert.match(html, /How do I find my Five Element for this compatibility chart\?/i);
+  assert.match(html, /It uses your answers about growth, expression, stability, boundaries, and emotional depth—not your birth date, zodiac sign, or a traditional chart/i);
+  assert.match(html, /Is this a Chinese zodiac, BaZi, or feng shui compatibility chart\?/i);
+  assert.match(html, /does not use Chinese zodiac animals, BaZi birth charts, feng shui directions, or traditional diagnostic rules/i);
+});
+
+test("homepage exposes one descriptive crawlable link to the compatibility chart", () => {
+  const html = read("index.html");
+  const links = [...html.matchAll(/<a\s+([^>]*href=["']\/five-elements-compatibility-chart\/["'][^>]*)>([\s\S]*?)<\/a>/gi)];
+
+  assert.equal(links.length, 1, "homepage must expose exactly one direct chart route");
+  assert.match(plainText(links[0][2]), /Five Elements compatibility chart for all 25 pairings/i);
+  assert.doesNotMatch(links[0][1], /\brel=["'][^"']*nofollow/i, "homepage chart link must remain crawlable");
 });
 
 test("methodology states the AI and traditional-chart boundaries", () => {
