@@ -2,9 +2,9 @@
   "schema_version": 1,
   "frontend_smoke": {
     "status": "pass",
-    "verified_at": "2026-08-13",
-    "source_digest": "45fb7da22273c781dc92a263eb68c679ed3821e354d310f33e52d584292467c2",
-    "evidence": "In-app Browser offline smoke of the homepage at desktop 1280x720 and mobile 390x844. Both layouts parsed exactly one canonical Brand node, resolved Product.brand to https://yourloveelement.com/#brand, kept the production API base disabled, and had no warning/error console entries. Desktop client/scroll widths were 1280/1280 and mobile client/scroll widths were 390/390, so neither layout had horizontal overflow. The focused SEO suite passed 66/66, including the Brand/Organization name, URL, and logo parity plus homepage WebPage/sitemap freshness. No visible copy, CSS, JavaScript, tracking, API, checkout, paid flow, report, email, refund-policy, return-policy, or shipping behavior changed. This digest invalidates the evidence on later frontend changes."
+    "verified_at": "2026-08-19",
+    "source_digest": "50d29d382a29030cd7455c56e34c939b5608f05ea91e991e49d08a8b5dd6e4f3",
+    "evidence": "In-app Browser offline smoke of the standalone Five Elements compatibility chart candidate. At desktop width 1280, the route rendered one H1, the exact production canonical, 25 visible pair cells, and 25 ItemList entries; document client/scroll widths were 1280/1280 and the table wrapper was 918/918. A static 390x844 QA frame rendered the same route complete with 25 visible pair cells and 25 ItemList entries; body and document client/scroll widths were 390/390. Both checks kept the production API base disabled. The candidate adds two contextual inbound links, while the focused SEO suite passes 79/79 and transfer/resource budgets pass. No JavaScript, tracking, API, checkout, payment, webhook, report, email, refund-policy, legal-claim, Worker, or migration behavior changed. This digest invalidates the evidence on later frontend changes."
   },
   "paid_flow_e2e": {
     "status": "waived",
