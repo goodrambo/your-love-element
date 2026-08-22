@@ -2806,9 +2806,21 @@ test("compatibility chart covers every ordered Five Element pairing", () => {
   const expectedPairs = elements.flatMap((left) => elements.map((right) => `${left}-${right}`));
   const visiblePairs = [...html.matchAll(/<td\b[^>]*\bdata-pair=["']([^"']+)["'][^>]*\bid=["']([^"']+)["'][^>]*>/gi)]
     .map((match) => ({ identifier: match[1], fragment: match[2] }));
+  const pairingIndex = firstMatch(
+    html,
+    /<nav\b[^>]*\bid=["']pairing-index["'][^>]*>([\s\S]*?)<\/nav>/i,
+    "compatibility pairing index",
+  );
+  const pairingIndexTargets = [...pairingIndex.matchAll(/<a\s+href=["']#([^"']+)["'][^>]*>/gi)]
+    .map((match) => match[1]);
 
   assert.deepEqual(visiblePairs.map((pair) => pair.identifier), expectedPairs, "chart must cover all 25 ordered pairings exactly once");
   assert.equal(new Set(visiblePairs.map((pair) => pair.fragment)).size, 25, "each chart pairing must have one unique fragment");
+  assert.deepEqual(
+    pairingIndexTargets,
+    expectedPairs.map((pair) => pair.toLowerCase()),
+    "visible pairing index must link every ordered pairing in row-major order",
+  );
 
   const itemList = structuredItem(html, "ItemList", relativePath);
   assert.equal(itemList.numberOfItems, 25, "chart ItemList must declare 25 pairings");
