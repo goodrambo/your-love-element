@@ -2,9 +2,9 @@
   "schema_version": 1,
   "frontend_smoke": {
     "status": "pass",
-    "verified_at": "2026-08-13",
-    "source_digest": "45fb7da22273c781dc92a263eb68c679ed3821e354d310f33e52d584292467c2",
-    "evidence": "In-app Browser offline smoke of the homepage at desktop 1280x720 and mobile 390x844. Both layouts parsed exactly one canonical Brand node, resolved Product.brand to https://yourloveelement.com/#brand, kept the production API base disabled, and had no warning/error console entries. Desktop client/scroll widths were 1280/1280 and mobile client/scroll widths were 390/390, so neither layout had horizontal overflow. The focused SEO suite passed 66/66, including the Brand/Organization name, URL, and logo parity plus homepage WebPage/sitemap freshness. No visible copy, CSS, JavaScript, tracking, API, checkout, paid flow, report, email, refund-policy, return-policy, or shipping behavior changed. This digest invalidates the evidence on later frontend changes."
+    "verified_at": "2026-08-22",
+    "source_digest": "5b216d73f89aa7ef7a8169ecc22097a5772d1eb108daa68b2e07ab237a23a134",
+    "evidence": "Digest-bound offline Browser smoke covers exact draft PR #121 head f511971ff68f3d00e9160ca0c9a648800bee0a8d plus only the answer-first grouping of its existing 25 pairing-index anchors into five visible first-element groups. In-app Browser at 1280x720 verifies one H1, the exact production canonical, five group labels, 25 unique index links resolving to 25 chart cells, actual Wood-and-Fire target activation, zero document overflow, blank local API configuration, and the full 918px chart without scrolling. The exact 390x844 viewport verifies the same H1/canonical/groups and 25/25 unique resolved targets, zero document overflow, local-preview/API-disabled state, and the 760px chart contained in a 333px horizontal scroll region. Browser warnings/errors are zero and the exact-head SEO suite passes 80/80. Only the pairing-index markup and this digest-bound evidence change; CSS, JavaScript, tracking, API, checkout, payment, webhook, report, email, refund-policy, legal-claim, Worker, migration, customer messaging, paid media, and spend are unchanged. The exact-head paid-flow digest remains 37c32fb28ebf007b901794dad0cabbfc4d5f1acecc0c115ce3e01d25d409dcb9. This digest invalidates the evidence on any later configured-page or frontend source change."
   },
   "paid_flow_e2e": {
     "status": "waived",

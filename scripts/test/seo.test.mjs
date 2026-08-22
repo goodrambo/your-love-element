@@ -885,7 +885,7 @@ test("sitemap documents stay within the compressed HTML crawl budget", () => {
     return relativePath;
   });
 
-  assert.equal(documentPaths.length, 7, "Every submitted search document must have a transfer budget");
+  assert.equal(documentPaths.length, 8, "Every submitted search document must have a transfer budget");
   for (const relativePath of documentPaths) {
     assertCompressedHtmlBudget(read(relativePath), relativePath, maximumBytes);
   }
@@ -900,7 +900,7 @@ test("sitemap documents keep first-party CSS and JavaScript within a transfer bu
   const maximumBytes = 32 * 1024;
   const entries = sitemapUrlEntries(read("sitemap.xml"), "production sitemap");
 
-  assert.equal(entries.length, 7, "Every submitted search document must have a resource budget");
+  assert.equal(entries.length, 8, "Every submitted search document must have a resource budget");
   for (const { loc } of entries) {
     const documentUrl = new URL(loc);
     assert.equal(documentUrl.origin, origin, `${loc} must use the production origin`);
@@ -2097,7 +2097,7 @@ test("robots exposes one canonical sitemap discovery URL", () => {
 test("sitemap entries preserve one crawl target and bounded freshness metadata", () => {
   const entries = sitemapUrlEntries(read("sitemap.xml"), "production sitemap");
 
-  assert.equal(entries.length, 7, "production sitemap must expose all seven indexable pages");
+  assert.equal(entries.length, 8, "production sitemap must expose all eight indexable pages");
   assert.ok(entries.every((entry) => entry.loc.startsWith(`${origin}/`)));
   assert.throws(
     () => sitemapUrlEntries(
@@ -2150,7 +2150,7 @@ test("robots permits search and answer-engine crawlers to reach every sitemap pa
 
   assert.equal(
     assertSitemapPathsAllowed(read("robots.txt"), sitemap, discoveryCrawlers, "production robots.txt"),
-    28,
+    32,
   );
   assert.throws(
     () => assertSitemapPathsAllowed(
@@ -2745,7 +2745,7 @@ test("editorial breadcrumbs form one canonical two-level hierarchy", () => {
 });
 
 test("editorial FAQ schema exactly matches the visible questions and answers", () => {
-  for (const relativePath of ["five-elements-love-compatibility/index.html", "how-it-works/index.html"]) {
+  for (const relativePath of ["five-elements-love-compatibility/index.html", "five-elements-compatibility-chart/index.html", "how-it-works/index.html"]) {
     const html = read(relativePath);
     const visible = visibleFaqEntries(html, relativePath);
     const structured = structuredFaqEntries(html, relativePath);
@@ -2797,6 +2797,56 @@ test("compatibility guide covers every regulating pair with one repair prompt", 
     assert.equal(text.split(`${pair}:`).length - 1, 1, `${pair} must appear exactly once in the compatibility section`);
   }
   assert.equal((text.match(/Repair prompt:/g) || []).length, 5, "each regulating pair must include one repair prompt");
+});
+
+test("compatibility chart covers every ordered Five Element pairing", () => {
+  const relativePath = "five-elements-compatibility-chart/index.html";
+  const html = read(relativePath);
+  const elements = ["Wood", "Fire", "Earth", "Metal", "Water"];
+  const expectedPairs = elements.flatMap((left) => elements.map((right) => `${left}-${right}`));
+  const visiblePairs = [...html.matchAll(/<td\b[^>]*\bdata-pair=["']([^"']+)["'][^>]*\bid=["']([^"']+)["'][^>]*>/gi)]
+    .map((match) => ({ identifier: match[1], fragment: match[2] }));
+  const pairingIndex = firstMatch(
+    html,
+    /<nav\b[^>]*\bid=["']pairing-index["'][^>]*>([\s\S]*?)<\/nav>/i,
+    "compatibility pairing index",
+  );
+  const pairingIndexTargets = [...pairingIndex.matchAll(/<a\s+href=["']#([^"']+)["'][^>]*>/gi)]
+    .map((match) => match[1]);
+
+  assert.deepEqual(visiblePairs.map((pair) => pair.identifier), expectedPairs, "chart must cover all 25 ordered pairings exactly once");
+  assert.equal(new Set(visiblePairs.map((pair) => pair.fragment)).size, 25, "each chart pairing must have one unique fragment");
+  assert.deepEqual(
+    pairingIndexTargets,
+    expectedPairs.map((pair) => pair.toLowerCase()),
+    "visible pairing index must link every ordered pairing in row-major order",
+  );
+
+  const itemList = structuredItem(html, "ItemList", relativePath);
+  assert.equal(itemList.numberOfItems, 25, "chart ItemList must declare 25 pairings");
+  assert.deepEqual(
+    itemList.itemListElement.map((item) => item.identifier),
+    expectedPairs,
+    "chart ItemList must preserve the visible ordered pairing inventory",
+  );
+  assert.deepEqual(
+    itemList.itemListElement.map((item) => item.url),
+    visiblePairs.map((pair) => `${origin}/five-elements-compatibility-chart/#${pair.fragment}`),
+    "chart ItemList URLs must resolve to the visible pairing fragments",
+  );
+  assert.match(html, /How do I find my Five Element for this compatibility chart\?/i);
+  assert.match(html, /It uses your answers about growth, expression, stability, boundaries, and emotional depth—not your birth date, zodiac sign, or a traditional chart/i);
+  assert.match(html, /Is this a Chinese zodiac, BaZi, or feng shui compatibility chart\?/i);
+  assert.match(html, /does not use Chinese zodiac animals, BaZi birth charts, feng shui directions, or traditional diagnostic rules/i);
+});
+
+test("homepage exposes one descriptive crawlable link to the compatibility chart", () => {
+  const html = read("index.html");
+  const links = [...html.matchAll(/<a\s+([^>]*href=["']\/five-elements-compatibility-chart\/["'][^>]*)>([\s\S]*?)<\/a>/gi)];
+
+  assert.equal(links.length, 1, "homepage must expose exactly one direct chart route");
+  assert.match(plainText(links[0][2]), /Five Elements compatibility chart for all 25 pairings/i);
+  assert.doesNotMatch(links[0][1], /\brel=["'][^"']*nofollow/i, "homepage chart link must remain crawlable");
 });
 
 test("methodology states the AI and traditional-chart boundaries", () => {
