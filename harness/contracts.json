@@ -114,12 +114,14 @@
     "assets/tracking-config.js",
     "assets/meta-pixel-base.js",
     "worker/src/index.js",
+    "scripts/fetch-gsc-performance.mjs",
     "scripts/fetch-growth-scorecard.mjs",
     "scripts/growth-control.mjs",
     "scripts/growth-scorecard-adapter.mjs"
   ],
   "javascript_tests": [
     "worker/test/growth-metrics.test.mjs",
+    "scripts/test/fetch-gsc-performance.test.mjs",
     "scripts/test/fetch-growth-scorecard.test.mjs",
     "scripts/test/growth-scorecard-adapter.test.mjs",
     "scripts/test/growth-control.test.mjs",
