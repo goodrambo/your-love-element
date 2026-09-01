@@ -166,6 +166,12 @@ Review strategy once per 6 early-stage runs, once per 7 mid-stage runs, and once
 
 Use `scripts/growth-control.mjs` after the exact-property GSC aggregate, protected scorecard response when required, and any authorized provider aggregates have been collected. The evaluator does not fetch data or read credentials. It accepts aggregate JSON only, rejects customer/session/order/reading/answer/secret-shaped keys, and emits one active stage, one primary constraint, and one pre-registered action contract.
 
+When an exact-property Search Console access token is injected into the live runtime, fetch final property-level `web` Performance through Google's documented `https://www.googleapis.com/webmasters/v3/sites/{siteUrl}/searchAnalytics/query` endpoint with the fixed `sc-domain:yourloveelement.com` site URL. Use a token containing only the read-only `https://www.googleapis.com/auth/webmasters.readonly` scope. The fetcher does not list properties, accepts no caller-supplied property, requests only the `date` dimension with `dataState: final` and `aggregationType: byProperty`, strips CTR/position, fails once on `401`, `403`, or `404`, and emits only evaluator-compatible clicks/impressions aggregates. Search Console documents that date-dimension days without data are omitted from the response, so the fetcher materializes those omitted dates as zero-click/zero-impression final days; it never fills an incomplete or preliminary day because `dataState: final` and an end date before `fetched_on` are mandatory. Keep the token in `GSC_ACCESS_TOKEN`, pass explicit America/Los_Angeles dates, and redirect output only under ignored `artifacts/growth-control/`.
+
+```bash
+node scripts/fetch-gsc-performance.mjs --start-date YYYY-MM-DD --end-date YYYY-MM-DD --fetched-on YYYY-MM-DD
+```
+
 When `JOB_RUNNER_SECRET` is injected into the live runtime, fetch the latest closed-day scorecard through the exact allowlisted Worker origin. The fetcher requires an explicit end date, never accepts a caller-supplied origin, fails once on `401` or `404`, requires private/no-store and non-CORS response headers, rejects sensitive or unknown fields, and writes only aggregate JSON to stdout. Keep redirected output under ignored `artifacts/growth-control/`, then place that aggregate into the separate growth-control input and run the evaluator CLI below.
 
 ```bash
