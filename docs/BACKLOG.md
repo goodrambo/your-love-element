@@ -1,12 +1,13 @@
 ---
 kind: backlog
 status: active
-last_reviewed: 2026-08-18
-review_after: 2026-08-18
+last_reviewed: 2026-10-16
+review_after: 2026-10-17
 ---
 # Active Backlog
 This is the only active task list. History files may contain old “next tasks”; those are not actionable unless copied here after revalidation.
 ## Sequential growth objective
+- [ ] Current priority as of 2026-10-16: finish the user-authorized exact PR #114 SEO release after fresh desktop/mobile smoke, unchanged paid-flow scope and exact-head CI; verify Pages serves the merged revision and record the real exposure date. Previous stop records for this candidate are superseded by the user's direct execution request. Keep six alternatives parked and one primary experiment; do not start a second content/channel experiment. Final GSC through Oct13 remains streak 0/30 and clicks 1d/7d/30d 0/0/1. Stage 1 deadline is null; Oct15 hard review was missed and Stage 2 has not started. Keep MID every four hours; after verified replacement exposure compare two complete adjacent seven-day final-click windows, stop on breakage and replace on no improvement. Actual purchases/spend/revenue, causal lift and ETA are unknown; paid-media cap remains $0. Older dated checklists below are historical context and do not restore expired gates or authorize parked work.
 - [x] Restore the phased growth-control heartbeat to its required EARLY cadence: every 30 minutes while bootstrap/high-impact work remains, every four hours only after seven complete aggregate days and a 24-hour empty ready queue, and daily after Stage 1 completes and the first qualifying Stage 2 streak day. On 2026-08-14 the recovered exact-id update path changed only the existing `yle` rrule from four hours to 30 minutes because ready PR #111 resets the empty-queue gate; exact-file readback confirmed its full prompt, name, ACTIVE status, failed-runs-only notification policy, and original thread target stayed identical, with no duplicate automation. On 2026-08-18, user-authorized anti-idle policy was added to that same automation without changing its cadence, notification, target, or safety boundaries: unchanged audits, probes, status reports, and routine test additions no longer count as outcomes; each run must prioritize a ready release/production verification, new final-GSC decision, direct traffic action, or reversible next-release preparation.
 - [x] Enforce exact `your-love-element` isolation in the repository contract, Harness, runbook, and sole `yle` heartbeat; allowlist only this filesystem/Git root, Supabase project, GitHub repository, Cloudflare Worker/zone, and Resend domain/addresses while denying every sibling asset in the same accounts.
 - [x] Change the active Stage 1 objective to `30` consecutive final GSC `web` days for exact property `sc-domain:yourloveelement.com`, each strictly above `1,000` clicks (`>= 1,001`). Keep impressions diagnostic-only, use GSC's `America/Los_Angeles` daily boundary, leave the unspecified Stage 1 deadline `null`, and gate the original purchase objective behind Stage 1. The evaluator passes 20/20 contract, boundary, and transition tests; the Stage 1-to-2 bootstrap now explicitly requires `scorecard_read`, not the completed `gsc_read` gate, and the combined focused evaluator/fetcher/adapter suite passes 31/31. PR [#88](https://github.com/goodrambo/your-love-element/pull/88) merged as `d977ca6`; main Harness run `30939472162`, Pages run `30939470638`, and post-merge production health passed.
@@ -90,7 +91,6 @@ This is the only active task list. History files may contain old “next tasks�
 - [ ] Validate the revised preview-to-offer experience with 5-8 target users who read US/UK English; record quiz comprehension, perceived personalization, price clarity, purchase intent, and the exact objections that stop checkout.
 - [ ] Add customer proof only after authentic buyer feedback and explicit publication consent are available; do not fabricate testimonials, star ratings, buyer counts, or outcome claims.
 - [ ] Define a concrete refund eligibility window and decision timeline with business/legal review, then surface the approved rule before checkout; the current policy is intentionally case-based and may leave cautious buyers uncertain.
-- [ ] Confirm which June social items were actually published and record their performance.
 - [ ] Decide the next content or paid-acquisition experiment from current data, not the May/June historical snapshot.
 
 ## Maintenance
