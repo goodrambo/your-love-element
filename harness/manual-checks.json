@@ -2,9 +2,9 @@
   "schema_version": 1,
   "frontend_smoke": {
     "status": "pass",
-    "verified_at": "2026-08-13",
-    "source_digest": "45fb7da22273c781dc92a263eb68c679ed3821e354d310f33e52d584292467c2",
-    "evidence": "In-app Browser offline smoke of the homepage at desktop 1280x720 and mobile 390x844. Both layouts parsed exactly one canonical Brand node, resolved Product.brand to https://yourloveelement.com/#brand, kept the production API base disabled, and had no warning/error console entries. Desktop client/scroll widths were 1280/1280 and mobile client/scroll widths were 390/390, so neither layout had horizontal overflow. The focused SEO suite passed 66/66, including the Brand/Organization name, URL, and logo parity plus homepage WebPage/sitemap freshness. No visible copy, CSS, JavaScript, tracking, API, checkout, paid flow, report, email, refund-policy, return-policy, or shipping behavior changed. This digest invalidates the evidence on later frontend changes."
+    "verified_at": "2026-10-16",
+    "source_digest": "a792b66856bf2cc895e55e24e08412a0a5c3c12ba8fb09e46586c982f7bf56a5",
+    "evidence": "Fresh user-authorized offline Browser verification on 2026-10-16 of exact PR #114 runtime tree ad3b16aae28191e0dd3823f038bc29b3e009a615, served from an isolated archive without switching or staging the existing dirty worktree. Homepage, methodology and Five Elements guide visually pass at 1280x720 and true 390x844: one H1, exact production canonicals, no horizontal overflow. Five method navigation targets, eight guide fragment targets, six homepage element deep links and both method discovery links resolve uniquely. Actual mobile homepage BaZi link reaches /how-it-works/#love-element-vs-zodiac with the comparison section at viewport top; actual Earth activation reaches the guide Earth section. Console warnings/errors are empty. DOM reports local-preview, apiEnabled false and metaTracking disabled; no production reading, checkout, purchase, email or advertising event was created. The isolated exact-tree SEO suite passes 78/78. All 11 paid-flow digest files are byte-identical to main ab85a16d93615f7d3eb46759bb2ca99cf712731e, and the paid-flow digest remains 37c32fb28ebf007b901794dad0cabbfc4d5f1acecc0c115ce3e01d25d409dcb9. This record expires under the unchanged Harness rules and is invalidated by any frontend digest change."
   },
   "paid_flow_e2e": {
     "status": "waived",
