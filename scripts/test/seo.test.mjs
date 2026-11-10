@@ -10,6 +10,33 @@ const contracts = JSON.parse(readFileSync(resolve(root, "harness/contracts.json"
 const origin = contracts.production.site_url;
 const canonicalOrigin = new URL(origin);
 
+test("homepage exposes a crawlable, accessible 25-pair chart without changing the quiz offer", () => {
+  const html = read("index.html");
+  const section = html.match(/<section\b[^>]*id="compatibility-chart"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(section, "Chart must be present in delivered HTML, not injected by JavaScript");
+  assert.match(section, /<h2 id="compatibility-chart-title">Five Elements love compatibility chart<\/h2>/);
+  assert.match(section, /role="region" tabindex="0" aria-label="Scrollable Five Elements compatibility chart"/);
+  assert.match(section, /<caption>All 25 ordered Wood, Fire, Earth, Metal, and Water pairings<\/caption>/);
+  const pairs = [...section.matchAll(/<td data-pair="([^"]+)" id="([^"]+)">([\s\S]*?)<\/td>/g)];
+  const elements = ["Wood", "Fire", "Earth", "Metal", "Water"];
+  assert.equal(pairs.length, 25);
+  assert.equal(new Set(pairs.map(([, pair]) => pair)).size, 25);
+  for (const first of elements) for (const second of elements) {
+    const cell = pairs.find(([, pair]) => pair === first + "-" + second);
+    assert.ok(cell, first + "-" + second);
+    assert.equal(cell[2], "home-pair-" + first.toLowerCase() + "-" + second.toLowerCase());
+    assert.match(cell[3], /<strong>.+<\/strong>.+/);
+  }
+  assert.equal((section.match(/scope="col"/g) || []).length, 6);
+  assert.equal((section.match(/scope="row"/g) || []).length, 5);
+  assert.match(section, /not a compatibility score or prediction/);
+  assert.doesNotMatch(section, /<script|\bhidden\b|display:\s*none/);
+  assert.match(html, /href="#compatibility-chart">Compare two elements<\/a>/);
+  assert.match(html, /#compatibility-chart \.homepage-compatibility-scroll \{[^}]*overflow-x: auto/);
+  assert.match(html, /<h1 id="hero-title">Free Five Element Love Quiz<\/h1>/);
+  assert.match(html, /Get your free preview with no email or payment required/);
+});
+
 function read(relativePath) {
   return readFileSync(resolve(root, relativePath), "utf8");
 }
